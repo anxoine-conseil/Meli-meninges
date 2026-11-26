@@ -1014,6 +1014,7 @@ html.catalogue-open {
   <section id="sdk" class="view hidden"><div class="card"><button class="ghost backHub" data-hub>← Tous les jeux</button><h2 class="huge"><img class="mmIco" src="logo/mm-96.png" alt="">Sudoku</h2><div id="sdkBox" class="game"></div></div></section>
   <section id="dom" class="view hidden"><div class="card"><button class="ghost backHub" data-hub>← Tous les jeux</button><h2 class="huge"><img class="mmIco" src="logo/mm-96.png" alt="">Dominos</h2><div id="domBox" class="game"></div></div></section>
   <section id="dep" class="view hidden"><div class="card"><button class="ghost backHub" data-hub>← Tous les jeux</button><h2 class="huge"><img class="mmIco" src="logo/mm-96.png" alt="">Le jeu des départements</h2><p class="soft" style="margin:0 0 10px">Un département s'affiche en rouge : trouvez tous ceux qui le touchent.</p><iframe id="depFrame" title="Jeu des départements" style="width:100%;height:760px;border:0;display:block;background:transparent" loading="lazy"></iframe></div></section>
+  <section id="mel" class="view hidden"><div class="card"><button class="ghost backHub" data-hub>← Tous les jeux</button><h2 class="huge"><img class="mmIco" src="logo/mm-96.png" alt="">Les mots mêlés</h2><p class="soft" style="margin:0 0 10px">Des mots sont cachés dans la grille : à l’endroit, à l’envers, en travers… À vous de tous les retrouver !</p><iframe id="melFrame" title="Les mots mêlés" style="width:100%;height:900px;border:0;display:block;background:transparent"></iframe></div></section>
   <section id="form" class="view hidden"><div class="card"><button class="ghost backHub" data-hub>← Tous les jeux</button><h2 class="huge"><img class="mmIco" src="logo/mm-96.png" alt="">Le maçon malin</h2><p class="soft" style="margin:0 0 10px">Briques, demi-briques, triangles… emboîtez toutes les formes pour remplir le rectangle.</p><iframe id="formFrame" title="Le maçon malin" style="width:100%;height:900px;border:0;display:block;background:transparent"></iframe></div></section>
   <section id="meca" class="view hidden"><div class="card"><button class="ghost backHub" data-hub>← Tous les jeux</button><h2 class="huge"><img class="mmIco" src="logo/mm-96.png" alt="">Monsieur Méninge le mécano</h2><p class="soft" style="margin:0 0 10px">Remettez chaque pièce à sa place et découvrez comment l’objet est fabriqué.</p><iframe id="mecaFrame" title="Monsieur Méninge le mécano" style="width:100%;height:900px;border:0;display:block;background:transparent"></iframe></div></section>
   <section id="cel" class="view hidden"><div class="card"><button class="ghost backHub" data-hub>← Tous les jeux</button><h2 class="huge"><img class="mmIco" src="logo/mm-96.png" alt="">Qui est où ?</h2><p class="soft" style="margin:0 0 10px">Un monument, un personnage, un événement… Placez chaque carte dans le bon département.</p><iframe id="celFrame" title="Qui est où ?" style="width:100%;height:900px;border:0;display:block;background:transparent"></iframe></div></section>
@@ -2074,7 +2075,7 @@ function show(v) {
   document.documentElement.classList.toggle('catalogue-open', atCatalogue);
   document.querySelector('meta[name="theme-color"]').content = atCatalogue ? '#f7eedc' : '#16233F';
   if (atCatalogue) mmHide();
-  ['hub', 'home', 'game', 'final', 'cat', 'sdk', 'tq', 'dom', 'dep', 'cel', 'dam', 'fle', 'obj', 'ani', 'meca', 'form', 'loto', 'bat', 'pen', 'reu', 'cav'].forEach(s => $(s).classList.toggle('hidden', s !== v));
+  ['hub', 'home', 'game', 'final', 'cat', 'sdk', 'tq', 'dom', 'dep', 'cel', 'dam', 'fle', 'obj', 'ani', 'meca', 'form', 'loto', 'bat', 'pen', 'reu', 'cav', 'mel'].forEach(s => $(s).classList.toggle('hidden', s !== v));
   mountGame(v);
   $('roundLbl').classList.toggle('hidden', v !== 'game');
   $('tabs').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v));
@@ -2089,7 +2090,7 @@ function mountGame(v) {
   if (v === 'sdk') mounted.sdk = Games.mountSudoku($('sdkBox'), snd);
   if (v === 'tq') mounted.tq = Games.mountTaquin($('tqBox'), IMAGES, snd);
   if (v === 'dom') mounted.dom = Games.mountDomino($('domBox'), snd);
-  const frames = { dep: ['depFrame', 'departements.html'], cel: ['celFrame', 'celebres.html'], dam: ['damFrame', 'dames.html'], fle: ['fleFrame', 'fleurs.html'], obj: ['objFrame', 'objets.html'], ani: ['aniFrame', 'animaux.html'], meca: ['mecaFrame', 'mecano.html'], form: ['formFrame', 'formes.html'], loto: ['lotoFrame', 'loto.html'], bat: ['batFrame', 'bataille.html'], pen: ['penFrame', 'pendu.html'], reu: ['reuFrame', 'reussites.html'], cav: ['cavFrame', 'cave.html'] };
+  const frames = { dep: ['depFrame', 'departements.html'], cel: ['celFrame', 'celebres.html'], dam: ['damFrame', 'dames.html'], fle: ['fleFrame', 'fleurs.html'], obj: ['objFrame', 'objets.html'], ani: ['aniFrame', 'animaux.html'], meca: ['mecaFrame', 'mecano.html'], form: ['formFrame', 'formes.html'], loto: ['lotoFrame', 'loto.html'], bat: ['batFrame', 'bataille.html'], pen: ['penFrame', 'pendu.html'], reu: ['reuFrame', 'reussites.html'], cav: ['cavFrame', 'cave.html'], mel: ['melFrame', 'motsmeles.html'] };
   if (frames[v]) {
     const f = $(frames[v][0]); mounted[v] = true;
     f.addEventListener('load', () => {
@@ -2172,7 +2173,8 @@ const CABINET = [
     { img: 'dep', t: 'Les départements', s: 'Trouver tous les voisins', g: 'dep', x: 29 },
     { img: 'cel', t: 'Qui est où ?', s: 'Placer chaque carte sur la carte', g: 'cel', x: 29 },
     { img: 'cav', t: 'La Cave de France', s: 'Cépages et appellations', g: 'cav', x: 29 } ] },
-  { id: 'casse', img: 'casse', t: 'Casse-tête', s: 'Cuisine, proverbes, calcul', x: 29, kids: [
+  { id: 'casse', img: 'casse', t: 'Casse-tête', s: 'Mots mêlés, cuisine, proverbes…', x: 29, kids: [
+    { img: 'mel', t: 'Mots mêlés', s: 'Retrouver les mots cachés', g: 'mel', x: 29 },
     { img: 'cuisine', t: 'Cuisine', s: 'Recettes, spécialités, fromages', g: 'cuisine', x: 29 },
     { img: 'prov', t: 'Proverbes', s: 'Remettre les phrases dans l’ordre', g: 'mots', x: 29 },
     { img: 'calcul', t: 'Calcul malin', s: 'Nombres et signes à placer', g: 'calcul', x: 29 } ] }
