@@ -928,6 +928,24 @@ html.catalogue-open {
 .cabinetNote { text-align:center; color:#6b4520; font:600 15px Sora,system-ui,sans-serif; margin:14px 0 24px; }
 @media (max-width:420px) { .drawer:not(.open) .dl small { display:none; } }
 @media (prefers-reduced-motion:no-preference) { .subDrawers { animation:slideOut .35s ease-out; } @keyframes slideOut { from { opacity:0; transform:translateY(-10px); } } }
+
+/* ===== Confort de jeu : le jeu domine l'écran ===== */
+html.game-open header.top { padding:0 0 8px; gap:8px; }
+html.game-open header.top h1, html.game-open #roundLbl { display:none !important; }
+html.game-open header.top .ghost, html.game-open header.top a.ghost { min-height:40px !important; padding:0 14px !important; font-size:14px !important; border-radius:12px !important; }
+html.game-open .tabs { gap:8px !important; }
+html.game-open .backHub { display:none !important; }
+html.game-open h2.huge { font-size:clamp(22px,5.5vw,30px) !important; margin:0 0 8px !important; }
+@media (max-width:700px) { html.game-open .view > .card { padding:12px 10px !important; border-radius:18px !important; } }
+.gFolds { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 12px; text-align:left; }
+.gFold { flex:0 1 auto; }
+.gFold[open] { flex:1 1 100%; }
+.gFold > summary { list-style:none; display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:6px 14px; border-radius:12px; cursor:pointer; font-weight:800; font-size:15px; background:color-mix(in srgb, currentColor 10%, transparent); border:1px solid color-mix(in srgb, currentColor 28%, transparent); }
+.gFold > summary::-webkit-details-marker { display:none; }
+.gFold > summary small { font-weight:600; opacity:.75; font-size:13px; }
+.gFold[open] > summary { margin-bottom:10px; }
+.gFoldIn > .gTop { margin-bottom:6px; }
+.gFoldIn > p { margin:0 !important; }
 </style>
 </head>
 <body>
@@ -2070,6 +2088,36 @@ const scene = (th, upto) => isRec(th) ? Puzzle.cookbook(recRounds(), upto, (th.u
 const piecesFor = th => isRec(th) ? recAt(S.round).need : isText(th) ? PAP.frags(items()[S.round], S.level).length : isCalc(th) ? PAP.calcRound(S.level, S.seeds[S.round]).slots.length : LEVELS[S.level].n ** 2;
 const medal = i => `<span class="medal ${i < 3 ? 'm' + (i + 1) : ''}">${i + 1}</span>`;
 const pts = n => `${n} point${n > 1 ? 's' : ''}`;
+// Confort de jeu : une fois le jeu choisi, c'est lui qui prend la place.
+const GAME_VIEWS = ['sdk', 'tq', 'dom', 'dep', 'cel', 'dam', 'fle', 'obj', 'ani', 'meca', 'form', 'loto', 'bat', 'pen', 'reu', 'cav', 'mel'];
+function enhanceGame(v) {
+  const sec = $(v);
+  if (!sec || !GAME_VIEWS.includes(v) || sec.dataset.enh) return;
+  sec.dataset.enh = '1';
+  const fold = (cls, label, nodes) => {
+    const d = document.createElement('details'); d.className = 'gFold ' + cls;
+    d.innerHTML = `<summary>${label}</summary><div class="gFoldIn"></div>`;
+    nodes[0].before(d); nodes.forEach(n => d.querySelector('.gFoldIn').appendChild(n));
+    return d;
+  };
+  const row = document.createElement('div'); row.className = 'gFolds';
+  const top0 = sec.querySelector('.gTop'), h2 = sec.querySelector('h2.huge');
+  // Les boutons restent au même endroit du jeu (les clics y sont gérés par le jeu lui-même)
+  if (top0) top0.before(row); else if (h2) h2.after(row);
+  // Réglages (niveau, taille, nombre…) repliés dans un bouton
+  const top = sec.querySelector('.gTop');
+  if (top) {
+    const d = fold('gSet', '⚙️ Réglages <small class="gSum"></small>', [top]);
+    row.appendChild(d);
+    const upd = () => { d.querySelector('.gSum').textContent = [...top.querySelectorAll('[aria-pressed="true"]')].map(b => b.textContent.trim()).join(' · '); };
+    top.addEventListener('click', e => { setTimeout(upd, 0); if (e.target.closest('button.big')) setTimeout(() => { d.open = false; }, 60); });
+    upd();
+  }
+  // Règles du jeu : un bouton « Comment jouer ? »
+  const rule = sec.querySelector('.gRule') || (() => { const p = row.nextElementSibling; return p && p.matches('p.soft') ? p : null; })();
+  if (rule) row.appendChild(fold('gHow', '❓ Comment jouer ?', [rule]));
+  if (!row.children.length) row.remove();
+}
 function show(v) {
   const atCatalogue = v === 'hub';
   document.documentElement.classList.toggle('catalogue-open', atCatalogue);
@@ -2077,6 +2125,8 @@ function show(v) {
   if (atCatalogue) mmHide();
   ['hub', 'home', 'game', 'final', 'cat', 'sdk', 'tq', 'dom', 'dep', 'cel', 'dam', 'fle', 'obj', 'ani', 'meca', 'form', 'loto', 'bat', 'pen', 'reu', 'cav', 'mel'].forEach(s => $(s).classList.toggle('hidden', s !== v));
   mountGame(v);
+  document.documentElement.classList.toggle('game-open', GAME_VIEWS.includes(v));
+  enhanceGame(v);
   $('roundLbl').classList.toggle('hidden', v !== 'game');
   $('tabs').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v));
   window.scrollTo(0, 0);
