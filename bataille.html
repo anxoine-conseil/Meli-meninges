@@ -182,9 +182,9 @@ main.nav{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr)}
 .bd{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px 12px}.bd h3{margin:2px 0 8px;font:600 15px "Instrument Sans",sans-serif;color:var(--soft)}
 .bd.mv{box-shadow:0 0 0 3px var(--gold)}
 .board{display:grid;grid-template-columns:20px repeat(10,minmax(0,1fr));grid-template-rows:20px repeat(10,minmax(0,1fr));aspect-ratio:1;position:relative}
-.sea{grid-row:2/12;grid-column:2/12;border-radius:6px;background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.18),transparent 45%),repeating-linear-gradient(160deg,rgba(255,255,255,.06) 0 6px,transparent 6px 14px),linear-gradient(160deg,var(--sea1),var(--sea2));box-shadow:inset 0 0 0 1px #0f3558}
+.sea{z-index:0;pointer-events:none;grid-row:2/12;grid-column:2/12;border-radius:6px;background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.18),transparent 45%),repeating-linear-gradient(160deg,rgba(255,255,255,.06) 0 6px,transparent 6px 14px),linear-gradient(160deg,var(--sea1),var(--sea2));box-shadow:inset 0 0 0 1px #0f3558}
 .lab{display:flex;align-items:center;justify-content:center;font:600 11px "Instrument Sans",sans-serif;color:var(--soft)}
-.cell{z-index:1;border:0;margin:0;padding:0;background:transparent;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.28);min-width:0;min-height:0;cursor:default}
+.cell{z-index:1;border:0;margin:0;padding:0;background:transparent;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.45);min-width:0;min-height:0;cursor:default}
 .board.live .cell:not(:disabled){cursor:crosshair}
 .board.live .cell:not(:disabled):hover,.board.live .cell:not(:disabled):focus-visible{background:rgba(255,230,140,.35);outline:2px solid #ffe08a;outline-offset:-2px}
 .cell.pv{background:rgba(120,230,150,.5)!important}.cell.pvx{background:rgba(240,90,80,.55)!important}
@@ -404,7 +404,7 @@ function aiPick(){const D=G.P[0],free=[...Array(100).keys()].filter(i=>!knownEmp
 
 // ---- Plateaux ----
 function board(P,o){const showShips=o.ships,cl=o.click,mark=G.last&&G.last.b===P?G.last.i:-1;
-  let h=`<div class="board${o.click?' live':''}" data-b="${o.id}"><span class="corner"></span>${[...COLS].map((c,k)=>`<span class="lab" style="grid-row:1;grid-column:${k+2}">${c}</span>`).join('')}${[...Array(10)].map((_,k)=>`<span class="lab" style="grid-row:${k+2};grid-column:1">${k+1}</span>`).join('')}`;
+  let h=`<div class="board${o.click?' live':''}" data-b="${o.id}"><span class="corner"></span>${[...COLS].map((c,k)=>`<span class="lab" style="grid-row:1;grid-column:${k+2}">${c}</span>`).join('')}${[...Array(10)].map((_,k)=>`<span class="lab" style="grid-row:${k+2};grid-column:1">${k+1}</span>`).join('')}<div class="sea" aria-hidden="true"></div>`;
   for(let i=0;i<100;i++){const r=Math.floor(i/10),c=i%10,sh=P.shots[i];
     h+=`<button class="cell${sh?' shot':''}" data-i="${i}" style="grid-row:${r+2};grid-column:${c+2}" aria-label="${coord(i)}${sh===1?', à l\'eau':sh===2?', touché':sh===3?', coulé':''}"${cl&&(!sh||o.all)?'':' tabindex="-1"'}${!cl||(sh&&!o.all)?' disabled':''}></button>`}
   P.ships.forEach((s,si)=>{if(!s.cells.length||!(showShips||s.sunk))return;const a=s.cells[0],r=Math.floor(a/10),c=a%10;
