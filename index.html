@@ -406,6 +406,7 @@ input,.gSel{border:2px solid var(--line);border-radius:16px}
 .pad{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:10px}
 .pad button{background:#fff;border:2px solid #c5d7e4;box-shadow:0 3px 0 #c5d7e4;font:700 30px Sora,sans-serif;color:#0e4f5c;min-height:64px;padding:0}
 .pad button:active{transform:translateY(3px);box-shadow:0 1px 0 #c5d7e4}
+.pad button.sdkDone{visibility:hidden;pointer-events:none}
 .ghost.dark[aria-pressed=true]{border-color:var(--sun);background:#fff6d6;color:var(--ink)}
 .tq{position:relative;aspect-ratio:1;background:#1f2433;border-radius:12px;overflow:hidden;border:4px solid #1f2433}
 .tile{position:absolute;width:calc(100% / var(--n));height:calc(100% / var(--n));padding:2px;min-height:0;border-radius:0;background:transparent;transition:left .15s,top .15s;cursor:pointer}
@@ -916,6 +917,9 @@ html.catalogue-open {
 .shareBtn { flex:1 1 260px; min-height:58px; border-radius:16px; border:2px solid #b8862f; background:linear-gradient(#fff6dd,#f3dfae); color:#4a2c10; font:800 17px Sora,system-ui,sans-serif; box-shadow:0 3px 0 #9c6b22, 0 6px 14px rgba(80,45,10,.18); padding:0 18px; }
 .shareBtn:hover { filter:brightness(1.05); }
 .shareBtn:active { transform:translateY(2px); box-shadow:0 1px 0 #9c6b22; }
+#installSteps .iKey { display:inline-grid; place-items:center; width:44px; height:44px; border-radius:11px; background:#fff; border:2px solid #cfd6e4; color:#0a7aff; vertical-align:middle; margin:0 4px; }
+#installSteps .iosShare { width:28px; height:28px; display:block; }
+.installBtn .iosShare { width:24px; height:24px; display:inline-block; vertical-align:-5px; margin-right:4px; }
 .installBtn { background:linear-gradient(#2f8f5b,#1f6e43) !important; color:#fff !important; border-color:#185a36 !important; box-shadow:0 3px 0 #134a2c, 0 6px 14px rgba(20,70,40,.25) !important; }
 #installOk { width:100%; }
 .installSteps { margin:0 0 16px; padding-left:24px; font-size:17px; line-height:1.5; }
@@ -1021,7 +1025,7 @@ html.game-open h2.huge { font-size:clamp(22px,5.5vw,30px) !important; margin:0 0
     <div class="shareRow">
       <button type="button" class="shareBtn" data-share="decouvrir"><span aria-hidden="true">📣</span> Faire découvrir le jeu à un ami</button>
       <button type="button" class="shareBtn" data-share="inviter"><span aria-hidden="true">🎲</span> Inviter un ami à jouer avec moi</button>
-      <button type="button" class="shareBtn installBtn" id="installBtn"><span aria-hidden="true">📲</span> Mettre le jeu sur mon écran d’accueil</button>
+      <button type="button" class="shareBtn installBtn" id="installBtn"><svg class="iosShare" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 9H6.5A1.5 1.5 0 0 0 5 10.5v9A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 17.5 9h-2"/><path d="M12 14.5V2.5M8.5 6 12 2.5 15.5 6"/></svg> Mettre le jeu sur mon écran d’accueil</button>
     </div>
     <div class="shareOv hidden" id="installOv" role="dialog" aria-modal="true" aria-labelledby="installTitle">
       <div class="shareCard">
@@ -1840,9 +1844,17 @@ const BANK = [
         const inner = v ? v : notes[k].size ? `<span class="notes" style="--n:${bc}">${[...Array(n)].map((_, i) => `<i>${notes[k].has(i + 1) ? i + 1 : ''}</i>`).join('')}</span>` : '';
         return `<button class="${cls}" data-k="${k}" aria-label="Ligne ${r + 1}, colonne ${c + 1}${v ? ', ' + v : ', vide'}">${inner}</button>`;
       }).join('');
+      // Un chiffre posé n fois sur la grille n'est plus à jouer : il disparaît du pavé.
+      pad.querySelectorAll('[data-num]').forEach(b => {
+        const d = +b.dataset.num, used = val.filter(x => x === d).length >= n;
+        b.classList.toggle('sdkDone', used); b.disabled = used;
+        b.setAttribute('aria-hidden', used); b.tabIndex = used ? -1 : 0;
+      });
     }
+    const usedUp = v => val.filter(x => x === v).length >= P.n;
     function put(v) {
       if (done || P.puz[sel]) return;
+      if (v && val[sel] !== v && usedUp(v)) return;
       if (st.pencil && v) { notes[sel].has(v) ? notes[sel].delete(v) : notes[sel].add(v); render(); return; }
       val[sel] = v; notes[sel].clear();
       if (v) { if (st.help && v !== P.sol[sel]) snd.no?.(); else snd.place?.(); }
@@ -2506,16 +2518,16 @@ renderHome();
   const isAndroid = /Android/.test(ua);
   function steps() {
     if (isIOS) return [
-      'Appuyez sur le bouton <b>Partager</b> <span aria-hidden="true">⬆️</span> (le carré avec une flèche vers le haut, en bas ou en haut de l’écran).',
+      'Appuyez sur le bouton <b>Partager</b> <span class="iKey"><svg class="iosShare" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 9H6.5A1.5 1.5 0 0 0 5 10.5v9A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 17.5 9h-2"/><path d="M12 14.5V2.5M8.5 6 12 2.5 15.5 6"/></svg></span> (le petit carré avec une flèche qui monte, en bas de l’écran sur iPhone, en haut sur iPad).',
       'Faites défiler et choisissez <b>« Sur l’écran d’accueil »</b>.',
       'Appuyez sur <b>« Ajouter »</b> en haut à droite. C’est fait ! 🎉'];
     if (isAndroid) return [
-      'Appuyez sur les <b>trois petits points ⋮</b> en haut à droite de Chrome.',
+      'Appuyez sur les <b>trois petits points</b> <span class="iKey"><svg class="iosShare" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="19" r="2" fill="currentColor"/></svg></span> en haut à droite de Chrome.',
       'Choisissez <b>« Installer l’application »</b> ou <b>« Ajouter à l’écran d’accueil »</b>.',
       'Confirmez avec <b>« Installer »</b>. C’est fait ! 🎉'];
     return [
       'Dans Chrome ou Edge, cliquez sur la petite icône <b>« Installer »</b> <span aria-hidden="true">⊕</span> à droite de la barre d’adresse.',
-      'Sinon, ouvrez le menu <b>⋮</b> et choisissez <b>« Installer Méli-Méninges »</b>.',
+      'Sinon, ouvrez le menu <span class="iKey"><svg class="iosShare" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="19" r="2" fill="currentColor"/></svg></span> et choisissez <b>« Installer Méli-Méninges »</b>.',
       'Avec un autre navigateur, ajoutez simplement la page à vos <b>favoris ⭐</b>.'];
   }
   btn.addEventListener('click', async () => {
