@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="icon" type="image/png" href="logo/mm-32.png">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Méli-Méninges — Le maçon malin</title>
+<style>
+:root{color-scheme:dark;--bg:#0f1a2e;--card:#16233c;--line:#2a3a5a;--ink:#eef2f8;--soft:#9aa6bb;--gold:#ffd65c;--ok:#4fc38a;--bad:#ff6b7a;--blue:#5fb4ff}
+*{box-sizing:border-box;min-width:0}
+html.emb body{background:transparent}
+html,body{overscroll-behavior:none}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;padding:4px 0 24px}
+button{font:inherit;cursor:pointer}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.bar b{color:var(--soft);font-weight:600;font-size:15px;margin-right:4px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{background:#1d2c4a;color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:9px 14px;min-height:44px;font-weight:600}
+.seg button[aria-pressed=true]{background:#2a4a7a;border-color:var(--blue);box-shadow:0 0 0 2px rgba(95,180,255,.25)}
+.big{background:#e1000f;color:#fff;border:0;border-radius:14px;padding:10px 18px;font-weight:700;min-height:46px}
+.stats{display:flex;flex-wrap:wrap;gap:18px;align-items:center;color:var(--soft);font-size:15px;margin:0 0 10px}
+.stats b{color:var(--ink);font-size:20px}
+.stars{font-size:22px;letter-spacing:2px;color:var(--gold)}
+.stars .off{color:#3a4a68}
+.boardWrap{display:flex;justify-content:center;background:#6b6f74 url(matieres/beton.jpg) 0 0/220px;box-shadow:inset 0 0 40px rgba(0,0,0,.45);border-radius:16px;padding:12px;touch-action:none}
+#board{display:block;width:100%;max-width:640px;height:auto;overflow:visible}
+.cellbg{fill:none;stroke:rgba(255,255,255,.55);stroke-width:.025;stroke-dasharray:.1 .07}
+.frame{fill:none;stroke:url(#m-bois-noyer);stroke-width:.3}
+.pp{cursor:pointer}
+.info{min-height:52px;margin:10px 0;padding:10px 16px;border-radius:14px;background:var(--card);border:1px solid var(--line)}
+.info.no{border-color:var(--bad)}
+.info.ok{border-color:var(--ok)}
+.trayWrap{position:relative;margin-top:10px;background:#2a2d33 url(matieres/tapis.jpg) 0 0/180px;box-shadow:inset 0 6px 14px rgba(0,0,0,.6);border:1px solid var(--line);border-radius:18px;padding:10px;touch-action:none;overflow:hidden}
+.tray{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;min-height:70px}
+.tray.belt{display:block;position:relative;flex-wrap:nowrap}
+.tray.belt .pc{position:absolute;top:50%;transform:translateY(-50%)}
+.trayWrap.belt::before,.trayWrap.belt::after{content:"";position:absolute;left:0;right:0;height:7px;background:repeating-linear-gradient(90deg,#8a8f98 0 6px,#4d5259 6px 22px);opacity:.9}
+.trayWrap.belt::before{top:3px}.trayWrap.belt::after{bottom:3px}
+.pc{background:none;border:0;padding:4px;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:10px}
+.pc svg{display:block;pointer-events:none;overflow:visible}
+.pc:focus-visible{outline:3px solid var(--blue)}
+.fly{position:fixed;z-index:60;pointer-events:none;opacity:.9;filter:drop-shadow(0 8px 10px rgba(0,0,0,.45))}
+.fly svg{display:block;overflow:visible}
+.win{text-align:center;padding:16px;border-radius:18px;background:linear-gradient(135deg,#1f3b2c,#16233c);border:1px solid var(--ok);margin-bottom:10px}
+.win h2{margin:0 0 4px;color:var(--gold)}
+.win .stars{font-size:38px}
+.hidden{display:none!important}
+.help{color:var(--soft);font-size:14px;margin:8px 0 0}
+@keyframes pop{from{opacity:.2}}
+.placed{animation:pop .35s}
+@media(prefers-reduced-motion:reduce){.placed{animation:none}}
+</style>
+<script>if(window!==window.parent)document.documentElement.classList.add('emb')</script>
+</head>
+<body>
+<div class="bar"><b>Niveau</b><div class="seg" id="lv"></div><button class="big" id="restart">Nouvelle surface</button><button class="big" id="demoBtn" style="background:#2e7d4f">▶ Démonstration</button></div>
+<div class="stats"><span><b id="cnt">0</b> / <span id="tot">0</span> formes posées</span><span><b id="time">0 s</b></span><span class="stars" id="liveStars" aria-label="étoiles"></span></div>
+<div class="win hidden" id="win"></div>
+<div class="boardWrap" id="bw"><svg id="board" role="img" aria-label="La surface à remplir"></svg></div>
+<div class="trayWrap" id="tw"><div class="tray" id="tray"></div></div>
+<div class="info" id="info" aria-live="polite"></div>
+<p class="help">Faites glisser une forme dans le rectangle. Touchez une forme pour la faire tourner. Touchez une forme déjà posée pour la reprendre. Plus vous allez vite, plus vous gagnez d'étoiles !</p>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="defs"><filter id="ol" x="-5%" y="-5%" width="110%" height="110%"><feMorphology in="SourceAlpha" operator="dilate" radius=".045" result="d"/><feFlood flood-color="#16233f"/><feComposite in2="d" operator="in" result="o"/><feMerge><feMergeNode in="o"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="bev" x="-8%" y="-8%" width="125%" height="125%" color-interpolation-filters="sRGB">
+<feGaussianBlur in="SourceAlpha" stdDeviation=".045" result="b"/>
+<feSpecularLighting in="b" surfaceScale="2.2" specularConstant=".55" specularExponent="16" lighting-color="#fff" result="s"><feDistantLight azimuth="225" elevation="42"/></feSpecularLighting>
+<feComposite in="s" in2="SourceAlpha" operator="in" result="s2"/>
+<feComposite in="SourceGraphic" in2="s2" operator="arithmetic" k1="0" k2="1" k3=".5" k4="0" result="lit"/>
+<feMorphology in="SourceAlpha" operator="erode" radius=".03" result="er"/>
+<feComposite in="SourceAlpha" in2="er" operator="out" result="edge"/>
+<feFlood flood-color="#000" flood-opacity=".45"/><feComposite in2="edge" operator="in" result="edgeD"/>
+<feGaussianBlur in="SourceAlpha" stdDeviation=".05" result="sb"/><feOffset dx=".04" dy=".07" result="so"/>
+<feFlood flood-color="#000" flood-opacity=".45"/><feComposite in2="so" operator="in" result="shadow"/>
+<feMerge><feMergeNode in="shadow"/><feMergeNode in="lit"/><feMergeNode in="edgeD"/></feMerge>
+</filter></defs></svg>
+<script>
+{
+const $ = id => document.getElementById(id);
+const P0 = window.parent !== window ? window.parent : null;
+const api = () => { try { return P0 && P0.mmApi; } catch (e) { return null; } };
+const snd = k => { try { api()?.[k]?.(); } catch (e) {} };
+const mm = (pose, t, ms) => { try { api()?.mm(pose, t, ms); } catch (e) {} };
+const rnd = n => Math.floor(Math.random() * n);
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+// ---------- les formes : chaque case est coupée en 4 triangles (N, E, S, O) ----------
+const SH = {
+  carre:    { n: 'la demi-brique', q: [[0, 0, 'NESW']] },
+  brique:   { n: 'la brique', q: [[0, 0, 'NESW'], [1, 0, 'NESW']] },
+  barre:    { n: 'la grande brique', q: [[0, 0, 'NESW'], [1, 0, 'NESW'], [2, 0, 'NESW']] },
+  equerre:  { n: 'l’équerre', q: [[0, 0, 'NESW'], [0, 1, 'NESW'], [1, 1, 'NESW']] },
+  grandTri: { n: 'le grand triangle', q: [[0, 0, 'SW'], [0, 1, 'NESW'], [1, 1, 'SW']] },
+  petitTri: { n: 'le petit triangle', q: [[0, 0, 'NE']] },
+  parallelo:{ n: 'le parallélogramme', q: [[0, 0, 'SE'], [1, 0, 'NESW'], [2, 0, 'NW']] },
+  trapeze:  { n: 'le trapèze', q: [[0, 0, 'SE'], [1, 0, 'NESW'], [2, 0, 'SW']] },
+  maison:   { n: 'la maison', q: [[0, 0, 'S'], [0, 1, 'NESW']] },
+  biseau:   { n: 'la brique biseautée', q: [[0, 0, 'NESW'], [1, 0, 'SW']] }
+};
+const LEVELS = {
+  1: { w: 4, h: 2, speed: 0, rot: false, mix: { carre: 3, brique: 3, grandTri: 2, petitTri: 1 } },
+  2: { w: 4, h: 3, speed: 0, rot: false, mix: { carre: 2, brique: 3, grandTri: 3, equerre: 2, petitTri: 1, parallelo: 1 } },
+  3: { w: 5, h: 3, speed: 22, rot: true, mix: { carre: 2, brique: 3, grandTri: 3, equerre: 2, petitTri: 1, parallelo: 2, trapeze: 1, barre: 1 } },
+  4: { w: 5, h: 4, speed: 32, rot: true, mix: { carre: 2, brique: 3, grandTri: 3, equerre: 2, petitTri: 2, parallelo: 2, trapeze: 2, barre: 1, biseau: 1 } },
+  5: { w: 6, h: 4, speed: 42, rot: true, mix: { carre: 1, brique: 3, grandTri: 3, equerre: 2, petitTri: 2, parallelo: 2, trapeze: 2, barre: 1, biseau: 2, maison: 1 } },
+  6: { w: 7, h: 5, speed: 54, rot: true, mix: { carre: 1, brique: 2, grandTri: 3, equerre: 2, petitTri: 3, parallelo: 2, trapeze: 2, barre: 2, biseau: 2, maison: 2 } }
+};
+const LVNAME = { 1: 'Facile', 2: 'Moyen', 3: 'Ça bouge', 4: 'Ça bouge plus', 5: 'Rapide', 6: 'Expert' };
+const MATS = { 'bois-chene': 'bois de chêne', 'bois-noyer': 'bois de noyer', 'bois-pin': 'bois de pin', beton: 'béton', pierre: 'pierre', brique: 'terre cuite', ardoise: 'ardoise', granit: 'granit' };
+(function () { const d = document.getElementById('defs'); for (const m of [...Object.keys(MATS), 'mortier']) d.insertAdjacentHTML('beforeend', `<pattern id="m-${m}" patternUnits="userSpaceOnUse" width="2" height="2"><image href="matieres/${m}.jpg" width="2" height="2" preserveAspectRatio="none"/></pattern>`); })();
+const COLORS = ['#e63946', '#f4a261', '#e9c46a', '#2a9d8f', '#457b9d', '#9b5de5', '#ff6fb5', '#43aa8b', '#f3722c', '#277da1', '#90be6d', '#c0392b', '#00b4d8', '#f15bb5', '#b5838d'];
+const QI = { N: 0, E: 1, S: 2, W: 3 };
+// liste de triangles [x, y, q] à partir de la description
+const cells = sh => sh.flatMap(([x, y, qs]) => [...qs].map(c => [x, y, QI[c]]));
+// tourner d'un quart de tour (sens des aiguilles d'une montre), puis recaler en haut à gauche
+function rot(tr) { const r = tr.map(([x, y, q]) => [-y - 1, x, (q + 1) % 4]); return norm(r); }
+function norm(tr) { const mx = Math.min(...tr.map(t => t[0])), my = Math.min(...tr.map(t => t[1])); return tr.map(([x, y, q]) => [x - mx, y - my, q]); }
+const dims = tr => [Math.max(...tr.map(t => t[0])) + 1, Math.max(...tr.map(t => t[1])) + 1];
+function quadPts(x, y, q) { const c = [x + .5, y + .5]; const P = [[[x, y], [x + 1, y]], [[x + 1, y], [x + 1, y + 1]], [[x + 1, y + 1], [x, y + 1]], [[x, y + 1], [x, y]]][q]; return [P[0], P[1], c].map(p => p.map(v => +v.toFixed(3)).join(',')).join(' '); }
+const shapeSVG = (tr, mat) => `<g filter="url(#bev)">${tr.map(([x, y, q]) => `<polygon points="${quadPts(x, y, q)}" fill="url(#m-${mat})" stroke="url(#m-${mat})" stroke-width=".04" stroke-linejoin="round"/>`).join('')}</g>`;
+
+// ---------- fabriquer une surface découpée (toujours faisable) ----------
+function generate(L) {
+  const { w, h, mix } = LEVELS[L];
+  const names = Object.entries(mix).flatMap(([k, n]) => Array(n).fill(k));
+  for (let attempt = 0; attempt < 60; attempt++) {
+    const grid = new Array(w * h * 4).fill(-1), pieces = []; let steps = 0;
+    const idx = (x, y, q) => (y * w + x) * 4 + q;
+    const fits = (tr, ox, oy) => tr.every(([x, y, q]) => { const X = x + ox, Y = y + oy; return X >= 0 && Y >= 0 && X < w && Y < h && grid[idx(X, Y, q)] < 0; });
+    function solve() {
+      if (++steps > 4000) return false;
+      const f = grid.indexOf(-1); if (f < 0) return true;
+      const q = f % 4, cell = (f - q) / 4, fx = cell % w, fy = (cell - fx) / w;
+      for (const k of shuffle(names.slice()).filter((v, i, a) => a.indexOf(v) === i)) {
+        let tr = norm(cells(SH[k].q));
+        const rots = shuffle([0, 1, 2, 3]);
+        for (const r of rots) {
+          let t = tr; for (let i = 0; i < r; i++) t = rot(t);
+          for (const [x, y, qq] of shuffle(t.slice())) {
+            if (qq !== q) continue;
+            const ox = fx - x, oy = fy - y;
+            if (!fits(t, ox, oy)) continue;
+            const id = pieces.length; pieces.push({ k, tr: t, ox, oy });
+            t.forEach(([a, b, c]) => grid[idx(a + ox, b + oy, c)] = id);
+            if (solve()) return true;
+            t.forEach(([a, b, c]) => grid[idx(a + ox, b + oy, c)] = -1); pieces.pop();
+          }
+        }
+      }
+      return false;
+    }
+    if (solve()) return pieces;
+  }
+  return null;
+}
+
+// ---------- état du jeu ----------
+let L = 1; try { L = +localStorage.getItem('fo-lv') || 1; } catch (e) {}
+let demoing = false, W, H, pieces = [], grid = [], t0 = 0, tick = 0, done = false, belt = null, drag = null, raf = 0;
+const svg = $('board');
+
+function build() {
+  demoing = false;
+  const cfg = LEVELS[L]; W = cfg.w; H = cfg.h; done = false;
+  const gen = generate(L) || generate(L);
+  const mats = Object.keys(MATS); const cols = shuffle(mats.concat(mats, mats, mats, mats));
+  pieces = gen.map((p, i) => {
+    let tr = p.tr; if (cfg.rot) { const r = rnd(4); for (let k = 0; k < r; k++) tr = rot(tr); } else tr = p.tr;
+    return { id: i, k: p.k, tr, col: cols[i % cols.length], at: null, sol: p };
+  });
+  grid = new Array(W * H * 4).fill(-1); window.__fo = pieces;
+  svg.setAttribute('viewBox', `-0.35 -0.35 ${W + .7} ${H + .75}`);
+  drawBoard();
+  $('tot').textContent = pieces.length; $('cnt').textContent = 0; $('win').classList.add('hidden'); $('tw').classList.remove('hidden');
+  renderTray();
+  t0 = Date.now(); clearInterval(tick); tick = setInterval(updTime, 500); updTime();
+  say(`Remplissez tout le rectangle avec les ${pieces.length} formes.${cfg.speed ? ' Attention, elles défilent sur le tapis : attrapez-les au passage !' : ''}${cfg.rot ? ' Certaines sont à tourner : touchez-les.' : ''}`);
+}
+function drawBoard() {
+  let h = `<rect x="0" y="0" width="${W}" height="${H}" fill="url(#m-mortier)"/><rect x="0" y="0" width="${W}" height="${H}" fill="none" stroke="rgba(0,0,0,.35)" stroke-width=".12" style="filter:blur(.04px)"/>`;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) h += `<rect class="cellbg" x="${x}" y="${y}" width="1" height="1"/>`;
+  h += `<g filter="url(#bev)"><rect class="frame" x="-.15" y="-.15" width="${W + .3}" height="${H + .3}" rx=".06"/></g><g id="placed"></g>`;
+  svg.innerHTML = h;
+  for (const p of pieces) if (p.at) drawPlaced(p);
+}
+function drawPlaced(p) {
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.setAttribute('class', 'pp placed'); g.dataset.id = p.id; g.setAttribute('transform', `translate(${p.at[0]} ${p.at[1]})`);
+  g.innerHTML = shapeSVG(p.tr, p.col);
+  $('placed').appendChild(g);
+}
+const idx = (x, y, q) => (y * W + x) * 4 + q;
+const unit = () => svg.getBoundingClientRect().width / (W + .7);
+function trayUnit() { return Math.max(16, Math.min(unit() * .62, 46)); }
+function pieceEl(p, u) { const [dw, dh] = dims(p.tr); return `<svg width="${dw * u}" height="${dh * u}" viewBox="0 0 ${dw} ${dh}">${shapeSVG(p.tr, p.col)}</svg>`; }
+
+function renderTray() {
+  const cfg = LEVELS[L], u = trayUnit(), tray = $('tray');
+  const free = pieces.filter(p => !p.at);
+  tray.innerHTML = shuffle(free.slice()).map(p => `<button class="pc" data-id="${p.id}" aria-label="Forme : ${SH[p.k].n} en ${MATS[p.col]}">${pieceEl(p, u)}</button>`).join('');
+  cancelAnimationFrame(raf);
+  if (cfg.speed) {
+    tray.classList.add('belt'); $('tw').classList.add('belt');
+    const maxH = Math.max(70, ...free.map(p => dims(p.tr)[1] * u + 12)); tray.style.height = maxH + 'px';
+    let x = 0; belt = { items: [...tray.children].map(el => { const it = { el, x }; x += el.offsetWidth + 26; return it; }), last: performance.now(), paused: false };
+    belt.items.forEach(it => it.el.style.left = it.x + 'px');
+    const loop = now => {
+      const dt = Math.min(.05, (now - belt.last) / 1000); belt.last = now;
+      if (!belt.paused && !done) {
+        const tw = $('tray').clientWidth;
+        let right = Math.max(tw, ...belt.items.map(i => i.x + i.el.offsetWidth));
+        for (const it of belt.items) { it.x -= cfg.speed * dt; if (it.x + it.el.offsetWidth < -10) { it.x = right + 26; right = it.x + it.el.offsetWidth; } it.el.style.left = it.x.toFixed(1) + 'px'; }
+      }
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+  } else { tray.classList.remove('belt'); $('tw').classList.remove('belt'); tray.style.height = ''; belt = null; }
+}
+function refreshPieceEl(p) { const b = $('tray').querySelector(`[data-id="${p.id}"]`); if (b) b.innerHTML = pieceEl(p, trayUnit()); }
+
+function say(t, cls = '') { $('info').innerHTML = t; $('info').className = 'info ' + cls; }
+const fmt = ms => { const s = Math.round(ms / 1000), m = Math.floor(s / 60); return m ? `${m} min ${String(s % 60).padStart(2, '0')} s` : `${s} s`; };
+// étoiles : 3 si on va vite, puis 2, puis 1
+function starsFor(ms) { const per = ms / 1000 / pieces.length; return per <= 5 ? 3 : per <= 10 ? 2 : 1; }
+const starHTML = n => '★'.repeat(n) + `<span class="off">${'★'.repeat(3 - n)}</span>`;
+function updTime() { if (done) return; const ms = Date.now() - t0; $('time').textContent = fmt(ms); $('liveStars').innerHTML = starHTML(starsFor(ms)); }
+
+function fitsAt(p, ox, oy) { return p.tr.every(([x, y, q]) => { const X = x + ox, Y = y + oy; return X >= 0 && Y >= 0 && X < W && Y < H && grid[idx(X, Y, q)] < 0; }); }
+function tryDrop(p, cx, cy) {
+  const r = svg.getBoundingClientRect(), u = unit();
+  if (cx < r.left - u * .5 || cx > r.right + u * .5 || cy < r.top - u * .5 || cy > r.bottom + u * .5) return false;
+  const [dw, dh] = dims(p.tr);
+  const bx = (cx - r.left) / u - .35 - dw / 2, by = (cy - r.top) / u - .35 - dh / 2;
+  const cands = [];
+  for (let oy = Math.floor(by) - 1; oy <= Math.ceil(by) + 1; oy++) for (let ox = Math.floor(bx) - 1; ox <= Math.ceil(bx) + 1; ox++) cands.push([ox, oy, Math.hypot(ox - bx, oy - by)]);
+  cands.sort((a, b) => a[2] - b[2]);
+  const c = cands.find(([ox, oy, d]) => d < 1.05 && fitsAt(p, ox, oy));
+  if (!c) { snd('no'); say(`Elle ne rentre pas à cet endroit. Essayez ailleurs${LEVELS[L].rot || L > 1 ? ', ou tournez-la en la touchant' : ''}.`, 'no'); return true; }
+  p.at = [c[0], c[1]]; p.tr.forEach(([x, y, q]) => grid[idx(x + c[0], y + c[1], q)] = p.id);
+  drawPlaced(p);
+  const b = $('tray').querySelector(`[data-id="${p.id}"]`); if (b) { if (belt) belt.items = belt.items.filter(i => i.el !== b); b.remove(); }
+  const n = pieces.filter(q => q.at).length; $('cnt').textContent = n; snd('place');
+  if (grid.every(v => v >= 0)) win(); else say(`Bien ! Encore ${pieces.length - n} forme${pieces.length - n > 1 ? 's' : ''}.`, 'ok');
+  return true;
+}
+function takeBack(p) {
+  p.tr.forEach(([x, y, q]) => grid[idx(x + p.at[0], y + p.at[1], q)] = -1); p.at = null;
+  svg.querySelector(`.pp[data-id="${p.id}"]`)?.remove();
+  const u = trayUnit(), b = document.createElement('button'); b.className = 'pc'; b.dataset.id = p.id; b.setAttribute('aria-label', 'Forme : ' + SH[p.k].n); b.innerHTML = pieceEl(p, u);
+  $('tray').appendChild(b);
+  if (belt) { const right = Math.max($('tray').clientWidth, ...belt.items.map(i => i.x + i.el.offsetWidth)); belt.items.push({ el: b, x: right + 26 }); b.style.left = (right + 26) + 'px'; }
+  $('cnt').textContent = pieces.filter(q => q.at).length; say('Forme reprise : replacez-la ailleurs.');
+}
+function win() {
+  done = true; clearInterval(tick); cancelAnimationFrame(raf);
+  const ms = Date.now() - t0, st = starsFor(ms); snd('win');
+  let best = 0; try { best = +localStorage.getItem('fo-best-' + L) || 0; if (st > best) localStorage.setItem('fo-best-' + L, st); } catch (e) {}
+  $('win').innerHTML = `<h2>Bravo, le mur est bâti !</h2><div class="stars">${starHTML(st)}</div><p style="margin:4px 0 0">${pieces.length} formes en ${fmt(ms)}. ${st < 3 ? 'Plus vite, et vous aurez ' + (st + 1) + ' étoiles !' : 'Trois étoiles, magnifique !'}</p>`;
+  $('win').classList.remove('hidden'); $('tw').classList.add('hidden'); $('liveStars').innerHTML = starHTML(st);
+  mm('eureka', st === 3 ? 'Eurêka ! Trois étoiles, quel coup d’œil !' : 'Eurêka ! Tout est emboîté. On retente pour plus d’étoiles ?', 6000);
+  say('Touchez « Nouvelle surface » pour une autre, ou montez d’un niveau.', 'ok');
+  $('win').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ---------- glisser, toucher pour tourner ----------
+$('tray').addEventListener('pointerdown', e => {
+  const b = e.target.closest('.pc'); if (!b || done || demoing) return; e.preventDefault();
+  try { b.setPointerCapture(e.pointerId); } catch (_) {}
+  drag = { p: pieces[+b.dataset.id], b, x: e.clientX, y: e.clientY, moved: false }; if (belt) belt.paused = true;
+});
+svg.addEventListener('pointerdown', e => {
+  const g = e.target.closest('.pp'); if (!g || done || demoing) return; e.preventDefault();
+  drag = { p: pieces[+g.dataset.id], g, x: e.clientX, y: e.clientY, moved: false, fromBoard: true };
+});
+document.addEventListener('pointermove', e => {
+  if (!drag) return;
+  if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 7) {
+    drag.moved = true;
+    if (drag.fromBoard) { const p = drag.p; takeBack(p); drag.b = $('tray').querySelector(`[data-id="${p.id}"]`); }
+    const u = unit(), [dw, dh] = dims(drag.p.tr);
+    drag.el = document.createElement('div'); drag.el.className = 'fly'; drag.el.innerHTML = `<svg width="${dw * u}" height="${dh * u}" viewBox="0 0 ${dw} ${dh}">${shapeSVG(drag.p.tr, drag.p.col)}</svg>`;
+    drag.w = dw * u; drag.h = dh * u; document.body.appendChild(drag.el); if (drag.b) drag.b.style.visibility = 'hidden';
+  }
+  if (drag.el) { drag.el.style.left = (e.clientX - drag.w / 2) + 'px'; drag.el.style.top = (e.clientY - drag.h / 2) + 'px'; }
+});
+document.addEventListener('pointerup', e => {
+  if (!drag) return; const d = drag; drag = null; if (belt) belt.paused = false;
+  if (d.el) { d.el.remove(); if (d.b) d.b.style.visibility = ''; tryDrop(d.p, e.clientX, e.clientY); return; }
+  if (d.fromBoard) { takeBack(d.p); return; }
+  // simple toucher : tourner la forme
+  d.p.tr = rot(d.p.tr); refreshPieceEl(d.p);
+});
+document.addEventListener('pointercancel', () => { if (drag) { drag.el?.remove(); if (drag.b) drag.b.style.visibility = ''; drag = null; if (belt) belt.paused = false; } });
+document.addEventListener('touchmove', e => { if (drag) e.preventDefault(); }, { passive: false });
+
+// ---------- démonstration : la surface se construit toute seule ----------
+const wait = ms => new Promise(r => setTimeout(r, ms));
+async function demo() {
+  if (demoing) return;
+  build(); demoing = true; clearInterval(tick); $('time').textContent = '—'; $('liveStars').innerHTML = '';
+  if (belt) belt.paused = true;
+  say('Démonstration : regardez comment on remplit le mur, du bas vers le haut…', 'ok');
+  $('bw').scrollIntoView({ behavior: 'smooth', block: 'start' }); await wait(700);
+  const order = pieces.slice().sort((a, b) => (b.sol.oy + dims(b.sol.tr)[1]) - (a.sol.oy + dims(a.sol.tr)[1]) || a.sol.ox - b.sol.ox);
+  for (const p of order) {
+    if (!demoing) return;
+    const btn = $('tray').querySelector(`[data-id="${p.id}"]`); if (!btn) continue;
+    btn.style.outline = '3px solid #ffd65c';
+    if (JSON.stringify(p.tr) !== JSON.stringify(p.sol.tr)) { for (let k = 0; k < 3 && JSON.stringify(p.tr) !== JSON.stringify(p.sol.tr); k++) { p.tr = rot(p.tr); refreshPieceEl(p); await wait(260); } }
+    const a = btn.getBoundingClientRect(), r = svg.getBoundingClientRect(), u = unit(), [dw, dh] = dims(p.tr);
+    const fly = document.createElement('div'); fly.className = 'fly';
+    fly.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 ${dw} ${dh}" preserveAspectRatio="none">${shapeSVG(p.tr, p.col)}</svg>`;
+    Object.assign(fly.style, { left: a.left + 4 + 'px', top: a.top + 4 + 'px', width: a.width - 8 + 'px', height: a.height - 8 + 'px', transition: 'all .6s cubic-bezier(.3,.8,.3,1)' });
+    document.body.appendChild(fly); btn.style.visibility = 'hidden';
+    await wait(30);
+    Object.assign(fly.style, { left: r.left + (p.sol.ox + .35) * u + 'px', top: r.top + (p.sol.oy + .35) * u + 'px', width: dw * u + 'px', height: dh * u + 'px' });
+    await wait(640); fly.remove();
+    if (!demoing) return;
+    p.at = [p.sol.ox, p.sol.oy]; p.tr.forEach(([x, y, q]) => grid[idx(x + p.at[0], y + p.at[1], q)] = p.id); drawPlaced(p);
+    if (belt) belt.items = belt.items.filter(i => i.el !== btn); btn.remove();
+    $('cnt').textContent = pieces.filter(q => q.at).length; snd('place');
+    await wait(160);
+  }
+  demoing = false; done = true; cancelAnimationFrame(raf); $('tw').classList.add('hidden');
+  say('Voilà, le mur est complet ! À vous maintenant : touchez « Nouvelle surface ».', 'ok');
+  mm('eureka', 'Et voilà le travail ! À vous de jouer maintenant.', 5000);
+}
+$('demoBtn').addEventListener('click', demo);
+
+// ---------- niveaux ----------
+$('lv').innerHTML = Object.keys(LEVELS).map(k => `<button data-v="${k}" aria-pressed="${+k === L}">${k}. ${LVNAME[k]}</button>`).join('');
+$('lv').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; L = +b.dataset.v; try { localStorage.setItem('fo-lv', L); } catch (_) {} $('lv').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); build(); });
+$('restart').addEventListener('click', build);
+let rz = 0; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (!done) renderTray(); }, 200); });
+build();
+setTimeout(() => mm('jouer', 'Le maçon malin ! Bâtissez tout le mur, le plus vite possible.', 6000), 400);
+}
+</script>
+</body>
+</html>

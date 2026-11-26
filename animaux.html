@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="icon" type="image/png" href="logo/mm-32.png">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Méli-Méninges — Les mots en animaux</title>
+<link rel="stylesheet" href="jeu-alphabet.css">
+<script>if(window!==window.parent)document.documentElement.classList.add('emb')</script>
+</head>
+<body>
+<h1 class="flower-title">Les mots en animaux</h1>
+<div class="mode" role="group" aria-label="Mode de jeu">
+  <button data-mode="ecrire" aria-pressed="false">Écrire avec les animaux</button>
+  <button data-mode="secret" aria-pressed="false">Le message secret</button>
+  <button data-mode="abc" aria-pressed="true">L'abécédaire</button>
+</div>
+
+<div id="play" class="hidden">
+  <div class="bar"><b>Niveau</b><div class="seg" id="lv"></div></div>
+  <div class="stats"><span>Mot <b id="nW">1</b> / 5</span><span><b id="pts">0</b> points</span></div>
+  <div class="target">
+    <p class="ask" id="ask"></p>
+    <div class="word" id="word"></div>
+    <div class="guess hidden" id="guessBox"><input id="guess" autocomplete="off" aria-label="Votre réponse" placeholder="Votre réponse"><button class="big" id="guessBtn">Valider</button></div>
+  </div>
+  <p class="msg" id="msg" aria-live="polite"></p>
+  <div class="actions">
+    <button class="ghost" id="hintBtn">Un indice</button>
+    <button class="ghost" id="clearBtn">Effacer le dernier animal</button>
+    <button class="big" id="nextBtn">Mot suivant</button>
+  </div>
+  <div class="tray" id="tray" style="--t:78px"></div>
+  <p class="note" id="note"></p>
+</div>
+
+<div id="abcView">
+  <p class="ask">Les animaux de A à Z. Survolez ou touchez une photo pour la voir en grand.</p>
+  <div class="abc" id="abc"></div>
+</div>
+<figure class="photo-zoom hidden" id="photoZoom" aria-hidden="true">
+  <img id="photoZoomImage" alt="">
+  <figcaption id="photoZoomName"></figcaption>
+</figure>
+
+<script>
+window.meliAlphabet = {"assets": "animaux-alphabet", "levelKey": "an-lv", "withItems": "les animaux", "one": "un animal", "theItem": "l’animal", "thisItem": "cet animal", "eachItem": "chaque animal", "theseItems": "ces animaux", "missingLabel": "Animal ", "removed": "Animal retiré.", "fallback": "En attendant les images, certains animaux portent encore leur nom. ", "introSecret": "Un message secret en animaux… Saurez-vous le lire ?", "introAlphabet": "Voici les animaux de A à Z. Retenez bien leur nom !"};
+window.meliAlphabet.rows = [["A", "Abeille", "#996d24", "abeille"], ["B", "Baleine", "#6a8296", "baleine"], ["C", "Chat", "#806f5c", "chat"], ["D", "Dauphin", "#607a90", "dauphin"], ["E", "Éléphant", "#767b84", "elephant"], ["F", "Flamant rose", "#a94565", "flamant"], ["G", "Girafe", "#a47429", "girafe"], ["H", "Hibou", "#86602c", "hibou"], ["I", "Iguane", "#517340", "iguane"], ["J", "Jaguar", "#916225", "jaguar"], ["K", "Kangourou", "#916441", "kangourou"], ["L", "Lion", "#8e6529", "lion"], ["M", "Mouton", "#877c6e", "mouton"], ["N", "Narval", "#6b7e89", "narval"], ["O", "Ours", "#72563e", "ours"], ["P", "Panda", "#51565c", "panda"], ["Q", "Quokka", "#82674a", "quokka"], ["R", "Renard", "#a7592d", "renard"], ["S", "Serpent", "#4f6840", "serpent"], ["T", "Tortue", "#747345", "tortue"], ["U", "Urubu", "#585969", "urubu"], ["V", "Vache", "#68605b", "vache"], ["W", "Wombat", "#73604e", "wombat"], ["X", "Xérus", "#8a724c", "xerus"], ["Y", "Yack", "#5e554d", "yack"], ["Z", "Zèbre", "#5b6066", "zebre"]];
+window.meliAlphabet.words = {"1": ["CHAT", "OURS", "LION", "LOUP", "COQ", "OIE", "LAMA", "YACK", "THON", "NID", "BEC", "AILE", "PAON", "RAIE", "RAT"], "2": ["ZEBRE", "PANDA", "TIGRE", "LAPIN", "HIBOU", "MERLE", "CHIEN", "KOALA", "CERFS", "COBRA", "HYENE", "AIGLE"], "3": ["ARROSE", "ABEILLE", "DAUPHIN", "BALEINE", "ELEPHANT", "KANGOUROU", "FLAMANT", "SERPENT", "MOUTON", "JAGUAR", "TORTUE", "MARMOTTE", "HIRONDELLE", "CROCODILE", "PAPILLON"], "4": ["PETIT CHAT", "GRAND OURS", "VACHE NOIRE", "LION BLANC", "HIBOU BRUN", "GROS MOUTON", "BELLE GIRAFE", "PANDA GEANT", "JEUNE ZEBRE", "TORTUE MARINE"], "5": ["LE CHAT DORT", "LA VACHE BROUTE", "LE RENARD COURT", "LA TORTUE AVANCE", "LE DAUPHIN SAUTE", "LE HIBOU HULULE", "LE COQ CHANTE", "LE PANDA MANGE"], "6": ["LE RENARD SE CACHE DANS LES BUISSONS", "LA GIRAFE MANGE LES FEUILLES", "LE CHAT DORT AU SOLEIL", "LA BALEINE REMONTE A LA SURFACE", "LES ABEILLES BUTINENT LES FLEURS", "LE LION SE REPOSE SOUS UN ARBRE", "LE KANGOUROU BONDIT DANS LA PRAIRIE", "LES ZEBRES GALOPENT DANS LA SAVANE"]};
+</script>
+<script src="jeu-alphabet.js"></script>
+</body>
+</html>

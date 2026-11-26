@@ -1,0 +1,14 @@
+{
+  "name": "Méli-Méninges",
+  "short_name": "Méli-Méninges",
+  "description": "Les jeux qui font travailler les méninges",
+  "lang": "fr",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8f6ff",
+  "theme_color": "#f8f6ff",
+  "icons": [
+    { "src": "logo/mm-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "logo/mm-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Belote – Méli-Méninges</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f7eedb;color:#172238;font:17px system-ui}main{max-width:860px;margin:auto;padding:16px}header{background:#142139;color:#fff2cc;border:3px solid #b98936;padding:16px 20px;border-radius:16px}h1{margin:3px 0;font: bold 2.2rem Georgia}h2{font: bold 1.4rem Georgia;margin:14px 0 8px}p{line-height:1.45}button{font:inherit;min-height:44px;cursor:pointer;border:1px solid #93703d;border-radius:8px;padding:7px 12px;background:#fffaf0;color:#172238}button:focus-visible{outline:3px solid #0062b6;outline-offset:2px}button:disabled{opacity:.47;cursor:default}.cards,.choices,#table{display:flex;flex-wrap:wrap;gap:8px}.card{min-width:52px;min-height:65px;display:inline-grid;place-items:center;text-align:center;padding:5px;background:#fffdf7;border:1px solid #a69373;border-radius:8px;font-size:1.13rem;font-weight:bold}.red{color:#aa1930}.trump{background:#ffe3a2}.play{min-width:72px;text-align:center}.play small{display:block;margin-bottom:3px}#status{font-weight:bold}#table{min-height:100px}details{margin:16px 0}summary{cursor:pointer}
+
+body{background:#eee4d0}
+main{padding:clamp(8px,2.5vw,24px)}
+header{box-shadow:0 4px 10px #36231635}
+.felt{position:relative;margin-top:16px;padding:clamp(10px,3vw,28px);background:radial-gradient(ellipse at 45% 35%,#1d6e4c,#103b30 95%);border:clamp(6px,1.5vw,13px) solid #714422;border-radius:28px;box-shadow:0 6px 14px #361e1454,inset 0 0 0 2px #c9ae65,inset 0 0 25px #041e16;color:#fff3d4}
+.felt h2{margin:10px 0}
+#choices{align-items:center;min-height:44px}
+#status{min-height:3em;margin:6px 0}
+#table{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,auto);gap:4px;margin:8px auto;max-width:480px}
+.play{min-width:0;color:#fff6dc;display:flex;align-items:center;flex-direction:column;justify-content:center;min-height:54px}
+.play small{margin:0 0 4px;font-weight:650}
+.seat0{grid-area:3/2}.seat1{grid-area:2/3}.seat2{grid-area:1/2}.seat3{grid-area:2/1}
+#hand{gap:8px;align-items:flex-start}
+.card{display:inline-block;position:relative;padding:0;width:clamp(43px,9.8vw,77px);min-width:0;min-height:0;aspect-ratio:5/7;border:1px solid #cfbd9b;border-radius:7px;overflow:hidden;background:#fffdf7;color:#182234;box-shadow:1px 3px 5px #02170d95;vertical-align:middle}
+.card svg{display:block;width:100%;height:100%;pointer-events:none}
+.card.red{color:#b21f36}.card.trump{border-color:#e4b54f;background:#fff7df}
+button.card:disabled{opacity:.68;filter:saturate(.72)}
+button.card:not(:disabled):hover{border-color:#ffdc75;box-shadow:0 0 0 2px #ffdc75,1px 5px 9px #031b12}
+.card.played{animation:deal .24s ease-out}
+@keyframes deal{from{opacity:.1;transform:translateY(9px) rotate(-5deg)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.card.played{animation:none}}
+#score:empty{display:none}
+#score{background:#fff1cc;color:#142139;padding:12px;border-radius:8px;font-weight:650}
+</style>
+<main><header>Méli-Méninges · Le cabinet des curiosités<h1>Belote</h1>Essai solo à quatre joueurs</header>
+<p><a href="index.html">Tous les jeux</a></p><details><summary>Comment jouer</summary><p>Vous jouez avec Nord contre Est et Ouest. Pour cet essai, vous choisissez directement l’atout après avoir vu votre main. Jouez huit plis. Les cartes autorisées sont mises en évidence. Le résultat affiche les points de la donne, avec le dix de der, le capot et la belote-rebelote. Les enchères, annonces facultatives et le cumul sur plusieurs donnes sont hors de cette version.</p></details>
+<button id="new">Nouvelle donne</button>
+<section class="felt" aria-label="Tapis de jeu"><p id="status" role="status"></p><div id="choices" class="choices"></div>
+<h2>À la table</h2><div id="table"></div>
+<h2>Vos cartes</h2><div id="hand" class="cards"></div>
+<p id="score"></p></section></main>
+<script>
+const tarot = false;
+const suits = ['♠','♥','♦','♣'];
+const suitNames = ['Pique','Cœur','Carreau','Trèfle'];
+const names = ['Vous','Est','Nord','Ouest'];
+const $ = id => document.getElementById(id);
+const ranks = tarot ? [1,2,3,4,5,6,7,8,9,10,'V','C','D','R'] : [7,8,9,'V','D','R',10,'A'];
+const trumpOrder = [7,8,'D','R',10,'A',9,'V'];
+const isBout = c => c.s === 'X' || (c.s === 'T' && [1,21].includes(c.r));
+const tarValue = c => isBout(c) ? 4.5 : ({R:4.5,D:3.5,C:2.5,V:1.5}[c.r] || .5);
+let hands, pile, won, result, phase, lead, turn, atout, count, timer, message, excuseDebt, belote, petit, dog;
+function shuffle(cards){
+  for(let i=cards.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [cards[i],cards[j]]=[cards[j],cards[i]];
+  }
+  return cards;
+}
+function camp(p){return tarot ? +(p!==0) : p%2;}
+function sortHand(hand){
+  hand.sort((a,b)=>[...suits,'T','X'].indexOf(a.s)-[...suits,'T','X'].indexOf(b.s)||
+    (a.s==='T'?a.r-b.r:ranks.indexOf(a.r)-ranks.indexOf(b.r)));
+}
+function start(){
+  clearTimeout(timer);
+  const deck=suits.flatMap(s=>ranks.map(r=>({s,r})));
+  if(tarot) deck.push(...Array.from({length:21},(_,i)=>({s:'T',r:i+1})),{s:'X',r:0});
+  shuffle(deck);
+  const n=tarot?18:8;
+  hands=Array.from({length:4},()=>deck.splice(0,n));
+  pile=[];won=[[],[]];result='';count=0;lead=0;turn=0;excuseDebt=0;belote=0;petit=null;
+  atout=tarot?'T':null;dog=deck;
+  if(tarot) hands[0].push(...dog);
+  hands.forEach(sortHand);
+  phase=tarot?'discard':'choose';
+  message=tarot?'Garde imposée. Vous avez reçu les six cartes du chien. Choisissez six cartes pour votre écart.':'Vous êtes preneur. Choisissez la couleur d’atout.';
+  render();
+}
+function playStart(){
+  phase='play';
+  if(!tarot) belote=hands.findIndex(h=>['R','D'].every(r=>h.some(c=>c.s===atout&&c.r===r)));
+  message='À vous de jouer.';
+  render();
+}
+
+// Card artwork is embedded so the table also works offline.
+const pipPaths={
+  '♠':'M0-7C-2-3-7-1-7 3c0 4 5 5 7 1 2 4 7 3 7-1 0-4-5-6-7-10zm-3 14h6L0 2z',
+  '♥':'M0 7C-2 4-8 0-7-4c1-4 6-4 7 0 1-4 6-4 7 0C8 0 2 4 0 7z',
+  '♦':'M0-8 6 0 0 8-6 0z',
+  '♣':'M0-7a4 4 0 0 1 3 7 4 4 0 1 1-2 4l2 4h-6l2-4a4 4 0 1 1-2-4 4 4 0 0 1 3-7z'
+};
+const tarotScenes=[
+  '☀','☾','★','♜','⚓','♞','⚜','♛','♧','♟','❦','♝','☂','♫','✿','❖','☘','♔','⚖','✦','☼'
+];
+function pips(c){
+  const pip=(x,y,size=1,flip=false)=>'<path fill="currentColor" transform="translate('+x+' '+y+') scale('+size+') rotate('+(flip?180:0)+')" d="'+pipPaths[c.s]+'"/>';
+  const n=c.r==='A'?1:Number(c.r);
+  if(n===1) return pip(36,50,1.95);
+  const positions=[];
+  const pair=y=>positions.push([22,y],[50,y]);
+  if(n<=3){
+    positions.push([36,25],[36,75]);
+    if(n===3) positions.push([36,50]);
+  }else{
+    pair(25);pair(75);
+    if(n===5||n===7||n===9) positions.push([36,n===7?37:50]);
+    if(n>=6&&n<=8) pair(50);
+    if(n===8||n===10) positions.push([36,34],[36,66]);
+    if(n>=9){pair(41.7);pair(58.3);}
+  }
+  return positions.map(([x,y])=>pip(x,y,n>=9?.68:.88,y>50)).join('');
+}
+function court(c){
+  const colors={'♠':'#223a70','♥':'#b82d39','♦':'#9b3d31','♣':'#237057'};
+  const cloak=colors[c.s];
+  const hat=c.r==='R'||c.r==='D'
+    ? '<path d="m22 18 2-9 7 5 5-9 5 9 7-5 2 9z" fill="#efbf49"/>'
+    : '<path d="m21 19 7-10 17 2 7 8-9 3z" fill="'+cloak+'"/>';
+  const portrait='<path d="M16 49q3-15 13-16h14q10 1 14 16z" fill="'+cloak+'"/>'+
+    '<path d="m30 34 6 13 7-13-4 1-3-4-3 4z" fill="#efbf49"/>'+
+    '<path d="M25 21q1-8 11-8 11 0 12 10l-3 12-17-1z" fill="#272437"/>'+
+    '<path d="M29 20q7-4 14 0v7q-2 8-7 8t-7-8z" fill="#efb985"/>'+
+    '<path d="M31 24h2m6 0h2m-7 6q2 1 4 0" fill="none" stroke="#643929" stroke-linecap="round"/>'+hat+
+    '<path d="M20 44l3-9m29 3 3 8" fill="none" stroke="#efbf49" stroke-width="2"/>';
+  return '<rect x="15" y="5" width="42" height="90" rx="3" fill="#fff0cc" stroke="#d5ad58"/>'+
+    '<g transform="translate(0 2)">'+portrait+'</g><g transform="translate(72 102) rotate(180)">'+portrait+'</g>'+
+    '<path d="M16 51h40" stroke="#d5ad58"/>';
+}
+function trumpArt(c){
+  const excuse=c.s==='X';
+  const r=excuse?0:c.r;
+  const ink=['#62427b','#1d5970','#9b3a47','#325e44','#805024'][r%5];
+  const sky=['#f1d8e9','#c3e1ed','#f9d4cb','#dbe4a9','#f0cf95'][r%5];
+  const icon=excuse?'♫':tarotScenes[r-1];
+  const panel='<rect x="16" y="5" width="40" height="43" rx="3" fill="'+sky+'" stroke="#b88d45"/>'+
+    '<circle cx="36" cy="24" r="13" fill="#fff2b9" opacity=".85"/>'+
+    '<path d="M17 45 27 35l8 4 9-6 11 10v4H17z" fill="'+ink+'" opacity=".32"/>'+
+    '<text x="36" y="31.5" fill="'+ink+'" text-anchor="middle" font-family="Georgia,serif" font-size="23">'+icon+'</text>';
+  return panel+'<g transform="translate(72 100) rotate(180)">'+panel+'</g>';
+}
+function art(c){
+  const special=c.s==='T'||c.s==='X';
+  const rank=c.s==='X'?'E':c.r;
+  const suit=special?(c.s==='X'?'♪':'✦'):c.s;
+  const corner='<text x="8" y="15" text-anchor="middle" font-size="11">'+rank+'</text>'+
+    '<text x="8" y="26" text-anchor="middle" font-size="11">'+suit+'</text>';
+  const body=special?trumpArt(c):['R','D','C','V'].includes(c.r)?court(c):pips(c);
+  return '<svg viewBox="0 0 72 100" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">'+body+
+    '<g fill="currentColor" font-family="Georgia,serif" font-weight="bold">'+corner+
+    '<g transform="translate(72 100) rotate(180)">'+corner+'</g></g></svg>';
+}
+function cardText(c){
+  if(c.s==='X') return 'Excuse';
+  if(c.s==='T') return 'Atout '+c.r;
+  const rank={A:'As',V:'Valet',C:'Cavalier',D:'Dame',R:'Roi'}[c.r]??c.r;
+  return rank+' de '+suitNames[suits.indexOf(c.s)].toLowerCase();
+}
+function paint(el,c){
+  el.className='card'+(['♥','♦'].includes(c.s)?' red':'')+(c.s===atout||c.s==='X'?' trump':'');
+  el.innerHTML=art(c);
+  el.setAttribute('aria-label',cardText(c));
+  el.title=cardText(c);
+}
+function winner(trick){
+  const first=trick.find(x=>x.c.s!=='X');
+  if(!first) return null;
+  const strength=({c})=>{
+    if(c.s===atout) return 100+(tarot?c.r:trumpOrder.indexOf(c.r));
+    return c.s===first.c.s?ranks.indexOf(c.r): -1;
+  };
+  return trick.reduce((best,x)=>strength(x)>strength(best)?x:best,first);
+}
+function legal(hand){
+  const first=pile.find(x=>x.c.s!=='X');
+  if(!first) return hand;
+  const excuses=hand.filter(c=>c.s==='X');
+  const follow=hand.filter(c=>c.s===first.c.s);
+  if(follow.length&&first.c.s!==atout) return [...follow,...excuses];
+  if(!tarot&&first.c.s!==atout&&camp(winner(pile).p)===camp(turn)) return hand;
+  const trumps=hand.filter(c=>c.s===atout);
+  if(!trumps.length) return hand;
+  const order=c=>tarot?c.r:trumpOrder.indexOf(c.r);
+  const high=Math.max(-1,...pile.filter(x=>x.c.s===atout).map(x=>order(x.c)));
+  const higher=trumps.filter(c=>order(c)>high);
+  if(!tarot&&first.c.s!==atout&&!higher.length) return hand;
+  return [...(higher.length?higher:trumps),...excuses];
+}
+function eligible(c){
+  if(isBout(c)||c.r==='R') return false;
+  return c.s!=='T'||!hands[0].some(x=>x.s!=='T'&&!isBout(x)&&x.r!=='R');
+}
+function take(c){
+  const player=turn;
+  hands[player].splice(hands[player].indexOf(c),1);
+  pile.push({c,p:player});
+  if(pile.length===4){
+    const w=winner(pile).p;
+    const side=camp(w);
+    const final=hands[0].length===0;
+    for(const x of pile){
+      const owner=camp(x.p);
+      if(tarot&&x.c.s==='X'&&!final&&owner!==side){
+        won[owner].push(x.c);excuseDebt=owner===0?-.5:.5;
+      }else won[side].push(x.c);
+    }
+    if(tarot&&final&&pile.some(x=>x.c.s==='T'&&x.c.r===1)) petit=side;
+    count++;
+    phase=final?'end':'pause';
+    lead=w;
+    message=names[w]+(w===0?' remportez':' remporte')+' le pli.';
+    if(final) finish(side);
+    render();
+    return;
+  }
+  turn=(turn+1)%4;
+  advance();
+}
+function chooseBot(){
+  const options=legal(hands[turn]);
+  const partner=winner(pile);
+  const value=c=>tarot?tarValue(c):belValue(c);
+  const winning=options.filter(c=>c.s!=='X'&&winner([...pile,{c,p:turn}]).p===turn);
+  if(partner&&camp(partner.p)===camp(turn)) return [...options].sort((a,b)=>value(b)-value(a))[0];
+  if(winning.length) return [...winning].sort((a,b)=>value(a)-value(b))[0];
+  return [...options].sort((a,b)=>value(a)-value(b))[0];
+}
+function advance(){
+  message=turn===0?'À vous de jouer.':names[turn]+' joue…';
+  render();
+  if(turn!==0) timer=setTimeout(()=>take(chooseBot()),350);
+}
+function belValue(c){
+  return (c.s===atout?{V:20,9:14,A:11,10:10,R:4,D:3}:{A:11,10:10,R:4,D:3,V:2})[c.r]||0;
+}
+function finish(last){
+  const fmt=n=>n.toLocaleString('fr-FR');
+  if(tarot){
+    const zeroPlis=won[0].length===6||(excuseDebt<0&&won[0].length===7);
+    if(zeroPlis&&excuseDebt<0){won[0]=won[0].filter(c=>c.s!=='X');excuseDebt=0;}
+    if(won[1].length===1&&excuseDebt>0){won[0].push(won[1][0]);excuseDebt=0;}
+    const points=won[0].reduce((a,c)=>a+tarValue(c),excuseDebt);
+    const bouts=won[0].filter(isBout).length;
+    const target=[56,51,41,36][bouts];
+    const success=points>=target;
+    const score=2*((success?1:-1)*(25+Math.abs(points-target))+(petit===null?0:petit===0?10:-10));
+    result=(success?'Garde réussie':'Garde chutée')+' · '+fmt(points)+' points sur '+target+' requis · '+bouts+' bout(s) · Score du preneur : '+fmt(score*3)+'.';
+  }else{
+    const points=won.map((cards,i)=>cards.reduce((a,c)=>a+belValue(c),i===last?10:0));
+    if(points.includes(0)&&won.some(h=>!h.length)) points[last]+=90;
+    const bonus=belote<0 ? [0,0] : camp(belote)===0?[20,0]:[0,20];
+    const total=points.map((p,i)=>p+bonus[i]);
+    const status=total[0]===total[1]?'Litige':total[0]>total[1]?'Contrat réussi':'Contrat chuté';
+    result=status+' · Points de la donne : votre équipe '+total[0]+' / adversaires '+total[1]+(belote<0?'.':' (belote-rebelote comprise).');
+  }
+}
+function button(label,fn,parent){
+  const b=document.createElement('button');
+  b.textContent=label;b.onclick=fn;parent.append(b);return b;
+}
+function render(){
+  $('status').textContent=message;
+  $('score').textContent=result;
+  const choices=$('choices'), table=$('table'), hand=$('hand');
+  choices.replaceChildren();table.replaceChildren();hand.replaceChildren();
+  if(phase==='choose') suits.forEach((s,i)=>button(s+' '+suitNames[i],()=>{atout=s;playStart();},choices));
+  if(phase==='discard') choices.textContent='Écart : '+won[0].length+'/6';
+  if(phase==='play'&&!tarot) choices.textContent='Atout : '+atout+' '+suitNames[suits.indexOf(atout)]+' · Pli '+(count+1)+'/8';
+  if(phase==='play'&&tarot) choices.textContent='Garde · Pli '+(count+1)+'/18';
+  if(phase==='pause') button('Pli suivant',()=>{pile=[];turn=lead;phase='play';advance();},choices);
+  for(let p=0;p<4;p++){
+    const spot=document.createElement('div');
+    spot.className='play seat'+p;
+    const label=document.createElement('small');
+    label.textContent=!tarot&&p===2?'Nord · partenaire':names[p];
+    spot.append(label);
+    const played=pile.find(x=>x.p===p);
+    if(played){
+      const face=document.createElement('span');
+      paint(face,played.c);
+      face.setAttribute('role','img');
+      if(played===pile[pile.length-1]) face.classList.add('played');
+      spot.append(face);
+    }
+    table.append(spot);
+  }
+  const allowed=phase==='play'&&turn===0?legal(hands[0]):[];
+  for(const c of hands[0]){
+    const b=button('',()=>{
+      if(phase==='discard'){
+        hands[0].splice(hands[0].indexOf(c),1);
+        won[0].push(c);
+        if(won[0].length===6) playStart();else render();
+      }else take(c);
+    },hand);
+    paint(b,c);
+    b.disabled=phase==='discard'?!eligible(c):!allowed.includes(c);
+  }
+}
+$('new').onclick=start;
+start();
+</script></html>

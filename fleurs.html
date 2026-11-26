@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="icon" type="image/png" href="logo/mm-32.png">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Méli-Méninges — Les mots en fleurs</title>
+<link rel="stylesheet" href="jeu-alphabet.css">
+<script>if(window!==window.parent)document.documentElement.classList.add('emb')</script>
+</head>
+<body>
+<h1 class="flower-title">Les mots en fleurs</h1>
+<div class="mode" role="group" aria-label="Mode de jeu">
+  <button data-mode="ecrire" aria-pressed="false">Écrire avec les fleurs</button>
+  <button data-mode="secret" aria-pressed="false">Le message secret</button>
+  <button data-mode="abc" aria-pressed="true">L'abécédaire</button>
+</div>
+
+<div id="play" class="hidden">
+  <div class="bar"><b>Niveau</b><div class="seg" id="lv"></div></div>
+  <div class="stats"><span>Mot <b id="nW">1</b> / 5</span><span><b id="pts">0</b> points</span></div>
+  <div class="target">
+    <p class="ask" id="ask"></p>
+    <div class="word" id="word"></div>
+    <div class="guess hidden" id="guessBox"><input id="guess" autocomplete="off" aria-label="Votre réponse" placeholder="Votre réponse"><button class="big" id="guessBtn">Valider</button></div>
+  </div>
+  <p class="msg" id="msg" aria-live="polite"></p>
+  <div class="actions">
+    <button class="ghost" id="hintBtn">Un indice</button>
+    <button class="ghost" id="clearBtn">Effacer la dernière fleur</button>
+    <button class="big" id="nextBtn">Mot suivant</button>
+  </div>
+  <div class="tray" id="tray" style="--t:78px"></div>
+  <p class="note" id="note"></p>
+</div>
+
+<div id="abcView">
+  <p class="ask">Les fleurs de A à Z. Survolez ou touchez une photo pour la voir en grand.</p>
+  <div class="abc" id="abc"></div>
+</div>
+<figure class="photo-zoom hidden" id="photoZoom" aria-hidden="true">
+  <img id="photoZoomImage" alt="">
+  <figcaption id="photoZoomName"></figcaption>
+</figure>
+
+<script>
+window.meliAlphabet = {"assets": "fleurs-alphabet", "levelKey": "fl-lv", "withItems": "les fleurs", "one": "une fleur", "theItem": "la fleur", "thisItem": "cette fleur", "eachItem": "chaque fleur", "theseItems": "ces fleurs", "missingLabel": "Fleur ", "removed": "Fleur retirée.", "fallback": "En attendant les photos, certaines fleurs portent encore leur nom. Avec les photos, il faudra s’en souvenir ! ", "introSecret": "Un message secret en fleurs… Saurez-vous le lire ?", "introAlphabet": "Voici mes fleurs de A à Z. Retenez bien leur nom !"};
+window.meliAlphabet.rows = [["A", "Anémone", "#4b2fc0", "anemone"], ["B", "Bleuet", "#3a4fd0", "bleuet"], ["C", "Crocus", "#7a3fb0", "crocus"], ["D", "Dahlia", "#e0564f", "dahlia"], ["E", "Edelweiss", "#90a4ae", "edelweiss"], ["F", "Freesia", "#d9a400", "freesia"], ["G", "Gerbera", "#e8590c", "gerbera"], ["G", "Godétia", "#d63384", "godetia"], ["H", "Hortensia", "#5b73c9", "hortensia"], ["I", "Iris", "#5e2a9c", "iris"], ["J", "Jonquille", "#d9a400", "jonquille"], ["K", "Kalanchoé", "#e5483a", "kalanchoe"], ["L", "Lys", "#5d8a2f", "lys"], ["M", "Marguerite", "#d9a400", "marguerite"], ["M", "Muguet", "#3f8a3a", "muguet"], ["M", "Muflier", "#d62a6b", "muflier"], ["N", "Nénuphar", "#d9437e", "nenuphar"], ["O", "Orchidée", "#7a8a3a", "orchidee"], ["P", "Pissenlit", "#d9a400", "pissenlit"], ["P", "Pivoine", "#d9658f", "pivoine"], ["Q", "Queue-de-renard", "#8c1a3a", "queue-de-renard"], ["R", "Rose", "#c8102e", "rose"], ["R", "Rose", "#c8102e", "rose-2"], ["S", "Souci", "#e07b00", "souci"], ["T", "Tournesol", "#c99400", "tournesol"], ["U", "Ulmaire", "#6f8a3a", "ulmaire"], ["V", "Violette", "#5b2aa8", "violette"], ["W", "Watsonia", "#d9558f", "watsonia"], ["X", "Xéranthème", "#a8489a", "xerantheme"], ["Y", "Yucca", "#5f7f5a", "yucca"], ["Z", "Zinnia", "#d61f7a", "zinnia"]];
+window.meliAlphabet.words = {
+  1: ['CHAT', 'ROSE', 'LAIT', 'MIEL', 'PAIN', 'LUNE', 'NID', 'SEL', 'BOL', 'AMI', 'ROI', 'LIT', 'MER', 'ILE', 'ETE', 'PIED', 'BAIN', 'LOTO', 'NEZ', 'RIZ'],
+  2: ['POMME', 'FLEUR', 'MERLE', 'TABLE', 'PLAGE', 'NEIGE', 'CHIEN', 'LAPIN', 'PERLE', 'SAPIN', 'OLIVE', 'SALON', 'MIROIR', 'CANAL', 'TIGRE', 'POIRE'],
+  3: ['JARDIN', 'SOLEIL', 'ABEILLE', 'PAPILLON', 'CERISE', 'DIMANCHE', 'CHOCOLAT', 'BALCON', 'FRAMBOISE', 'PRINTEMPS', 'MIMOSA', 'BICHE', 'CAROTTE', 'HIRONDELLE'],
+  4: ['BELLE ROSE', 'PETIT CHAT', 'MERCI MAMIE', 'BONNE FETE', 'JOLI JARDIN', 'BON DIMANCHE', 'PAIN FRAIS', 'MERCI PAPA', 'CHER AMI', 'GRAND MERCI'],
+  5: ['JE T AIME', 'BONNE ANNEE', 'LA VIE EN ROSE', 'MERCI POUR TOUT', 'BON ANNIVERSAIRE', 'A BIENTOT', 'BONNE JOURNEE', 'GROS BISOUS'],
+  6: ['QUELLE BELLE JOURNEE', 'LE TEMPS DES CERISES', 'UN BOUQUET POUR TOI', 'JOYEUX NOEL', 'PRENEZ SOIN DE VOUS', 'LES FLEURS DU JARDIN', 'VIVE LES MARIES', 'WEEK END AU SOLEIL']
+};
+</script>
+<script src="jeu-alphabet.js"></script>
+</body>
+</html>

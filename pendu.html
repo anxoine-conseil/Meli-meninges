@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le Pendu de Monsieur Méninge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a village fair game, cheeky and warm, for children and grandparents alike
+   IDEA: a public square with a wooden scaffold, an executioner-clown and a crowd of villagers
+   PICTURE: each player's scaffold built plank by plank, Monsieur Méninge and the crowd reacting
+   COLOUR and TYPE: slate blue header, white stone ground, warm wood, player colours; DM Serif Display + Instrument Sans
+   LAYOUT: modest title strip, scaffolds left, question card right; stacks question then scaffolds on phones */
+:root{color-scheme:light dark;
+--bg:light-dark(#fbf9f7,#1a0d12);--ink:light-dark(#1e1216,#f4ebee);--soft:light-dark(#6b5a60,#b9a5ac);
+--wine:light-dark(#7b1e3a,#c94a6e);--wineD:#5a0f27;--vine:light-dark(#3f6b3a,#7fb276);--gold:#c99a2e;
+--land:light-dark(#ebe4df,#33232a);--edge:light-dark(#ffffff,#1a0d12);--sea:light-dark(#efe9e4,#24151b);
+--card:light-dark(#ffffff,#26161d);--line:light-dark(#e6dcd8,#3d2a32);--bad:light-dark(#b3261e,#ff7a70)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Instrument Sans",system-ui,sans-serif;overflow-x:clip}
+header{background:var(--wineD);color:#fff}
+.hin{max-width:1280px;margin:auto;padding:16px max(4vw,16px) 0;display:flex;flex-wrap:wrap;gap:10px 28px;align-items:flex-end;justify-content:space-between}
+h1{font:400 clamp(30px,3.6vw,44px)/1.05 "DM Serif Display",Georgia,serif;margin:0 0 12px}
+h1 small{display:block;font:500 15px "Instrument Sans",sans-serif;color:#e9c8d2;margin-top:6px}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{font:600 15px "Instrument Sans",sans-serif;color:#f3dbe2;background:transparent;border:0;padding:12px 16px;border-radius:12px 12px 0 0;cursor:pointer;min-height:44px}
+nav button[aria-selected=true]{background:var(--bg);color:var(--ink)}
+nav button:focus-visible,button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+main{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:20px;padding:18px max(4vw,16px) 36px;max-width:1280px;margin:auto;align-items:start}
+.mapbox{background:var(--sea);border-radius:18px;position:relative;overflow:hidden;aspect-ratio:1/0.965;box-shadow:inset 0 0 0 1px var(--line)}
+#map{position:absolute;inset:0;width:100%;height:100%}
+#map path{fill:var(--land);stroke:var(--edge);stroke-width:1;vector-effect:non-scaling-stroke;transition:fill .25s,opacity .25s;cursor:pointer}
+#map path:hover{filter:brightness(1.12)}
+#map path.dim{opacity:.28}
+#map path.ok{fill:var(--vine)!important;opacity:1}
+#map path.no{fill:var(--bad)!important;opacity:1}
+#map path.sel{stroke:var(--ink);stroke-width:2.4}
+#tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:13px;padding:4px 9px;border-radius:7px;white-space:nowrap;opacity:0;transform:translate(-50%,-140%);transition:opacity .1s}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px}
+.card h2{font:400 clamp(28px,3vw,36px)/1.08 "DM Serif Display",Georgia,serif;margin:0 0 6px;text-wrap:balance}
+.card h3{font:600 15px "Instrument Sans",sans-serif;margin:16px 0 6px;color:var(--soft)}
+.card p{margin:0 0 10px}
+.kick{font-size:14px;font-weight:600;color:var(--wine);margin:0 0 4px}
+.fun{background:light-dark(#f7eef1,#331c25);border-radius:12px;padding:10px 14px;font-size:15px}
+.tags{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0;padding:0}
+.tags li,.tags button{font:500 14px "Instrument Sans",sans-serif;padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.tags .r{border-color:var(--wine);color:var(--wine)}
+.tags .b{border-color:var(--gold);color:light-dark(#8a6512,#e2bd62)}
+.tags button{cursor:pointer;min-height:36px}
+.tags button:hover{border-color:var(--wine)}
+.legend button{display:inline-flex;align-items:center;gap:7px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.app{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
+.app b{font:400 22px "DM Serif Display",Georgia,serif;font-weight:400}
+.meta{font-size:14px;color:var(--soft)}
+.score{display:flex;gap:18px;font-size:14px;color:var(--soft);margin-bottom:12px}
+.score b{display:block;font:400 26px/1.1 "DM Serif Display",Georgia,serif;color:var(--ink)}
+.bar{height:8px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:16px}
+.bar i{display:block;height:100%;background:var(--wine);transition:width .3s}
+.q{font:400 clamp(24px,2.6vw,30px)/1.15 "DM Serif Display",Georgia,serif;margin:0 0 14px;text-wrap:balance}
+.opts{display:grid;gap:8px}
+.opt{font:500 16px "Instrument Sans",sans-serif;text-align:left;padding:12px 16px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;min-height:48px}
+.opt:hover:not(:disabled){border-color:var(--wine)}
+.opt.ok{background:var(--vine);border-color:var(--vine);color:#fff}
+.opt.no{border-color:var(--bad);color:var(--bad);text-decoration:line-through}
+.opt:disabled{cursor:default}
+.hint{font-size:15px;color:var(--soft);display:flex;gap:8px;align-items:center}
+.msg{font-weight:600;margin:14px 0 4px;min-height:24px}.msg.ok{color:var(--vine)}.msg.no{color:var(--bad)}
+.btn{font:600 15px "Instrument Sans",sans-serif;padding:12px 18px;border-radius:12px;border:0;cursor:pointer;min-height:46px;background:var(--wine);color:#fff;margin-top:14px}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.lv{display:grid;gap:8px}.lvb{text-align:left;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;cursor:pointer}
+.lvb b{display:block;font-size:16px}.lvb span{font-size:14px;color:var(--soft)}.lvb[aria-pressed=true]{border-color:var(--wine);box-shadow:inset 0 0 0 1.5px var(--wine)}
+.pr{display:flex;gap:8px;align-items:center;margin-bottom:6px}.pr i{width:14px;height:14px;border-radius:50%;flex:none}
+.pr input{flex:1;font:16px "Instrument Sans",sans-serif;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);min-height:44px}
+.pr input:focus{outline:none;border-color:var(--wine)}
+.x{width:44px;height:44px;flex:none;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:20px;cursor:pointer}
+.seg{display:flex;gap:6px}.seg.wrap{flex-wrap:wrap}.seg button{flex:1 1 auto;min-height:44px;padding:0 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font:600 15px "Instrument Sans",sans-serif;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--wine);border-color:var(--wine);color:#fff}
+.btn.sm{margin-top:2px;padding:8px 14px;min-height:40px}.btn.wide{width:100%;margin-top:18px;font-size:17px}
+.board{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px;padding:0;list-style:none}
+.board li{display:flex;gap:6px;align-items:center;padding:5px 11px;border-radius:999px;border:1.5px solid var(--line);font-size:14px}
+.board li i{width:10px;height:10px;border-radius:50%;background:var(--pc)}.board li.on{border-color:var(--pc);box-shadow:inset 0 0 0 1px var(--pc);font-weight:600}
+.turn{font:400 24px/1.2 "DM Serif Display",Georgia,serif;padding:10px 14px;border-radius:12px;background:var(--pc);color:#fff;margin-bottom:6px}.turn b{font-weight:400}
+.timer{height:6px;background:var(--line);border-radius:4px;overflow:hidden;margin:8px 0 12px}.timer i{display:block;height:100%;width:100%;background:var(--gold)}
+.podium{list-style:none;padding:0;margin:14px 0;display:grid;gap:8px}
+.podium li{display:grid;grid-template-columns:auto 1fr auto;gap:2px 12px;align-items:center;padding:10px 14px;border-radius:12px;border-left:6px solid var(--pc);background:var(--bg)}
+.podium span{font:400 28px "DM Serif Display",Georgia,serif;grid-row:span 2}.podium b{font-size:17px}.podium em{font-style:normal;font-weight:700;font-size:17px;white-space:nowrap}
+.podium small{grid-column:2/4;color:var(--soft);font-size:13px}
+.rack{display:grid;gap:12px}
+.shelf h4{margin:0 0 4px;font:600 15px "Instrument Sans",sans-serif;display:flex;justify-content:space-between;gap:8px}
+.shelf h4 span{color:var(--soft);font-weight:500}
+.btls{display:flex;flex-wrap:wrap;gap:3px;padding:6px 8px 4px;border-bottom:5px solid light-dark(#8b5e3c,#6b4528);background:light-dark(#f4efeb,#211217);border-radius:8px 8px 0 0}
+.btls svg{width:16px;height:46px;overflow:visible}
+.btls .e{opacity:.22}
+.big{font:400 clamp(40px,5vw,56px)/1 "DM Serif Display",Georgia,serif;color:var(--wine)}
+#hangbox{display:none}main.hang .mapbox{display:none}
+main.hang #hangbox{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:12px;align-content:start}
+.hp{background:var(--card);border:1px solid var(--line);border-top:6px solid var(--pc);border-radius:16px;padding:12px 14px}
+.hp.demo{grid-column:1/-1;max-width:420px;justify-self:center;width:100%}
+.hp h4{margin:0 0 4px;display:flex;justify-content:space-between;gap:8px;font:600 16px "Instrument Sans",sans-serif}
+.hp h4 i{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--pc);margin-right:7px}
+.hp h4 span:last-child{color:var(--soft);font-weight:500;white-space:nowrap}
+.hp.hanged{background:light-dark(#fbeaea,#3a1a1f)}
+.gal{width:100%;height:210px;display:block;overflow:visible}
+.ground{stroke:var(--line);stroke-width:2}
+.wd{fill:#b07a42;stroke:#6e4521;stroke-width:1.4}.grain{stroke:#8a5a2e;stroke-width:1;fill:none;opacity:.7}.nail{fill:#555}
+.rope{stroke:#c9a35b;stroke-width:3;fill:none;stroke-linecap:round}
+.skin{fill:#f3cfb3;stroke:#3a2a22;stroke-width:1.3}.eyes circle{fill:#1d1d1d}.mouth{stroke:#3a2a22;stroke-width:1.3;fill:none;stroke-linecap:round}
+.xeyes{display:none}.hanged .eyes{display:none}.hanged .xeyes{display:inline}
+.shirt{fill:var(--pc);stroke:#2a1a20;stroke-width:1.3}.arm{stroke:var(--pc);stroke-width:5;stroke-linecap:round;fill:none}
+.leg{stroke:#34313f;stroke-width:5.5;stroke-linecap:round}.shoe{fill:#4a2c16}
+.gal g[class]{transform-box:fill-box}
+.new.p0,.new.p1,.new.p2{animation:drop .75s cubic-bezier(.34,1.56,.64,1) both}
+.new.p3{transform-origin:top;animation:unroll .6s ease-out both}
+.new.p4,.new.p5,.new.p6,.new.p7{transform-origin:center;animation:pop .55s cubic-bezier(.34,1.7,.64,1) both}
+@keyframes drop{from{transform:translateY(-70px) rotate(-6deg);opacity:0}70%{opacity:1}}
+@keyframes unroll{from{transform:scaleY(0)}}
+@keyframes pop{from{transform:scale(0)}}
+.hp.hit{animation:shake .45s .2s}
+@keyframes shake{25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+.hanged .trap,.hangedg .trap{transform-origin:left center;animation:trap .35s .5s ease-in forwards}
+.hanged .sw,.hangedg .sw{transform-box:view-box;transform-origin:157px 21px;animation:swing 1.6s .85s ease-in-out infinite alternate}
+@keyframes trap{to{transform:rotate(80deg)}}
+@keyframes swing{from{transform:rotate(6deg)}to{transform:rotate(-6deg)}}
+.trap{transform-box:fill-box}.hangedg .trap{animation-delay:1.7s}.hangedg .sw{animation-delay:2s;transform-origin:157px 31px}
+.lh{transform-box:view-box;transform-origin:186px 144px;animation:lever .45s 1.2s ease-in forwards}
+@keyframes lever{to{transform:rotate(55deg)}}
+.handle{stroke:#4a4a4a;stroke-width:3.5;stroke-linecap:round}.knob{fill:#c0392b;stroke:#6e1d14}
+.mmpull{transform-box:fill-box;transform-origin:bottom center;animation:pull .5s 1.15s ease-in-out}
+@keyframes pull{50%{transform:translate(-3px,9px) rotate(-3deg)}}
+.mskin{fill:#f6d2b8;stroke:#2a1d18;stroke-width:2.2}.mshirt{fill:#f3ead7;stroke:#2a1d18;stroke-width:2}
+.marmo{stroke:#2a1d18;stroke-width:13;stroke-linecap:round;fill:none}.marm{stroke:#f3ead7;stroke-width:9;stroke-linecap:round;fill:none}
+.dung{fill:#8cc63f;stroke:#2a1d18;stroke-width:2}.strap{stroke:#8cc63f;stroke-width:5;stroke-linecap:round}
+.btn2{fill:#f2c21b;stroke:#2a1d18;stroke-width:1.2}.pocket{fill:#7db236;stroke:#2a1d18;stroke-width:1.4}.cuff{fill:#a5d65f;stroke:#2a1d18;stroke-width:1.4}
+.shoe2{fill:#7a4a24;stroke:#2a1d18;stroke-width:2}.mask{fill:#1d1d1d}.cheek{fill:#f4a3a8;opacity:.85}.nose{fill:#d63a2f;stroke:#2a1d18;stroke-width:1.5}
+.msmile{stroke:#2a1d18;stroke-width:2.2;fill:none;stroke-linecap:round}
+.smoke circle{stroke:#9bb7d4;stroke-width:1.2;animation:puff 2.6s ease-in-out infinite}
+.smoke circle:nth-child(2){animation-delay:.5s}.smoke circle:nth-child(3){animation-delay:1s}
+@keyframes puff{50%{transform:translateY(-4px);opacity:.6}}
+.mmbar{grid-column:1/-1;display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 14px}
+.mm{width:96px;height:140px;flex:none;overflow:visible}
+.bubble{position:relative;margin:0;background:var(--bg);border:1.5px solid var(--line);border-radius:16px;padding:10px 14px;font:400 19px/1.3 "DM Serif Display",Georgia,serif}
+.bubble::before{content:"";position:absolute;left:-9px;top:50%;width:14px;height:14px;background:var(--bg);border-left:1.5px solid var(--line);border-bottom:1.5px solid var(--line);transform:translateY(-50%) rotate(45deg)}
+.bubble.pop{animation:bub .45s cubic-bezier(.34,1.56,.64,1)}
+@keyframes bub{from{transform:scale(.6);opacity:0}}
+.mmbar.fin .mm,.mmbar.fin .bubble::before{display:none}
+.stage{grid-column:1/-1;background:var(--card);border:1px solid var(--line);border-top:6px solid var(--pc);border-radius:16px;padding:10px;text-align:center}
+.stage{padding:0;overflow:hidden}.stage svg{width:100%;display:block}.stage-cap{padding:8px}.stage-cap{margin:0;font:400 24px "DM Serif Display",Georgia,serif}
+.hb{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:6px}
+.hb button{min-height:48px;border-radius:10px;border:1.5px solid var(--pc);background:var(--bg);color:var(--ink);font:400 22px "DM Serif Display",Georgia,serif;cursor:pointer}
+.hb button:hover{background:var(--pc);color:#fff}
+.res{margin:6px 0 0;min-height:48px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:var(--bg);font-weight:600;color:var(--soft);text-align:center}
+.res.ok{color:var(--vine)}.res.no{color:var(--bad)}
+.hopt{display:flex;gap:12px;align-items:center;padding:10px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg)}
+.hopt b{font:400 20px "DM Serif Display",Georgia,serif;color:var(--wine);width:22px;flex:none}
+.hopt.ok{background:var(--vine);border-color:var(--vine);color:#fff}.hopt.ok b{color:#fff}
+@media(max-width:860px){main.hang .card{order:-1}main.hang.hend .card{order:0}}
+.bubble{flex:1 1 180px}.crowd{width:200px;height:88px;flex:none;margin-left:auto;overflow:visible}
+.cp{animation:idle 2.6s ease-in-out infinite;animation-delay:var(--d)}@keyframes idle{50%{transform:translateY(-1.3px)}}
+.mo,.ar{opacity:0}.crowd.ko .mo,.crowd.near .mo{opacity:1}.crowd.ko .ms,.crowd.near .ms{opacity:0}
+.crowd.ok .ar.up{opacity:1}.crowd.ok .cj{animation:jump .42s var(--j) 3 ease-out}.crowd.ko .cj,.crowd.near .cj{animation:recoil .55s var(--j) ease-out}
+@keyframes jump{50%{transform:translateY(-6px)}}@keyframes recoil{40%{transform:translateY(2.5px) rotate(-4deg)}}
+.shout{opacity:0;transform-box:fill-box;transform-origin:center bottom;animation:pop2 .4s calc(.2s + var(--k)) cubic-bezier(.34,1.56,.64,1) forwards}
+.shout text{font:600 10px "Instrument Sans",sans-serif;fill:#2a1d18}
+@keyframes pop2{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+.stage .mo{animation:show 0s 1.85s forwards}.stage .ms{animation:hide 0s 1.85s forwards}.stage .ar.up{animation:show 0s 1.9s forwards}
+.stage .cj{animation:jump .42s calc(1.9s + var(--j)) 4 ease-out}.stage .shout{animation-delay:calc(2.1s + var(--k))}
+@keyframes show{to{opacity:1}}@keyframes hide{to{opacity:0}}
+@media(max-width:600px){.mmbar{flex-wrap:wrap}.crowd{width:100%;height:70px}}
+footer{max-width:1280px;margin:auto;padding:0 max(4vw,16px) 30px;font-size:13px;color:var(--soft)}
+@media(max-width:860px){main{grid-template-columns:minmax(0,1fr)}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}.shout,.stage .mo{opacity:1}.stage .ms{opacity:0}.hanged .trap,.hangedg .trap{transform:rotate(80deg)}.lh{transform:rotate(55deg)}}
+
+:root{--wine:light-dark(#1f4e79,#8bb8ea);--wineD:#183b5e}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+
+.rbtn{align-self:center;background:#ffd24a;color:#1d1d24;border:0;border-radius:999px;font:600 15px "Instrument Sans",sans-serif;padding:10px 18px;min-height:44px;cursor:pointer;margin:0 0 12px;box-shadow:0 2px 0 rgba(0,0,0,.2)}
+.rbtn:hover{background:#ffe07a}.rbtn:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.rmodal{position:fixed;inset:0;z-index:90;background:rgba(10,8,20,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+.rmodal[hidden]{display:none}
+.rpanel{position:relative;background:var(--card);color:var(--ink);border-radius:18px;max-width:680px;width:100%;max-height:88vh;overflow:auto;padding:26px 26px 20px;box-shadow:0 20px 60px rgba(0,0,0,.4);animation:pop .35s cubic-bezier(.34,1.56,.64,1)}
+.rpanel h2{font:400 clamp(26px,3.4vw,34px)/1.1 "DM Serif Display",Georgia,serif;margin:0 40px 10px 0}
+.rpanel h3{font:400 21px/1.2 "DM Serif Display",Georgia,serif;margin:20px 0 6px;color:var(--wine)}
+.rpanel p,.rpanel li{font-size:16px;line-height:1.55}.rpanel ol,.rpanel ul{padding-left:1.3em;margin:6px 0}.rpanel li{margin:4px 0}
+.rpanel .lead{font-size:17px}.rpanel .tip{background:var(--bg);border-radius:10px;padding:8px 12px;font-size:15px}
+.rclose{position:sticky;top:0;float:right;margin:-10px -10px 0 8px;z-index:2;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:24px;line-height:1;cursor:pointer}
+@keyframes pop{from{transform:scale(.92);opacity:0}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="artdefs"></defs></svg>
+<header><div class="hin"><h1>Le Pendu de Monsieur Méninge<small>Culture générale pour toute la famille : histoire, géographie, sciences, sport, arts, langue, cuisine, calcul</small></h1>
+<button class="rbtn" id="rulesBtn" type="button">Comment jouer ?</button></div></header>
+<main class="hang">
+<div id="hangbox"></div>
+<section class="card" id="side" aria-live="polite"></section>
+</main>
+<script>
+{
+const THEMES={his:'Histoire',geo:'Géographie',sci:'Sciences et nature',spo:'Sport',art:'Arts et lettres',fr:'Langue française',cui:'Cuisine',div:'Calcul et logique'};
+const GK=`
+0|sci|Quel animal est surnommé le roi de la savane ?|Le lion|Le zèbre;La girafe;Le crocodile|
+0|sci|Combien de pattes a une araignée ?|8|6;4;10|
+0|sci|Combien de pattes a un insecte ?|6|8;4;10|La fourmi, l'abeille et la coccinelle ont toutes 6 pattes.
+0|sci|Quel animal fait « meuh » ?|La vache|Le mouton;Le cochon;La chèvre|
+0|sci|Comment s'appelle le petit de la vache ?|Le veau|Le poulain;L'agneau;Le chevreau|
+0|sci|Comment s'appelle le petit du cheval ?|Le poulain|Le veau;Le faon;L'ânon|
+0|sci|Comment s'appelle le petit de la poule ?|Le poussin|Le caneton;L'oison;Le lapereau|
+0|sci|Quel est le plus grand animal du monde ?|La baleine bleue|L'éléphant;La girafe;Le requin blanc|Elle peut mesurer plus de 25 mètres.
+0|sci|Quel animal a une trompe ?|L'éléphant|Le rhinocéros;L'hippopotame;Le gorille|
+0|sci|Quel animal change de couleur pour se cacher ?|Le caméléon|Le lézard vert;La tortue;Le serpent|
+0|sci|Lequel de ces animaux pond des œufs ?|La poule|La vache;Le chien;Le chat|
+0|sci|En quoi se transforme la chenille ?|En papillon|En abeille;En coccinelle;En libellule|
+0|sci|En quoi se transforme le têtard ?|En grenouille|En poisson;En serpent;En tortue|
+0|sci|Sur quelle planète vivons-nous ?|La Terre|Mars;Jupiter;Vénus|
+0|sci|Que fabriquent les abeilles ?|Du miel|Du lait;De la soie;Du sucre de canne|
+0|sci|Quel animal porte sa maison sur son dos ?|L'escargot|Le hérisson;La grenouille;Le lapin|
+0|sci|Où vivent les manchots empereurs ?|En Antarctique|Au pôle Nord;En Afrique;En Australie|
+0|sci|Que fait le chien quand il « parle » ?|Il aboie|Il miaule;Il hennit;Il bêle|
+0|sci|Quel animal a un long cou pour manger les feuilles des arbres ?|La girafe|Le zèbre;Le lion;L'ours|
+0|sci|Quel oiseau ne vole pas mais court très vite ?|L'autruche|Le moineau;L'aigle;La mouette|
+0|geo|Quelle est la capitale de la France ?|Paris|Lyon;Marseille;Bordeaux|
+0|geo|Quelles sont les couleurs du drapeau français ?|Bleu, blanc, rouge|Vert, blanc, rouge;Bleu, jaune, rouge;Noir, rouge, jaune|
+0|geo|Dans quel pays vivent les kangourous ?|L'Australie|L'Afrique du Sud;Le Brésil;Le Canada|
+0|geo|Quel océan borde l'ouest de la France ?|L'océan Atlantique|L'océan Pacifique;L'océan Indien;L'océan Arctique|
+0|geo|Quelle mer borde le sud de la France ?|La Méditerranée|La mer du Nord;La Manche;La mer Noire|
+0|geo|Quelle est la plus haute montagne de France ?|Le mont Blanc|Le puy de Dôme;Le mont Ventoux;Le Canigou|
+0|geo|Dans quel pays se trouvent les pyramides de Gizeh ?|L'Égypte|Le Mexique;La Grèce;L'Inde|
+0|geo|Dans quelle ville se trouve la tour Eiffel ?|Paris|Londres;Rome;Bruxelles|
+0|his|Que fête-t-on en France le 14 juillet ?|La fête nationale|Noël;Le Nouvel An;Pâques|
+0|his|Quels grands animaux ont disparu il y a environ 66 millions d'années ?|Les dinosaures|Les mammouths;Les éléphants;Les baleines|
+0|his|Dans quoi vivaient les seigneurs au Moyen Âge ?|Des châteaux forts|Des igloos;Des gratte-ciel;Des tipis|
+0|his|Qui était Napoléon Bonaparte ?|Un empereur des Français|Un roi d'Angleterre;Un peintre;Un explorateur|
+0|spo|Combien de joueurs a une équipe de football sur le terrain ?|11|9;7;15|
+0|spo|Avec quoi joue-t-on au badminton ?|Une raquette et un volant|Une batte et une balle;Une crosse et un palet;Un club et une balle|
+0|spo|Quel sport se joue avec un ballon ovale ?|Le rugby|Le football;Le basket-ball;Le handball|
+0|spo|Le Tour de France est une course de…|Vélo|Voiture;Course à pied;Chevaux|
+0|spo|Dans quel sport marque-t-on des paniers ?|Le basket-ball|Le volley-ball;Le tennis;Le golf|
+0|spo|Combien d'anneaux y a-t-il sur le drapeau olympique ?|5|3;4;6|
+0|art|Dans « Le Petit Chaperon rouge », qui mange la grand-mère ?|Le loup|L'ogre;Le renard;L'ours|
+0|art|Quelle princesse perd sa pantoufle de verre ?|Cendrillon|Blanche-Neige;La Belle au bois dormant;Raiponce|
+0|art|Combien de nains vivent avec Blanche-Neige ?|7|3;5;12|
+0|art|Dans « Les Trois Petits Cochons », quelle maison résiste au loup ?|La maison en briques|La maison en paille;La maison en bois;La maison en carton|
+0|art|Quel instrument a des touches noires et blanches ?|Le piano|La guitare;La trompette;Le violon|
+0|art|Quel instrument a généralement six cordes ?|La guitare|Le violon;Le piano;La flûte|Le violon, lui, n'en a que quatre.
+0|art|Que se passe-t-il quand Pinocchio ment ?|Son nez s'allonge|Ses oreilles rougissent;Il devient tout petit;Il éternue|
+0|fr|Quel est le contraire de « grand » ?|Petit|Gros;Long;Haut|
+0|fr|Combien y a-t-il de lettres dans l'alphabet ?|26|24;28;30|
+0|fr|Lequel de ces mots est un fruit ?|La pomme|La carotte;Le poireau;La pomme de terre|
+0|fr|Quel est le pluriel de « cheval » ?|Des chevaux|Des chevals;Des chevaus;Des chevalx|
+0|fr|Quel mot rime avec « chat » ?|Rat|Chien;Lune;Porte|
+0|cui|Quel légume orange adorent les lapins ?|La carotte|Le poivron;La citrouille;Le radis|
+0|cui|Quel fruit est jaune et courbé ?|La banane|Le citron;La poire;L'ananas|
+0|cui|Avec quoi fait-on les frites ?|Des pommes de terre|Des carottes;Des courgettes;Des navets|
+0|cui|Quel animal donne la plus grande partie du lait que l'on boit en France ?|La vache|La chèvre;La brebis;La jument|
+0|div|Combien font 5 + 3 ?|8|7;9;6|
+0|div|Combien y a-t-il de jours dans une semaine ?|7|5;6;10|
+0|div|Combien y a-t-il de mois dans une année ?|12|10;11;13|
+0|div|Combien y a-t-il de saisons dans une année ?|4|2;3;6|
+0|div|Combien font 10 − 4 ?|6|5;7;4|
+0|div|Combien de côtés a un triangle ?|3|4;5;6|
+0|div|Combien y a-t-il de minutes dans une heure ?|60|100;30;24|
+0|div|Quelle couleur obtient-on en mélangeant du bleu et du jaune ?|Du vert|Du violet;De l'orange;Du marron|
+0|div|Quelle couleur obtient-on en mélangeant du rouge et du blanc ?|Du rose|Du violet;De l'orange;Du gris|
+0|div|Combien font 2 × 6 ?|12|8;10;14|
+0|div|Quel jour vient après lundi ?|Mardi|Mercredi;Dimanche;Jeudi|
+1|his|En quelle année a eu lieu la prise de la Bastille ?|1789|1815;1848;1715|
+1|his|Qui était surnommée la Pucelle d'Orléans ?|Jeanne d'Arc|Marie-Antoinette;Catherine de Médicis;Aliénor d'Aquitaine|
+1|his|Quel roi était surnommé le Roi-Soleil ?|Louis XIV|Louis XVI;Henri IV;François Ier|
+1|his|En quelle année s'est terminée la Seconde Guerre mondiale ?|1945|1918;1940;1950|
+1|his|Qui a été le premier homme à marcher sur la Lune ?|Neil Armstrong|Youri Gagarine;Buzz Aldrin;Thomas Pesquet|Buzz Aldrin l'a suivi quelques minutes plus tard.
+1|his|En quelle année l'homme a-t-il marché sur la Lune pour la première fois ?|1969|1957;1975;1961|
+1|his|En quelle année est tombé le mur de Berlin ?|1989|1961;1991;1975|
+1|his|Quel paquebot a coulé en 1912 après avoir heurté un iceberg ?|Le Titanic|Le Normandie;Le Lusitania;Le France|
+1|his|Qui fut le premier président de la Ve République ?|Charles de Gaulle|Georges Pompidou;Vincent Auriol;René Coty|
+1|his|Qui a inventé l'imprimerie à caractères mobiles en Europe ?|Gutenberg|Léonard de Vinci;Galilée;Pascal|Vers 1450, à Mayence.
+1|his|Quel roi a été guillotiné en 1793 ?|Louis XVI|Louis XIV;Louis XV;Charles X|
+1|geo|Quel est le plus long fleuve de France ?|La Loire|La Seine;Le Rhône;La Garonne|
+1|geo|Quelle est la capitale de l'Italie ?|Rome|Milan;Venise;Naples|
+1|geo|Quelle est la capitale de l'Espagne ?|Madrid|Barcelone;Séville;Lisbonne|
+1|geo|Quel est le plus grand océan du monde ?|L'océan Pacifique|L'océan Atlantique;L'océan Indien;L'océan Arctique|
+1|geo|Quelle est la plus haute montagne du monde ?|L'Everest|Le mont Blanc;Le Kilimandjaro;L'Aconcagua|
+1|geo|Quel est le plus grand pays du monde par la superficie ?|La Russie|Le Canada;La Chine;Les États-Unis|
+1|geo|Quelle ville est surnommée la Ville rose ?|Toulouse|Lyon;Nice;Nantes|
+1|geo|Quel fleuve traverse Paris ?|La Seine|La Loire;La Marne;Le Rhône|
+1|geo|Sur quel continent se trouve le Brésil ?|L'Amérique du Sud|L'Afrique;L'Amérique du Nord;L'Océanie|
+1|geo|Quelle est la capitale du Royaume-Uni ?|Londres|Dublin;Édimbourg;Manchester|
+1|geo|Quelle mer est si salée qu'on y flotte sans effort ?|La mer Morte|La mer Rouge;La mer Noire;La mer Baltique|
+1|sci|Quelle est la formule chimique de l'eau ?|H₂O|CO₂;O₂;NaCl|
+1|sci|Quelle planète est surnommée la planète rouge ?|Mars|Vénus;Jupiter;Saturne|
+1|sci|Quel organe pompe le sang dans le corps ?|Le cœur|Les poumons;Le foie;Les reins|
+1|sci|À quelle température l'eau bout-elle au niveau de la mer ?|100 °C|80 °C;90 °C;120 °C|
+1|sci|Quelle est la plus grande planète du système solaire ?|Jupiter|Saturne;La Terre;Neptune|
+1|sci|Quel gaz les plantes absorbent-elles pour faire la photosynthèse ?|Le dioxyde de carbone|L'oxygène;L'azote;L'hélium|
+1|sci|Quel est l'animal terrestre le plus rapide ?|Le guépard|Le lion;Le cheval;L'antilope|
+1|sci|Combien de planètes compte le système solaire ?|8|7;9;10|Pluton n'est plus considérée comme une planète depuis 2006.
+1|sci|Les baleines sont des…|Mammifères|Poissons;Reptiles;Amphibiens|
+1|sci|Combien de dents a un adulte, dents de sagesse comprises ?|32|28;30;36|
+1|spo|Dans quel pays sont nés les Jeux olympiques antiques ?|La Grèce|L'Italie;L'Égypte;La Turquie|
+1|spo|Sur quelle surface se joue le tournoi de Roland-Garros ?|La terre battue|Le gazon;Le dur;La moquette|
+1|spo|Quelle couleur est le maillot du leader du Tour de France ?|Jaune|Vert;Rouge;Blanc|
+1|spo|Combien de points vaut un essai au rugby à XV ?|5|3;4;7|
+1|spo|Combien de temps dure un match de football, sans prolongation ?|90 minutes|60 minutes;80 minutes;120 minutes|
+1|spo|De quel pays vient le judo ?|Le Japon|La Chine;La Corée;La Thaïlande|
+1|spo|Quelle ville a accueilli les Jeux olympiques d'été de 2024 ?|Paris|Los Angeles;Tokyo;Londres|
+1|spo|Combien de joueurs a une équipe de rugby à XV sur le terrain ?|15|11;13;18|
+1|art|Qui a peint « La Joconde » ?|Léonard de Vinci|Michel-Ange;Raphaël;Botticelli|
+1|art|Dans quel musée est exposée « La Joconde » ?|Le Louvre|Le musée d'Orsay;Le Prado;Le British Museum|
+1|art|Qui a écrit « Les Misérables » ?|Victor Hugo|Émile Zola;Alexandre Dumas;Honoré de Balzac|
+1|art|Qui a écrit « Le Corbeau et le Renard » ?|Jean de La Fontaine|Charles Perrault;Molière;Esope|La Fontaine s'est inspiré d'Ésope, mais la fable en vers est la sienne.
+1|art|Qui a composé « La Marseillaise » ?|Rouget de Lisle|Berlioz;Lully;Mozart|
+1|art|Qui a écrit « Le Petit Prince » ?|Antoine de Saint-Exupéry|Jules Verne;Marcel Pagnol;Albert Camus|
+1|art|Quel grand compositeur est devenu sourd ?|Beethoven|Mozart;Bach;Chopin|
+1|art|Qui a peint « Les Tournesols » ?|Vincent van Gogh|Claude Monet;Paul Cézanne;Pablo Picasso|
+1|art|Qui a écrit « Roméo et Juliette » ?|William Shakespeare|Molière;Victor Hugo;Jean Racine|
+1|art|Combien de mousquetaires figurent dans le titre du roman d'Alexandre Dumas ?|Trois|Deux;Quatre;Cinq|D'Artagnan, le quatrième, n'est pas compté dans le titre.
+1|fr|Quel est le féminin d'« acteur » ?|Actrice|Acteuse;Actrise;Acteure|
+1|fr|Que veut dire « avoir le cafard » ?|Être triste|Avoir peur;Avoir faim;Être malade|
+1|fr|Que veut dire « poser un lapin » ?|Ne pas venir à un rendez-vous|Faire un cadeau;Mentir;Partir en vacances|
+1|fr|Que veut dire « coûter les yeux de la tête » ?|Coûter très cher|Faire mal aux yeux;Être gratuit;Être difficile à voir|
+1|fr|Quel est le pluriel d'« œil » ?|Des yeux|Des œils;Des yeuils;Des œuils|
+1|fr|Que veut dire « avoir un poil dans la main » ?|Être paresseux|Être poilu;Être avare;Être malhabile|
+1|fr|Quel mot est un synonyme de « rapide » ?|Véloce|Lent;Lourd;Calme|
+1|cui|De quelle région vient la choucroute ?|L'Alsace|La Bretagne;La Provence;L'Auvergne|
+1|cui|Lequel de ces fromages vient de Normandie ?|Le camembert|Le roquefort;Le comté;Le reblochon|
+1|cui|Avec quel fruit fait-on le cidre ?|La pomme|La poire;Le raisin;La prune|Avec la poire, on fait le poiré.
+1|cui|Quel est l'ingrédient principal du guacamole ?|L'avocat|La tomate;Le concombre;Le poivron|
+1|cui|De quel pays vient la pizza ?|L'Italie|La Grèce;L'Espagne;Les États-Unis|
+1|cui|Quelle ville est célèbre pour sa moutarde ?|Dijon|Lyon;Reims;Nancy|
+1|cui|Le roquefort est fait avec du lait de…|Brebis|Vache;Chèvre;Bufflonne|
+1|cui|La quiche est une spécialité de…|Lorraine|Bretagne;Savoie;Provence|
+1|div|Combien de jours compte une année bissextile ?|366|365;364;360|
+1|div|Combien y a-t-il de centimètres dans un mètre ?|100|10;1000;60|
+1|div|Combien de côtés a un hexagone ?|6|5;7;8|
+1|div|Combien font 7 × 8 ?|56|54;48;64|
+1|div|Combien font 15 % de 200 ?|30|15;20;35|
+1|div|Combien de cases compte un échiquier ?|64|49;81;100|
+1|div|Combien vaut la somme des angles d'un triangle ?|180°|90°;270°;360°|
+2|his|En quelle année a eu lieu la bataille de Marignan ?|1515|1415;1610;1492|
+2|his|Qui a été sacré empereur des Français en 1804 ?|Napoléon Ier|Louis XVIII;Napoléon III;Charles X|
+2|his|Quel traité a mis fin à la Première Guerre mondiale avec l'Allemagne ?|Le traité de Versailles|Le traité de Rome;Le traité de Paris;Le traité de Vienne|
+2|his|En quelle année les Françaises ont-elles voté pour la première fois ?|1945|1918;1936;1958|Le droit de vote est accordé en 1944 ; elles votent pour la première fois en 1945.
+2|his|Quelle reine a été guillotinée en 1793 ?|Marie-Antoinette|Catherine de Médicis;Anne d'Autriche;Marie Stuart|
+2|his|Qui commandait l'armée qui a battu Napoléon à Waterloo, avec les Prussiens ?|Le duc de Wellington|L'amiral Nelson;Le général Koutouzov;Le prince de Metternich|
+2|his|Qui a franchi le Rubicon en 49 av. J.-C. ?|Jules César|Pompée;Auguste;Hannibal|
+2|his|En quelle année Christophe Colomb atteint-il l'Amérique ?|1492|1515;1453;1498|
+2|his|Quel roi a signé l'édit de Nantes en 1598 ?|Henri IV|Louis XIII;François Ier;Henri III|
+2|his|Quel jour a eu lieu le débarquement en Normandie ?|Le 6 juin 1944|Le 8 mai 1945;Le 18 juin 1940;Le 11 novembre 1918|
+2|his|Que proclame la loi française de 1905 ?|La séparation des Églises et de l'État|Le droit de vote des femmes;L'école obligatoire;L'abolition de l'esclavage|
+2|his|Quelle dynastie a précédé les Capétiens ?|Les Carolingiens|Les Mérovingiens;Les Valois;Les Bourbons|
+2|geo|Quelle est la capitale de l'Australie ?|Canberra|Sydney;Melbourne;Perth|
+2|geo|Quelle est la capitale du Canada ?|Ottawa|Toronto;Montréal;Vancouver|
+2|geo|Quel est le plus long fleuve d'Europe ?|La Volga|Le Danube;Le Rhin;La Loire|
+2|geo|Combien de départements compte la France métropolitaine ?|96|95;101;90|101 en comptant les cinq départements d'outre-mer.
+2|geo|Quel détroit sépare l'Europe de l'Afrique ?|Le détroit de Gibraltar|Le Bosphore;Le pas de Calais;Le détroit de Messine|
+2|geo|Quel est le plus grand désert chaud du monde ?|Le Sahara|Le Kalahari;Le désert de Gobi;Le désert d'Atacama|
+2|geo|Quelle est la capitale du Brésil ?|Brasília|Rio de Janeiro;São Paulo;Salvador|
+2|geo|Dans quelle chaîne de montagnes se trouve l'Aconcagua ?|Les Andes|Les Rocheuses;L'Himalaya;L'Atlas|
+2|geo|Quel est le plus grand lac d'Afrique ?|Le lac Victoria|Le lac Tanganyika;Le lac Tchad;Le lac Malawi|
+2|geo|Quelle est la plus grande île de la Méditerranée ?|La Sicile|La Corse;La Sardaigne;Chypre|
+2|geo|Quel est le point culminant des Pyrénées ?|L'Aneto|Le Vignemale;Le Canigou;Le pic du Midi|
+2|geo|Quel est le plus haut sommet d'Afrique ?|Le Kilimandjaro|Le mont Kenya;Le Toubkal;Le mont Cameroun|
+2|sci|Combien d'os compte environ le squelette d'un adulte ?|206|150;270;320|
+2|sci|Quel scientifique a formulé la théorie de la relativité ?|Albert Einstein|Isaac Newton;Niels Bohr;Stephen Hawking|
+2|sci|Qui a découvert la pénicilline ?|Alexander Fleming|Louis Pasteur;Robert Koch;Marie Curie|
+2|sci|Quel est le symbole chimique de l'or ?|Au|Or;Ag;Fe|Ag est l'argent, Fe le fer.
+2|sci|Quelle est la vitesse de la lumière, environ ?|300 000 km/s|30 000 km/s;3 000 km/s;3 millions de km/s|
+2|sci|Quel savant a mis au point le vaccin contre la rage ?|Louis Pasteur|Claude Bernard;Edward Jenner;Robert Koch|
+2|sci|Quelle scientifique a reçu deux prix Nobel, en physique et en chimie ?|Marie Curie|Irène Joliot-Curie;Rosalind Franklin;Lise Meitner|
+2|sci|Quelle est la planète la plus proche du Soleil ?|Mercure|Vénus;Mars;La Terre|
+2|sci|Combien de chromosomes possède une cellule humaine ordinaire ?|46|23;44;48|
+2|sci|Quel est le plus grand organe du corps humain ?|La peau|Le foie;Les poumons;L'intestin|
+2|sci|Quel gaz forme environ 78 % de l'air ?|L'azote|L'oxygène;Le dioxyde de carbone;L'argon|
+2|sci|Quelle est la plus petite unité vivante ?|La cellule|L'atome;La molécule;Le gène|
+2|spo|Combien de sets faut-il gagner pour remporter un match masculin en Grand Chelem ?|3|2;4;5|
+2|spo|En quelle année la France a-t-elle gagné sa première Coupe du monde de football ?|1998|1984;2006;2018|
+2|spo|Quelle est la distance d'un marathon ?|42,195 km|40 km;42 km;45,5 km|
+2|spo|Dans quel sport se dispute la coupe Davis ?|Le tennis|Le golf;La voile;Le cyclisme|
+2|spo|Combien de joueurs a une équipe de volley-ball sur le terrain ?|6|5;7;9|
+2|spo|Qui a fondé les Jeux olympiques modernes ?|Pierre de Coubertin|Jules Rimet;Henri Desgrange;Jacques Rogge|
+2|spo|Dans quelle ville ont eu lieu les premiers Jeux olympiques modernes, en 1896 ?|Athènes|Paris;Londres;Rome|
+2|spo|Combien de trous compte un parcours de golf classique ?|18|9;12;24|
+2|spo|En quelle année a été créé le Tour de France ?|1903|1889;1919;1936|
+2|art|Qui a peint « Guernica » ?|Pablo Picasso|Salvador Dalí;Joan Miró;Francisco de Goya|
+2|art|Qui a sculpté « Le Penseur » ?|Auguste Rodin|Camille Claudel;Michel-Ange;Aristide Maillol|
+2|art|Qui a écrit « À la recherche du temps perdu » ?|Marcel Proust|André Gide;Gustave Flaubert;Paul Valéry|
+2|art|Qui a composé « Les Quatre Saisons » ?|Antonio Vivaldi|Jean-Sébastien Bach;Joseph Haydn;Giuseppe Verdi|
+2|art|Quel mouvement pictural doit son nom à un tableau de Monet ?|L'impressionnisme|Le cubisme;Le fauvisme;Le romantisme|Le tableau « Impression, soleil levant » (1872).
+2|art|Qui a écrit « L'Étranger » ?|Albert Camus|Jean-Paul Sartre;André Malraux;Boris Vian|
+2|art|Qui a peint le plafond de la chapelle Sixtine ?|Michel-Ange|Raphaël;Léonard de Vinci;Le Caravage|
+2|art|Qui a écrit « Germinal » ?|Émile Zola|Victor Hugo;Guy de Maupassant;Honoré de Balzac|
+2|art|Qui a composé « La Flûte enchantée » ?|Mozart|Beethoven;Haydn;Schubert|
+2|art|Qui a écrit « Candide » ?|Voltaire|Rousseau;Diderot;Montesquieu|
+2|art|Qui a peint « La Liberté guidant le peuple » ?|Eugène Delacroix|Jacques-Louis David;Théodore Géricault;Gustave Courbet|
+2|art|Qui a écrit « Madame Bovary » ?|Gustave Flaubert|Stendhal;Balzac;Maupassant|
+2|fr|Que signifie « procrastiner » ?|Remettre à plus tard|Se dépêcher;Exagérer;Se plaindre|
+2|fr|Que veut dire « sine qua non » ?|Indispensable|Inutile;Interdit;Facultatif|
+2|fr|Qu'est-ce qu'un palindrome ?|Un mot qui se lit dans les deux sens|Un mot qui a deux sens;Un mot très long;Un mot inventé|Exemples : « kayak », « radar ».
+2|fr|Comment s'appellent les habitants de Saint-Étienne ?|Les Stéphanois|Les Saint-Étiennois;Les Stéphaniens;Les Forésiens|
+2|fr|Qu'est-ce qu'une lapalissade ?|Une évidence|Un mensonge;Une insulte;Une devinette|
+2|fr|Quel mot désigne la peur des araignées ?|L'arachnophobie|L'agoraphobie;La claustrophobie;L'acrophobie|
+2|fr|Que veut dire « être sur la sellette » ?|Être mis en cause|Être à cheval;Être en vacances;Être très fatigué|
+2|cui|De quelle ville vient la bouillabaisse ?|Marseille|Nice;Toulon;Sète|
+2|cui|Quel fromage est indispensable à la tartiflette ?|Le reblochon|Le comté;La raclette;Le beaufort|
+2|cui|Quel est l'ingrédient principal du cassoulet, avec la viande ?|Les haricots blancs|Les lentilles;Les pois chiches;Les pommes de terre|
+2|cui|Que signifie le sigle AOP ?|Appellation d'origine protégée|Agriculture officielle et paysanne;Aliment d'origine populaire;Appellation d'ordre public|
+2|cui|Quelle épice est la plus chère du monde ?|Le safran|La vanille;La cannelle;Le poivre|
+2|cui|De quel pays vient le gouda ?|Les Pays-Bas|La Belgique;La Suisse;Le Danemark|
+2|cui|Le kouign-amann est une spécialité de…|Bretagne|Normandie;Alsace;Pays basque|
+2|cui|Quel est l'ingrédient de base du houmous ?|Les pois chiches|Les lentilles;Les fèves;Les haricots rouges|
+2|cui|D'où vient le piment d'Espelette ?|Du Pays basque|De Provence;Du Roussillon;De Corse|
+2|div|Combien font 12 au carré ?|144|124;122;164|
+2|div|Quelle est la racine carrée de 81 ?|9|8;7;11|
+2|div|Combien de zéros compte un milliard ?|9|6;10;12|
+2|div|Que vaut la lettre M en chiffres romains ?|1 000|500;100;50|
+2|div|Combien d'heures y a-t-il dans une semaine ?|168|148;160;178|
+2|div|Combien de secondes y a-t-il dans une heure ?|3 600|360;6 000;1 440|
+3|his|En quelle année a eu lieu le siège d'Alésia ?|52 av. J.-C.|44 av. J.-C.;12 av. J.-C.;476|
+3|his|Quel roi de France était surnommé « le Bien-Aimé » ?|Louis XV|Louis XIII;Louis XIV;Louis XVIII|
+3|his|Qui a arrêté une armée omeyyade près de Poitiers en 732 ?|Charles Martel|Charlemagne;Pépin le Bref;Clovis|
+3|his|Quel traité de 1494 partage le Nouveau Monde entre l'Espagne et le Portugal ?|Le traité de Tordesillas|Le traité d'Utrecht;Le traité de Westphalie;Le traité de Cateau-Cambrésis|
+3|his|Quelle bataille de 1805 est appelée « la bataille des Trois Empereurs » ?|Austerlitz|Iéna;Wagram;Eylau|
+3|his|En quelle année a été promulgué le Code civil des Français ?|1804|1789;1791;1815|
+3|his|Qui fut le dernier roi des Français ?|Louis-Philippe Ier|Charles X;Louis XVIII;Napoléon III|Napoléon III fut empereur, pas roi.
+3|his|Quel chancelier a réalisé l'unité allemande en 1871 ?|Otto von Bismarck|Guillaume II;Metternich;Frédéric le Grand|
+3|his|En quelle année a commencé la guerre de Cent Ans ?|1337|1214;1415;1453|Elle s'est terminée en 1453.
+3|his|Quel pharaon est célèbre pour son tombeau découvert presque intact en 1922 ?|Toutânkhamon|Ramsès II;Khéops;Akhenaton|
+3|his|Quelle ordonnance de 1539 impose le français dans les actes officiels ?|L'ordonnance de Villers-Cotterêts|L'édit de Nantes;L'ordonnance de Blois;La pragmatique sanction|
+3|his|Quel empereur a donné son nom à Constantinople ?|Constantin Ier|Justinien;Théodose;Dioclétien|
+3|geo|Quel est le lac le plus profond du monde ?|Le lac Baïkal|Le lac Tanganyika;Le lac Supérieur;La mer Caspienne|
+3|geo|Quelle est la capitale de la Nouvelle-Zélande ?|Wellington|Auckland;Christchurch;Dunedin|
+3|geo|Quel pays compte le plus de fuseaux horaires, territoires d'outre-mer compris ?|La France|La Russie;Les États-Unis;Le Royaume-Uni|Douze fuseaux grâce à l'outre-mer.
+3|geo|Quel pays est entièrement entouré par l'Afrique du Sud ?|Le Lesotho|L'Eswatini;Le Botswana;Le Malawi|
+3|geo|Dans quel département se trouve le mont Ventoux ?|Le Vaucluse|La Drôme;Les Alpes-de-Haute-Provence;Les Bouches-du-Rhône|
+3|geo|Quelle ville est la préfecture de l'Aveyron ?|Rodez|Millau;Villefranche-de-Rouergue;Aurillac|
+3|geo|Quelle rivière forme l'estuaire de la Gironde avec la Garonne ?|La Dordogne|Le Lot;Le Tarn;La Charente|
+3|geo|Quelle est la capitale du Kazakhstan ?|Astana|Almaty;Tachkent;Bichkek|
+3|geo|Quel est le plus long fleuve d'Afrique ?|Le Nil|Le Congo;Le Niger;Le Zambèze|
+3|geo|Quel pays a pour capitale Oulan-Bator ?|La Mongolie|Le Kirghizistan;Le Népal;Le Bhoutan|
+3|sci|Quel est l'élément chimique le plus abondant dans l'univers ?|L'hydrogène|L'hélium;L'oxygène;Le carbone|
+3|sci|Quel est le numéro atomique du carbone ?|6|8;12;14|
+3|sci|Qui a découvert les lois de l'hérédité en croisant des petits pois ?|Gregor Mendel|Charles Darwin;Jean-Baptiste Lamarck;Louis Pasteur|
+3|sci|Quelle est l'unité de la résistance électrique ?|L'ohm|Le volt;L'ampère;Le watt|
+3|sci|Dans quelle couche de l'atmosphère se trouve la couche d'ozone ?|La stratosphère|La troposphère;La mésosphère;La thermosphère|
+3|sci|Quel est l'os le plus long du corps humain ?|Le fémur|Le tibia;L'humérus;Le péroné|
+3|sci|Sur quelle planète une journée dure-t-elle plus longtemps qu'une année ?|Vénus|Mercure;Mars;Neptune|
+3|sci|Qui a montré que les planètes décrivent des ellipses autour du Soleil ?|Johannes Kepler|Nicolas Copernic;Galilée;Tycho Brahe|
+3|sci|À quoi servent les mitochondries ?|À produire l'énergie de la cellule|À stocker l'ADN;À fabriquer les protéines;À digérer les déchets|
+3|sci|Quel est le seul métal liquide à température ambiante ?|Le mercure|Le plomb;L'étain;Le gallium|Le gallium fond à 30 °C, juste au-dessus.
+3|sci|Combien de cœurs a une pieuvre ?|3|1;2;8|
+3|sci|Quelle est la formule du sel de cuisine ?|NaCl|KCl;CaCO₃;NaOH|
+3|spo|Quel pays a remporté la première Coupe du monde de football, en 1930 ?|L'Uruguay|Le Brésil;L'Argentine;L'Italie|
+3|spo|Quelle est la longueur d'un bassin olympique ?|50 mètres|25 mètres;33 mètres;100 mètres|
+3|spo|Lequel de ces coureurs a gagné cinq fois le Tour de France ?|Bernard Hinault|Laurent Fignon;Raymond Poulidor;Louison Bobet|Poulidor n'a jamais porté le maillot jaune.
+3|spo|Quel athlète a gagné quatre médailles d'or aux Jeux de Berlin en 1936 ?|Jesse Owens|Carl Lewis;Paavo Nurmi;Emil Zátopek|
+3|spo|Quelles sont les trois armes de l'escrime ?|Fleuret, épée, sabre|Fleuret, dague, sabre;Épée, rapière, sabre;Fleuret, épée, lance|
+3|spo|Combien de joueurs a une équipe de hockey sur glace sur la glace, gardien compris ?|6|5;7;11|
+3|spo|Combien de Coupes du monde Pelé a-t-il gagnées ?|3|1;2;4|1958, 1962 et 1970.
+3|spo|Dans quel sport se dispute la Ryder Cup ?|Le golf|Le tennis;La voile;Le polo|
+3|spo|Quel pays a inventé le volley-ball ?|Les États-Unis|Le Brésil;Le Japon;L'Italie|Inventé en 1895 par William Morgan.
+3|art|Qui a écrit « Les Fleurs du mal » ?|Charles Baudelaire|Paul Verlaine;Arthur Rimbaud;Stéphane Mallarmé|
+3|art|Qui a composé le « Boléro » ?|Maurice Ravel|Claude Debussy;Erik Satie;Camille Saint-Saëns|
+3|art|Qui a peint « Le Radeau de la Méduse » ?|Théodore Géricault|Eugène Delacroix;Jacques-Louis David;Ingres|
+3|art|Quel peintre a réalisé la série des « Nymphéas » ?|Claude Monet|Auguste Renoir;Édouard Manet;Alfred Sisley|
+3|art|Qui a écrit « Le Rouge et le Noir » ?|Stendhal|Balzac;Flaubert;Zola|
+3|art|Quel architecte a conçu la pyramide du Louvre ?|Ieoh Ming Pei|Jean Nouvel;Le Corbusier;Renzo Piano|
+3|art|Qui a composé la « Symphonie fantastique » ?|Hector Berlioz|Georges Bizet;Charles Gounod;César Franck|
+3|art|Quel était le vrai nom de Molière ?|Jean-Baptiste Poquelin|Jean Racine;François-Marie Arouet;Pierre Corneille|François-Marie Arouet, c'est Voltaire.
+3|art|Qui a peint « Le Déjeuner sur l'herbe » en 1863 ?|Édouard Manet|Claude Monet;Gustave Courbet;Paul Cézanne|
+3|art|Dans quelle ville se déroule l'opéra « Carmen » de Bizet ?|Séville|Madrid;Grenade;Barcelone|
+3|art|Quel mouvement André Breton a-t-il fondé ?|Le surréalisme|Le dadaïsme;Le symbolisme;Le cubisme|
+3|fr|Comment s'appellent les habitants de Besançon ?|Les Bisontins|Les Besançonnais;Les Vésuliens;Les Bisontais|
+3|fr|Comment s'appellent les habitants de Pont-à-Mousson ?|Les Mussipontains|Les Pontois;Les Moussonnais;Les Pontissaliens|
+3|fr|Comment s'appellent les habitants de Charleville-Mézières ?|Les Carolomacériens|Les Carolingiens;Les Mézièrois;Les Charlevillois|
+3|fr|Que veut dire « ubuesque » ?|Absurde et grotesque|Très drôle;Très savant;Riche et puissant|D'après le « Père Ubu » d'Alfred Jarry.
+3|fr|Qu'est-ce qu'un oxymore ?|L'alliance de deux mots contraires|Une répétition de sons;Une exagération;Une question sans réponse|Exemple : « une obscure clarté ».
+3|fr|Que veut dire « dithyrambique » ?|Très élogieux|Très ennuyeux;Très long;Très critique|
+3|fr|Qu'est-ce que la sérendipité ?|Faire une découverte par hasard|Garder son calme;Avoir de l'intuition;Savoir écouter|
+3|fr|Que désigne le mot « callipyge » ?|Qui a de belles fesses|Qui a une belle écriture;Qui parle beaucoup;Qui a de beaux cheveux|
+3|cui|Qu'est-ce que le brillat-savarin ?|Un fromage|Une sauce;Un gâteau;Un vin|
+3|cui|Quel fromage est surnommé « le roi des fromages » ?|Le brie|Le roquefort;Le comté;Le camembert|
+3|cui|Quel champignon est appelé le « diamant noir » ?|La truffe noire|Le cèpe;La morille;La trompette-de-la-mort|
+3|cui|Quels sont les ingrédients de base de la sauce béarnaise ?|Beurre, jaunes d'œufs, estragon|Crème, moutarde, ciboulette;Huile, ail, persil;Tomate, oignon, thym|
+3|cui|Quelle pâtisserie doit son nom à une course cycliste ?|Le paris-brest|L'opéra;Le saint-honoré;Le mille-feuille|Créée en 1910 pour la course Paris-Brest-Paris.
+3|cui|Que veut dire « cuire une pâte à blanc » ?|La cuire sans garniture|La cuire sans dorure;La cuire à basse température;La cuire avec du sucre|
+3|div|Que vaut XLIV en chiffres romains ?|44|46;64;54|
+3|div|Combien font 17 × 23 ?|391|371;401;381|
+3|div|Combien de diagonales a un hexagone ?|9|6;8;12|
+3|div|Quel nombre premier vient juste après 89 ?|97|91;93;95|91 = 7 × 13.
+3|div|Combien de faces a un icosaèdre ?|20|12;16;24|
+3|div|Combien font 2 puissance 10 ?|1 024|1 000;512;2 048|
+`.trim().split('\n').map(l=>{const [lv,th,q,a,w,ex]=l.split('|');return{lv:+lv,th,q,a,w:w.split(';'),ex:ex||''}});
+
+const DEFS=`<linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9cc6e8"/><stop offset=".7" stop-color="#dcebf3"/><stop offset="1" stop-color="#f6ead2"/></linearGradient><linearGradient id="gV" x1="0" x2="1"><stop offset="0" stop-color="#6e421d"/><stop offset=".3" stop-color="#b9834b"/><stop offset=".65" stop-color="#a26b36"/><stop offset="1" stop-color="#5f3817"/></linearGradient>
+<linearGradient id="gH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c8935a"/><stop offset=".45" stop-color="#a87039"/><stop offset="1" stop-color="#6b4019"/></linearGradient>
+<linearGradient id="gI" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7c7f84"/><stop offset="1" stop-color="#34363a"/></linearGradient>
+<radialGradient id="gS" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#fbe2cf"/><stop offset="1" stop-color="#dfa983"/></radialGradient>
+<radialGradient id="gM" cx=".38" cy=".3" r=".85"><stop offset="0" stop-color="#fde6d4"/><stop offset=".7" stop-color="#f1c3a3"/><stop offset="1" stop-color="#d99a76"/></radialGradient>
+<linearGradient id="gSh" x1="0" x2="1"><stop offset="0" stop-color="#f8f1e2"/><stop offset="1" stop-color="#d4c5a6"/></linearGradient>
+<linearGradient id="gD" x1="0" x2="1"><stop offset="0" stop-color="#a6dc5a"/><stop offset=".6" stop-color="#86c13a"/><stop offset="1" stop-color="#5f9622"/></linearGradient>
+<linearGradient id="gB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8d5a33"/><stop offset="1" stop-color="#3f230e"/></linearGradient>
+<linearGradient id="gT" x1="0" x2="1"><stop offset="0" stop-color="#4a4757"/><stop offset="1" stop-color="#2a2833"/></linearGradient>
+<radialGradient id="gN" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#f5675a"/><stop offset="1" stop-color="#a8221a"/></radialGradient>
+<radialGradient id="gF" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cddcee"/></radialGradient>
+<linearGradient id="gW" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></linearGradient>`;
+const O='stroke="#2e1b0e" stroke-width=".9"';
+const GR=(d)=>`<path d="${d}" fill="none" stroke="#4e2e12" stroke-width=".6" opacity=".55"/>`;
+const PARTS=[
+// 0 échafaud : escalier, croisillons, pieds, plancher, trappe
+`<path d="M58 150L121 182M121 150L58 182M124 150L188 182M188 150L124 182" stroke="#3e2410" stroke-width="4.6"/><path d="M58 150L121 182M121 150L58 182M124 150L188 182M188 150L124 182" stroke="#8e5c2c" stroke-width="3.2"/>
+<rect x="53" y="146" width="7" height="38" fill="url(#gV)" ${O}/><rect x="118" y="146" width="7" height="38" fill="url(#gV)" ${O}/><rect x="186" y="146" width="7" height="38" fill="url(#gV)" ${O}/>
+${[0,1,2,3].map(i=>{const y=175-i*9.2,x=8+(184-y)*.9545;return `<rect x="${(x-4).toFixed(1)}" y="${y.toFixed(1)}" width="13" height="3.2" rx=".6" fill="url(#gH)" ${O}/>`}).join('')}
+<path d="M8 184L50 140" stroke="#3e2410" stroke-width="6.4" stroke-linecap="round"/><path d="M8 184L50 140" stroke="#9a6532" stroke-width="4.6" stroke-linecap="round"/>
+<path d="M14 184V152M44 146V118M14 154L46 120" stroke="#3e2410" stroke-width="3.4" stroke-linecap="round"/><path d="M14 184V152M44 146V118M14 154L46 120" stroke="#a87039" stroke-width="2" stroke-linecap="round"/>
+<rect x="47" y="137" width="152" height="4.5" fill="#cf9c62" ${O}/><rect x="47" y="141.5" width="152" height="7" fill="url(#gH)" ${O}/>
+${[62,77,92,107,173,188].map(x=>`<path d="M${x} 141.5v7" stroke="#4e2e12" stroke-width=".7"/><circle cx="${x-3}" cy="145" r=".7" fill="#2b2b2b"/>`).join('')}
+${GR('M50 144.5q20 1 40 0t36 0M164 145q12-1 32 0')}
+<g class="trap"><rect x="127" y="137" width="36" height="11.5" fill="url(#gH)" stroke="#2e1b0e" stroke-width="1.1"/>${GR('M130 142q15 1.5 30 0M130 146q12-1 30 .5')}<rect x="127.5" y="138.5" width="7" height="3" fill="url(#gI)"/><circle cx="133" cy="140" r=".7" fill="#ccc"/></g>`,
+// 1 mât
+`<rect x="69" y="10" width="12.5" height="128" fill="url(#gV)" ${O}/>${GR('M72.5 18q1.5 30 0 60t.8 55M77.5 14q-1 40 .5 80')}<ellipse cx="76.5" cy="62" rx="1.6" ry="3.2" fill="none" stroke="#4e2e12" stroke-width=".7"/>
+<rect x="62" y="129" width="26" height="9" rx="1" fill="url(#gH)" ${O}/><rect x="66" y="114" width="18.5" height="12" rx="1" fill="url(#gI)" stroke="#1f2023" stroke-width=".7"/><circle cx="70" cy="120" r="1.4" fill="#c9cbd0"/><circle cx="80.5" cy="120" r="1.4" fill="#c9cbd0"/>`,
+// 2 potence : poutre, jambe de force, ferrures
+`<path d="M81.5 62V50L111 19.5H124Z" fill="url(#gV)" ${O}/>${GR('M84 55L110 26')}<rect x="60" y="8" width="114" height="11.5" rx="1" fill="url(#gH)" ${O}/><rect x="170" y="8" width="4" height="11.5" fill="#5f3817"/>${GR('M64 12q30 1.5 60 0t44 .5M66 16q40-1 100 .5')}
+<rect x="64.5" y="5.5" width="22" height="17" rx="1.2" fill="url(#gI)" stroke="#1f2023" stroke-width=".7"/><circle cx="69" cy="10" r="1.3" fill="#c9cbd0"/><circle cx="82" cy="10" r="1.3" fill="#c9cbd0"/><circle cx="69" cy="18" r="1.3" fill="#c9cbd0"/><circle cx="82" cy="18" r="1.3" fill="#c9cbd0"/>
+<rect x="104" y="18" width="13" height="6" rx="1" fill="url(#gI)" transform="rotate(-46 110 21)"/>`,
+// 3 corde : tours sur la poutre, corde torsadée, nœud coulant
+`${[151.5,154.9,158.3].map(x=>`<rect x="${x}" y="6" width="3" height="15.5" rx="1.5" fill="#c9a35b" stroke="#6b4c22" stroke-width=".6"/>`).join('')}
+<path d="M157 21V45" stroke="#6b4c22" stroke-width="3.6"/><path d="M157 21V45" stroke="#d2ae6a" stroke-width="2.4"/><path d="M157 21V45" stroke="#8f6a33" stroke-width="2.4" stroke-dasharray="1 2.4"/>
+${[0,1,2,3,4,5].map(i=>`<ellipse cx="157" cy="${45.5+i*2.4}" rx="3.4" ry="1.6" fill="#cfa962" stroke="#6b4c22" stroke-width=".6"/>`).join('')}
+<path d="M156.6 59.5Q156 66.5 150.5 70.6" stroke="#6b4c22" stroke-width="3.2" fill="none"/><path d="M156.6 59.5Q156 66.5 150.5 70.6" stroke="#d2ae6a" stroke-width="2" fill="none"/>`,
+// 4 tête
+`<rect x="142.3" y="82" width="5.4" height="7" fill="url(#gS)" stroke="#2b1d16" stroke-width=".8"/>
+<ellipse cx="138.3" cy="77" rx="1.5" ry="2.4" fill="url(#gS)" stroke="#2b1d16" stroke-width=".7"/><ellipse cx="151.7" cy="77" rx="1.5" ry="2.4" fill="url(#gS)" stroke="#2b1d16" stroke-width=".7"/>
+<ellipse cx="145" cy="76" rx="7" ry="8.4" fill="url(#gS)" stroke="#2b1d16" stroke-width=".9"/>
+<path d="M137.8 75.5C137 66 142 66.4 145 66.4C150.5 66.4 153.2 68.6 152.2 75.5C151 71 148.5 70.2 145.8 70.6C142.6 70.2 139.6 71.6 137.8 75.5Z" fill="#4a2f1d" stroke="#2b1d16" stroke-width=".6"/>
+<ellipse cx="141.6" cy="81.3" rx="1.6" ry=".9" fill="#ee9f95" opacity=".55"/><ellipse cx="148.4" cy="81.3" rx="1.6" ry=".9" fill="#ee9f95" opacity=".55"/>
+<g class="eyes"><path d="M140.4 73.6L143.6 72.6M146.4 72.6L149.6 73.6" stroke="#3a2518" stroke-width=".9" stroke-linecap="round"/><ellipse cx="142.3" cy="75.8" rx=".95" ry="1.15" fill="#1f1410"/><ellipse cx="147.7" cy="75.8" rx=".95" ry="1.15" fill="#1f1410"/><path d="M142.6 82q2.4-1.4 4.8 0" stroke="#5a2c22" stroke-width=".9" fill="none" stroke-linecap="round"/></g>
+<g class="xeyes"><path d="M141 74.6l2.6 2.6M143.6 74.6L141 77.2M146.4 74.6l2.6 2.6M149 74.6l-2.6 2.6M143 82.2h4" stroke="#1f1410" stroke-width=".9" stroke-linecap="round"/></g>
+<path d="M145 76.4q1.3 2.4-.3 3" stroke="#a5705a" stroke-width=".8" fill="none"/>`,
+// 5 torse : chemise, gilet à la couleur du joueur, ceinture
+`<path d="M134.6 92.5Q135 88.6 140.5 88.2L149.5 88.2Q155 88.6 155.4 92.5L153.6 113.5H136.4Z" fill="url(#gSh)" stroke="#2b1d16" stroke-width=".8"/>
+<path d="M135.6 92.4Q136 89 141.4 88.6L145 99.5L144.6 112.5H137Z" fill="var(--pc)" stroke="#2b1d16" stroke-width=".8"/><path d="M154.4 92.4Q154 89 148.6 88.6L145 99.5L145.4 112.5H153Z" fill="var(--pc)" stroke="#2b1d16" stroke-width=".8"/>
+<path d="M148.6 88.6L145 99.5L145.4 112.5H153L154.4 92.4Q154 89 148.6 88.6Z" fill="#000" opacity=".16"/>
+<path d="M142 88.4L145 92.6L148 88.4" fill="#fff" stroke="#2b1d16" stroke-width=".6"/><circle cx="144" cy="103" r=".8" fill="#ecd697"/><circle cx="144" cy="107.4" r=".8" fill="#ecd697"/>
+<rect x="136.3" y="111.4" width="17.4" height="3.2" fill="#3b2414" stroke="#1d120a" stroke-width=".5"/><rect x="143.3" y="111" width="3.4" height="4" fill="none" stroke="#d9b45a" stroke-width=".9"/>`,
+// 6 bras
+`<path d="M136.4 91.5Q132.4 95.5 132 103.5Q131.7 108 133 112M153.6 91.5Q157.6 95.5 158 103.5Q158.3 108 157 112" stroke="#2b1d16" stroke-width="6.6" fill="none" stroke-linecap="round"/><path d="M136.4 91.5Q132.4 95.5 132 103.5Q131.7 108 133 112M153.6 91.5Q157.6 95.5 158 103.5Q158.3 108 157 112" stroke="#efe6d2" stroke-width="5" fill="none" stroke-linecap="round"/>
+<path d="M131 109.5h4M155 109.5h4" stroke="#b8a888" stroke-width="1"/><ellipse cx="133.2" cy="114.4" rx="2" ry="2.6" fill="url(#gS)" stroke="#2b1d16" stroke-width=".7"/><ellipse cx="156.8" cy="114.4" rx="2" ry="2.6" fill="url(#gS)" stroke="#2b1d16" stroke-width=".7"/>`,
+// 7 jambes : pantalon, bottes
+`<path d="M136.8 114.4H145L144.3 134H139.2Z" fill="url(#gT)" stroke="#16151b" stroke-width=".8"/><path d="M145 114.4H153.2L150.8 134H145.7Z" fill="url(#gT)" stroke="#16151b" stroke-width=".8"/>
+<path d="M141.5 117V132M148.8 117L148 132" stroke="#5c596b" stroke-width=".5"/>
+<path d="M139 133.4h5.6v4.6h-8q-1.1 0-.6-1.5q.6-1.6 3-1.6Z" fill="url(#gB)" stroke="#1d120a" stroke-width=".7"/><path d="M145.4 133.4H151q2.4 0 3 1.6q.5 1.5-.6 1.5h-8Z" fill="url(#gB)" stroke="#1d120a" stroke-width=".7"/>`];
+const LEVER=`<g class="lever"><g class="lh"><path d="M186 134L201 112" stroke="#2e2e2e" stroke-width="4" stroke-linecap="round"/><path d="M186 134L201 112" stroke="#6d6f74" stroke-width="2.2" stroke-linecap="round"/><circle cx="201" cy="112" r="4.2" fill="#c0392b" stroke="#5e1a12" stroke-width=".9"/><circle cx="199.7" cy="110.7" r="1.2" fill="#fff" opacity=".6"/></g><rect x="180" y="131" width="12" height="6.5" rx="1" fill="url(#gI)" stroke="#1f2023" stroke-width=".7"/></g>`;
+function mmArt(pose){const K='stroke="#2a1d18" stroke-width="2"';
+ const armL=pose==='pull'
+  ?`<path d="M44 114Q30 116 22 122" stroke="#2a1d18" stroke-width="13" stroke-linecap="round" fill="none"/><path d="M44 114Q30 116 22 122" stroke="url(#gSh)" stroke-width="10" stroke-linecap="round" fill="none"/><path d="M27 116l-3 9" stroke="#2a1d18" stroke-width="1.4"/><path d="M24 121L10 124" stroke="#2a1d18" stroke-width="10.5" stroke-linecap="round"/><path d="M24 121L10 124" stroke="#f1c3a3" stroke-width="8" stroke-linecap="round"/><circle cx="8" cy="124" r="6" fill="url(#gM)" ${K}/>`
+  :`<rect x="17.5" y="56" width="6" height="104" rx="2.5" fill="url(#gV)" stroke="#2e1b0e" stroke-width="1.2"/><rect x="3" y="34" width="34" height="24" rx="3" fill="url(#gH)" stroke="#2e1b0e" stroke-width="1.4"/><rect x="8" y="34" width="4" height="24" fill="url(#gI)"/><rect x="28" y="34" width="4" height="24" fill="url(#gI)"/>${GR('M14 40q7 1 13 0M14 50q7-1 13 .5')}
+    <path d="M44 114Q32 120 28 132" stroke="#2a1d18" stroke-width="13" stroke-linecap="round" fill="none"/><path d="M44 114Q32 120 28 132" stroke="url(#gSh)" stroke-width="10" stroke-linecap="round" fill="none"/><path d="M28 126l9 3" stroke="#2a1d18" stroke-width="1.4"/><path d="M29 131L22 138" stroke="#2a1d18" stroke-width="10.5" stroke-linecap="round"/><path d="M29 131L22 138" stroke="#f1c3a3" stroke-width="8" stroke-linecap="round"/><ellipse cx="20.5" cy="137" rx="7" ry="6" fill="url(#gM)" ${K}/><path d="M15 135h11M15 139h11" stroke="#b9805e" stroke-width="1"/>`;
+ return `<g class="smoke"><circle cx="72" cy="27" r="7.5" fill="url(#gF)"/><circle cx="82" cy="16" r="6.5" fill="url(#gF)"/><circle cx="69" cy="7" r="5" fill="url(#gF)"/><circle cx="78" cy="1" r="3" fill="url(#gF)"/></g>
+ <path d="M44 109Q70 101 96 109L102 136H38Z" fill="url(#gSh)" ${K}/>
+ <path d="M96 114Q110 120 112 132" stroke="#2a1d18" stroke-width="13" stroke-linecap="round" fill="none"/><path d="M96 114Q110 120 112 132" stroke="url(#gSh)" stroke-width="10" stroke-linecap="round" fill="none"/><path d="M104 126l10-2" stroke="#2a1d18" stroke-width="1.4"/><path d="M112 131Q112 140 104 142" stroke="#2a1d18" stroke-width="10.5" stroke-linecap="round" fill="none"/><path d="M112 131Q112 140 104 142" stroke="#f1c3a3" stroke-width="8" stroke-linecap="round" fill="none"/>
+ <path d="M38 128Q70 121 102 128L108 170Q70 177 32 170Z" fill="url(#gD)" ${K}/><path d="M51 112H89L91 131H49Z" fill="url(#gD)" ${K}/>
+ <path d="M53 115H87L88.6 129M51.5 129L53 115" fill="none" stroke="#e8f6cf" stroke-width=".9" stroke-dasharray="2 1.6"/>
+ <path d="M52 113L45 101M88 113L95 101" stroke="#2a1d18" stroke-width="8" stroke-linecap="round"/><path d="M52 113L45 101M88 113L95 101" stroke="#86c13a" stroke-width="5.4" stroke-linecap="round"/>
+ <circle cx="55" cy="117" r="3.6" fill="#f2c21b" stroke="#2a1d18" stroke-width="1.4"/><circle cx="85" cy="117" r="3.6" fill="#f2c21b" stroke="#2a1d18" stroke-width="1.4"/><circle cx="54" cy="116" r="1" fill="#fff" opacity=".7"/><circle cx="84" cy="116" r="1" fill="#fff" opacity=".7"/>
+ <rect x="60" y="136" width="20" height="14" rx="2" fill="#7fb734" ${K} stroke-width="1.5"/><rect x="62" y="138" width="16" height="10" rx="1.4" fill="none" stroke="#e8f6cf" stroke-width=".8" stroke-dasharray="1.6 1.4"/><path d="M70 156V172" stroke="#2a1d18" stroke-width="1.4"/>
+ <path d="M38 128Q70 121 102 128L108 170Q70 177 32 170Z" fill="url(#gW)"/>
+ <rect x="44" y="168" width="19" height="12" fill="url(#gD)" ${K}/><rect x="77" y="168" width="19" height="12" fill="url(#gD)" ${K}/><rect x="42" y="176" width="23" height="6" rx="2.5" fill="#b4e070" ${K} stroke-width="1.5"/><rect x="75" y="176" width="23" height="6" rx="2.5" fill="#b4e070" ${K} stroke-width="1.5"/>
+ <path d="M34 190Q34 181 48 181Q63 181 66 189Q66 194 50 194Q34 194 34 190Z" fill="url(#gB)" ${K}/><path d="M74 189Q77 181 92 181Q106 181 106 190Q106 194 90 194Q74 194 74 189Z" fill="url(#gB)" ${K}/><ellipse cx="44" cy="185" rx="5" ry="1.8" fill="#fff" opacity=".35"/><ellipse cx="96" cy="185" rx="5" ry="1.8" fill="#fff" opacity=".35"/>
+ <path d="M57 104L70 113L83 104L77 101.5L70 107L63 101.5Z" fill="#fff" ${K} stroke-width="1.5"/>
+ <ellipse cx="36" cy="77" rx="8.5" ry="12" fill="url(#gM)" ${K}/><ellipse cx="104" cy="77" rx="8.5" ry="12" fill="url(#gM)" ${K}/><path d="M35 71q4 6 0 12M105 71q-4 6 0 12" stroke="#c98a67" stroke-width="1.6" fill="none"/>
+ <circle cx="70" cy="70" r="34" fill="url(#gM)" ${K} stroke-width="2.2"/><ellipse cx="57" cy="47" rx="10" ry="5" fill="#fff" opacity=".45" transform="rotate(-22 57 47)"/>
+ <path d="M38 61L22 52L25 63L22 74L39 69" fill="#1e1b1f" stroke="#000" stroke-width="1"/><path d="M37 60Q70 49 103 60L102 73Q70 64 38 73Z" fill="#1e1b1f" stroke="#000" stroke-width="1"/>
+ <path d="M47 53Q55 47 64 51M76 51Q85 47 93 53" stroke="#3b2a20" stroke-width="3.4" stroke-linecap="round" fill="none"/>
+ <ellipse cx="56" cy="65" rx="6.4" ry="5.8" fill="#fff"/><ellipse cx="84" cy="65" rx="6.4" ry="5.8" fill="#fff"/><circle cx="57.5" cy="66" r="3" fill="#1d1d1d"/><circle cx="82.5" cy="66" r="3" fill="#1d1d1d"/><circle cx="58.6" cy="64.8" r="1" fill="#fff"/><circle cx="83.6" cy="64.8" r="1" fill="#fff"/>
+ <ellipse cx="49" cy="84" rx="7.5" ry="4.6" fill="#f08d97" opacity=".6"/><ellipse cx="91" cy="84" rx="7.5" ry="4.6" fill="#f08d97" opacity=".6"/>
+ <path d="M53 91Q70 107 87 91Q70 99 53 91Z" fill="#7a2323" ${K} stroke-width="1.8"/><path d="M57 92.6Q70 99.5 83 92.6L82 95.2Q70 101 58 95.2Z" fill="#fff"/><path d="M63 103Q70 106.5 77 103" stroke="#c98a67" stroke-width="1.4" fill="none"/>
+ <circle cx="70" cy="79" r="9" fill="url(#gN)" ${K} stroke-width="1.8"/><circle cx="66.6" cy="75.8" r="2.4" fill="#fff" opacity=".6"/>
+ ${armL}`}
+
+
+// ---- Le public ----
+const CROWD=[
+ {c:'#5b6f8f',h:'beret',hc:'#2b2b33',k:'#3b2a20'},{c:'#9a4b3c',h:'scarf',hc:'#d9a441',k:'#6b3a22'},{c:'#4f7a4a',h:'canot',hc:'#e8d8a8',k:'#2e1f15'},
+ {c:'#7a5a9a',h:'bun',hc:'#5a3a22',k:'#5a3a22'},{c:'#b07a3a',h:'cap',hc:'#3a4a6a',k:'#1f1a16'},{c:'#3f5f6f',h:'none',hc:'#8a6a4a',k:'#8a6a4a'},
+ {c:'#8a3a52',h:'beret',hc:'#7b1e3a',k:'#c9c0b4'},{c:'#6a6a3a',h:'canot',hc:'#e8d8a8',k:'#4a3020'},{c:'#c0603a',h:'bun',hc:'#b88a4a',k:'#b88a4a'}];
+function person(o,i){const K='stroke="#2a1d18" stroke-width="1"';let hat='';
+ if(o.h==='beret')hat=`<ellipse cx="0" cy="-38" rx="9.5" ry="3.6" fill="${o.hc}" ${K}/><circle cx="0" cy="-41.6" r="1.4" fill="${o.hc}"/>`;
+ else if(o.h==='canot')hat=`<rect x="-11.5" y="-40" width="23" height="2.4" rx="1" fill="${o.hc}" ${K}/><rect x="-6.5" y="-46" width="13" height="6.4" rx="1" fill="${o.hc}" ${K}/><rect x="-6.5" y="-42.4" width="13" height="2" fill="#7b1e3a"/>`;
+ else if(o.h==='cap')hat=`<path d="M-8 -36.5Q-8 -44 0 -44Q8 -44 8 -36.5Z" fill="${o.hc}" ${K}/><path d="M2 -37h9" stroke="#2a1d18" stroke-width="2.4" stroke-linecap="round"/>`;
+ else if(o.h==='scarf')hat=`<path d="M-8.6 -30Q-9.5 -42 0 -42Q9.5 -42 8.6 -30L6.5 -34Q0 -38.5 -6.5 -34Z" fill="${o.hc}" ${K}/>`;
+ else if(o.h==='bun')hat=`<circle cx="0" cy="-42" r="4" fill="${o.hc}" ${K}/>`;
+ const hair=o.h==='scarf'?'':`<path d="M-7.4 -31.5Q-8 -40 0 -40Q8 -40 7.4 -31.5Q5 -36 0 -35.6Q-5 -36 -7.4 -31.5Z" fill="${o.k}" ${K} stroke-width=".6"/>`;
+ return `<g class="cp" style="--d:${(i*.37)%1.6}s"><g class="cj" style="--j:${(i%3)*.12}s">
+ <g class="ar${i%2?'':' up'}"><path d="M-10 -15L-16 -36M10 -15L16 -36" stroke="#2a1d18" stroke-width="5.6" stroke-linecap="round"/><path d="M-10 -15L-16 -36M10 -15L16 -36" stroke="${o.c}" stroke-width="4" stroke-linecap="round"/><circle cx="-16.4" cy="-37.5" r="2.6" fill="url(#gS)" ${K} stroke-width=".7"/><circle cx="16.4" cy="-37.5" r="2.6" fill="url(#gS)" ${K} stroke-width=".7"/></g>
+ <path d="M-15 0C-15 -16 -9.5 -21.5 0 -21.5C9.5 -21.5 15 -16 15 0Z" fill="${o.c}" ${K}/><path d="M-4 -21L0 -16L4 -21" fill="#efe6d2" ${K} stroke-width=".7"/>
+ <rect x="-2.6" y="-24.5" width="5.2" height="4.5" fill="url(#gS)"/><ellipse cx="0" cy="-31" rx="7.6" ry="8.6" fill="url(#gS)" ${K}/>${hair}${hat}
+ <circle cx="-2.7" cy="-31.4" r=".95" fill="#1f1410"/><circle cx="2.7" cy="-31.4" r=".95" fill="#1f1410"/><ellipse cx="-4.4" cy="-27.6" rx="1.5" ry=".9" fill="#ee9f95" opacity=".5"/><ellipse cx="4.4" cy="-27.6" rx="1.5" ry=".9" fill="#ee9f95" opacity=".5"/>
+ <path d="M-2.6 -26.6q2.6 2 5.2 0" class="ms" stroke="#5a2c22" stroke-width=".9" fill="none" stroke-linecap="round"/><ellipse cx="0" cy="-25.8" rx="1.5" ry="2" class="mo" fill="#5a2020"/></g></g>`}
+function crowdSVG(n,W,base,s,shout){const step=W/n;
+ return CROWD.slice(0,n).map((o,i)=>`<g transform="translate(${(step*(i+.5)+(i%2?3:-3)).toFixed(1)},${base+(i%2?4:0)}) scale(${s*(i%3===1?.94:1)})">${person(o,i)}</g>`).join('')+
+ (shout||[]).map(([x,y,t],k)=>`<g class="shout" style="--k:${k*.18}s"><rect x="${x-t.length*3.2-6}" y="${y-11}" width="${t.length*6.4+12}" height="16" rx="8" fill="#fff" stroke="#2a1d18" stroke-width="1"/><text x="${x}" y="${y}" text-anchor="middle">${esc(t)}</text></g>`).join('')}
+
+
+const $=id=>document.getElementById(id),side=$('side'),hb=$('hangbox');
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+const PCOL=['#7b1e3a','#3f6b3a','#a87a12','#3d5a99'];
+const LV=['Enfants','Petit niveau','Grand niveau','Très grand niveau'];
+const MAXE=8,LET='ABCD';
+$('artdefs').innerHTML=DEFS;
+let cfg={names:['Joueur 1','Joueur 2'],lvl:-1,th:Object.keys(THEMES)};try{Object.assign(cfg,JSON.parse(localStorage.getItem('pendu-gk')||'{}'))}catch(e){}
+const saveCfg=()=>{try{localStorage.setItem('pendu-gk',JSON.stringify(cfg))}catch(e){}};
+let H=null,best=0,say='',sayNew=true,crowdMood='',seen=new Set();try{best=+localStorage.getItem('pendu-gk-best')||0}catch(e){}
+function talk(t){say=t;sayNew=true}
+function gParts(e,fresh){const g=i=>i<e?`<g class="p${i}${fresh&&i===e-1?' new':''}">${i>3?`<g transform="matrix(1.3,0,0,1.3,-43.5,-41.4)">${PARTS[i]}</g>`:PARTS[i]}</g>`:'';return [0,1,2].map(g).join('')+`<g class="sw">${[3,4,5,6,7].map(g).join('')}</g>`}
+function gallows(e,fresh,pc){return `<svg viewBox="0 0 200 190" class="gal" style="--pc:${pc}" role="img" aria-label="${e} erreur${e>1?'s':''} sur ${MAXE}"><line x1="0" y1="184.5" x2="200" y2="184.5" class="ground"/>${gParts(e,fresh)}</svg>`}
+function mmBar(){const s=`<div class="mmbar"><svg viewBox="0 -6 140 206" class="mm" role="img" aria-label="Monsieur Méninge, le bourreau">${mmArt()}</svg><p class="bubble${sayNew?' pop':''}">${esc(say)}</p><svg viewBox="0 -58 160 70" class="crowd ${crowdMood}" role="img" aria-label="Le public">${crowdSVG(5,160,10,.95,crowdMood==='ok'?[[45,-50,'Bravo !']]:crowdMood==='ko'?[[112,-50,'Ouuuh !']]:crowdMood==='near'?[[112,-50,'Oh là là !']]:[])}</svg></div>`;sayNew=false;return s}
+const nm=a=>a.map(p=>esc(p.n)).join(', ').replace(/, ([^,]*)$/,' et $1');
+
+function pool(){return GK.filter(q=>(cfg.lvl<0||q.lv===cfg.lvl)&&cfg.th.includes(q.th))}
+function count(){return pool().length}
+function setup(){H=null;crowdMood='';document.querySelector('main').classList.remove('hend');
+  talk(cfg.lvl===0?'Approchez, les enfants ! Le bourreau Méninge a des questions pour vous…':'Approchez, approchez ! Le bourreau Méninge vous attend…');
+  hb.innerHTML=mmBar()+`<div class="hp demo" style="--pc:#7b1e3a"><h4><span>Huit erreurs et c'est la corde</span></h4>${gallows(MAXE,false,'#7b1e3a')}<p class="meta">Plancher, mât, potence, corde, tête, corps, bras, jambes : chaque mauvaise réponse ajoute un morceau.</p></div>`;
+  const n=count();
+  side.innerHTML=`<p class="kick">Culture générale, de 7 à 107 ans</p><h2>Qui finira pendu ?</h2>
+  <p>Une question pour tout le monde à chaque tour. Chacun choisit sa lettre sous sa potence ; la réponse s'affiche quand tous ont répondu. Une erreur, un morceau de plus. Le premier pendu perd la partie.</p>
+  <h3>Joueurs (1 à 4)</h3><div id="pl">${cfg.names.map((n,i)=>`<div class="pr"><i style="background:${PCOL[i]}"></i><input value="${esc(n)}" data-p="${i}" maxlength="20" aria-label="Nom du joueur ${i+1}">${cfg.names.length>1?`<button class="x" data-del="${i}" aria-label="Retirer ${esc(n)}">×</button>`:''}</div>`).join('')}</div>
+  ${cfg.names.length<4?'<button class="btn ghost sm" id="addp">+ Ajouter un joueur</button>':''}
+  <h3>Niveau</h3><div class="seg wrap">${[[-1,'Tout mélangé'],[0,'Enfants'],[1,'Petit'],[2,'Grand'],[3,'Très grand']].map(([v,x])=>`<button data-l="${v}" aria-pressed="${cfg.lvl===v}">${x}</button>`).join('')}</div>
+  <h3>Thèmes</h3><div class="seg wrap">${Object.entries(THEMES).map(([k,v])=>`<button data-t="${k}" aria-pressed="${cfg.th.includes(k)}">${v}</button>`).join('')}</div>
+  <p class="meta" style="margin-top:8px">${n} question${n>1?'s':''} avec ces réglages.</p>
+  <button class="btn wide" id="go"${n<4?' disabled':''}>${n<4?'Choisissez au moins un thème':'Commencer la partie'}</button>`;
+}
+function start(){cfg.names=cfg.names.map((n,i)=>n.trim()||('Joueur '+(i+1)));saveCfg();
+  H={P:cfg.names.map((n,i)=>({n,c:PCOL[i],e:0,ok:0,ans:null,fresh:false})),n:0,over:false,deck:[]};next()}
+function draw(){let p=pool().filter(q=>!seen.has(q.q));if(!p.length){pool().forEach(q=>seen.delete(q.q));p=pool()}const q=rnd(p);seen.add(q.q);const o=shuf([q.a,...q.w]);return{...q,o,ans:o.indexOf(q.a)}}
+function next(){H.n++;H.Q=draw();H.rev=false;crowdMood='';H.P.forEach(p=>{p.ans=null;p.fresh=false});
+  talk(rnd(H.n===1?['Première question… la corde est déjà prête !','On commence ! Bonne chance… vous en aurez besoin.']:['À vos lettres !','Réfléchissez bien, mon échafaud a faim…','Moi, je connais la réponse… mais je ne dis rien !','Pas de souffleur, hein !','Hmm, celle-là, elle est sournoise…','Allez, celle-là, c\'est du gâteau !']));render()}
+function panels(){hb.innerHTML=mmBar()+H.P.map((p,i)=>{let st;
+  if(H.rev)st=p.ans===H.Q.ans?`<p class="res ok">Bonne réponse (${LET[p.ans]})</p>`:`<p class="res no">${p.ans==null?'Pas de réponse':'Réponse '+LET[p.ans]} : raté</p>`;
+  else if(p.ans!=null)st='<p class="res">Réponse enregistrée</p>';
+  else st=`<div class="hb">${H.Q.o.map((_,j)=>`<button data-h="${i}" data-o="${j}" aria-label="${esc(p.n)} répond ${LET[j]}">${LET[j]}</button>`).join('')}</div>`;
+  return `<div class="hp${p.e>=MAXE?' hanged':''}${p.fresh&&H.rev?' hit':''}" style="--pc:${p.c}"><h4><span><i></i>${esc(p.n)}</span><span>${p.e} / ${MAXE}</span></h4>${gallows(p.e,p.fresh,p.c)}${st}</div>`}).join('')}
+function render(){document.querySelector('main').classList.remove('hend');const Q=H.Q,left=H.P.filter(p=>p.ans==null).length;panels();
+  side.innerHTML=`<p class="kick">Question ${H.n} · ${THEMES[Q.th]} · ${LV[Q.lv]}</p><p class="q">${esc(Q.q)}</p>
+  <div class="opts">${Q.o.map((x,j)=>`<div class="hopt${H.rev&&j===Q.ans?' ok':''}"><b>${LET[j]}</b>${esc(x)}</div>`).join('')}</div>
+  ${H.rev?`<div class="msg ${H.P.every(p=>p.ans===Q.ans)?'ok':'no'}">${msg()}</div>${Q.ex?`<p class="fun" style="margin-top:12px">${esc(Q.ex)}</p>`:''}<button class="btn" id="hnext">${H.over?'Voir le résultat':'Question suivante'}</button>`
+   :`<p class="hint">${H.P.length>1?'Chacun répond sous sa potence. ':''}Encore ${left} réponse${left>1?'s':''} attendue${left>1?'s':''}.</p>`}`}
+function msg(){const w=H.P.filter(p=>p.ans!==H.Q.ans);return `Réponse ${LET[H.Q.ans]} · ${esc(H.Q.a)}. `+(!w.length?'Tout le monde a juste !':H.P.length===1?'Un morceau de plus à la potence…':`Un morceau de plus pour ${nm(w)}.`)}
+function answer(i,j){const p=H.P[i];if(H.rev||p.ans!=null)return;p.ans=j;if(H.P.every(x=>x.ans!=null))reveal();else render()}
+function reveal(){H.rev=true;H.P.forEach(p=>{if(p.ans===H.Q.ans)p.ok++;else{p.e++;p.fresh=true}});H.over=H.P.some(p=>p.e>=MAXE);
+  const w=H.P.filter(p=>p.fresh),near=H.P.filter(p=>p.e===MAXE-1);
+  crowdMood=!w.length?'ok':near.length||H.over?'near':'ko';
+  if(H.over)talk('Ha ha ! Préparez-vous pour le grand final…');
+  else if(!w.length)talk(rnd(['Tout bon ? Mon échafaud attendra…','Grr… personne pour ma corde cette fois.','Bravo… je range mon maillet. Pour l\'instant.']));
+  else if(near.length)talk(`${near.map(p=>p.n).join(' et ')}, je fais le nœud… plus le droit à l'erreur !`);
+  else talk(rnd([`Et une planche de plus pour ${w.map(p=>p.n).join(', ')} !`,`Je sors le maillet pour ${w.map(p=>p.n).join(', ')} !`,`Toc toc toc… ça se construit pour ${w.map(p=>p.n).join(', ')} !`]));
+  render()}
+function end(){document.querySelector('main').classList.add('hend');H.P.forEach(p=>p.fresh=false);
+  const L=H.P.find(p=>p.e>=MAXE),hanged=H.P.filter(p=>p.e>=MAXE);crowdMood='';
+  talk(H.P.length===1?'Désolé… le règlement, c\'est le règlement !':`Désolé ${L.n}… le règlement, c'est le règlement !`);
+  hb.innerHTML=mmBar().replace('class="mmbar"','class="mmbar fin"')+`<div class="stage hanged" style="--pc:${L.c}"><svg viewBox="0 -6 312 248" role="img" aria-label="Monsieur Méninge actionne la trappe de ${esc(L.n)} devant le public"><rect x="0" y="-6" width="312" height="201" fill="url(#gSky)"/><ellipse cx="60" cy="20" rx="22" ry="7" fill="#fff" opacity=".8"/><ellipse cx="76" cy="15" rx="13" ry="7" fill="#fff" opacity=".8"/><ellipse cx="250" cy="30" rx="20" ry="6" fill="#fff" opacity=".7"/><path d="M0 170Q60 150 120 165T240 158T312 162V195H0Z" fill="#a9c48a" opacity=".7"/><path d="M214 168v-12l6-5 6 5v12M232 168v-16l7-6 7 6v16M252 168v-10l5-4 5 4v10M246 152v-8h3v6" fill="#9eaab8" opacity=".8"/><rect x="0" y="194.5" width="312" height="48" fill="#d9c49a"/><line x1="0" y1="194.5" x2="312" y2="194.5" stroke="#b49c6c" stroke-width="1.5"/><g transform="translate(0,10)" class="hangedg">${gParts(MAXE,false)}${LEVER}</g><g transform="translate(196,0)"><g class="mmpull">${mmArt('pull')}</g></g>${crowdSVG(9,312,241,1.08,[[52,180,'Oh !'],[156,174,`Pauvre ${L.n} !`],[262,180,'Hourra !']])}</svg><p class="stage-cap">${esc(L.n)}</p></div>`+
+  H.P.map(p=>`<div class="hp${p.e>=MAXE?' hanged':''}" style="--pc:${p.c}"><h4><span><i></i>${esc(p.n)}</span><span>${p.e} / ${MAXE}</span></h4>${gallows(p.e,false,p.c)}</div>`).join('');
+  let html;
+  if(H.P.length===1){const p=H.P[0],rec=p.ok>best;if(rec){best=p.ok;try{localStorage.setItem('pendu-gk-best',best)}catch(e){}}
+    html=`<p class="kick">Partie terminée</p><h2>Pendu au bout de ${H.n} questions</h2><div class="big">${p.ok}</div><p>bonne${p.ok>1?'s':''} réponse${p.ok>1?'s':''} avant la corde. ${rec?'Nouveau record !':'Record : '+best+'.'}</p>`}
+  else{const P=[...H.P].sort((a,b)=>a.e-b.e||b.ok-a.ok),bE=P[0].e,win=P.filter(p=>p.e===bE);
+    html=`<p class="kick">Partie terminée en ${H.n} questions</p><h2>La corde pour ${nm(hanged)} !</h2>
+    <p>${win.length===H.P.length?'Tout le monde est à égalité…':(win.length>1?'Les mieux placés : ':'Le meilleur : ')+nm(win)+', avec '+bE+' erreur'+(bE>1?'s':'')+'.'}</p>
+    <ol class="podium">${P.map(p=>`<li style="--pc:${p.c}"><span>${1+P.filter(x=>x.e<p.e).length}</span><b>${esc(p.n)}</b><em>${p.e} / ${MAXE}</em><small>${p.ok} bonne${p.ok>1?'s':''} réponse${p.ok>1?'s':''}${p.e>=MAXE?' · pendu':''}</small></li>`).join('')}</ol>`}
+  side.innerHTML=html+`<div class="row"><button class="btn" id="again">Revanche</button><button class="btn ghost" id="setup">Changer les réglages</button></div>`;
+}
+hb.addEventListener('click',e=>{const b=e.target.closest('[data-h]');if(b&&H)answer(+b.dataset.h,+b.dataset.o)});
+side.addEventListener('click',e=>{const t=e.target,cl=x=>t.closest(x);
+  const lb=cl('[data-l]');if(lb){cfg.lvl=+lb.dataset.l;saveCfg();setup();return}
+  const tb=cl('[data-t]');if(tb){const k=tb.dataset.t;cfg.th=cfg.th.includes(k)?cfg.th.filter(x=>x!==k):[...cfg.th,k];saveCfg();setup();return}
+  const db=cl('[data-del]');if(db){cfg.names.splice(+db.dataset.del,1);saveCfg();setup();return}
+  if(t.id==='addp'){cfg.names.push('Joueur '+(cfg.names.length+1));saveCfg();setup();const ins=side.querySelectorAll('#pl input');ins[ins.length-1].select();return}
+  if(t.id==='go'||t.id==='again'){start();return}
+  if(t.id==='setup'){setup();return}
+  if(t.id==='hnext'){H.over?end():next()}
+});
+side.addEventListener('input',e=>{const i=e.target.dataset.p;if(i!=null){cfg.names[+i]=e.target.value;saveCfg()}});
+setup();
+
+}
+</script>
+<div class="rmodal" id="rulesBox" hidden role="dialog" aria-modal="true" aria-labelledby="rtitle"><div class="rpanel"><button class="rclose" type="button" aria-label="Fermer">×</button><h2 id="rtitle">Comment jouer au pendu</h2>
+<p class="lead">De 1 à 4 joueurs sur le même écran. Chacun a sa potence : une mauvaise réponse, et Monsieur Méninge ajoute un morceau.</p>
+<h3>Préparer la partie</h3>
+<ol><li>Écrivez le prénom de chaque joueur (de 1 à 4).</li>
+<li>Choisissez le <b>niveau</b> : Enfants, Petit, Grand, Très grand, ou Tout mélangé.</li>
+<li>Choisissez les <b>thèmes</b> : histoire, géographie, sciences, sport, arts, langue française, cuisine, calcul. Touchez un thème pour l'enlever ou le remettre.</li>
+<li>Touchez « Commencer la partie ».</li></ol>
+<h3>Pendant la partie</h3>
+<ol><li>Une question s'affiche avec quatre réponses : A, B, C et D.</li>
+<li>Chaque joueur touche sa lettre <b>sous sa propre potence</b>. Son choix reste caché (« Réponse enregistrée »).</li>
+<li>Quand tout le monde a répondu, la bonne réponse s'affiche, avec parfois une petite explication.</li>
+<li>Bonne réponse : rien ne bouge. Mauvaise réponse : un morceau de l'échafaud se construit (plancher, mât, potence, corde, tête, corps, bras, jambes).</li>
+<li>Touchez « Question suivante » pour continuer.</li></ol>
+<h3>Qui gagne ?</h3>
+<p>Au bout de <b>8 erreurs</b>, le joueur est pendu et la partie s'arrête : Monsieur Méninge tire le levier devant le public ! Le classement va de celui qui a fait le moins d'erreurs au pendu. Seul, on joue jusqu'à être pendu et on essaie de battre son record de bonnes réponses.</p><button class="btn wide rok" type="button">J'ai compris, on joue !</button></div></div>
+<script>
+{const box=document.getElementById('rulesBox');
+function openR(){box.hidden=false;const m=(document.body.className.match(/g-(\w+)/)||[])[1];const sec=m&&document.getElementById('r-'+m);box.querySelector('.rpanel').scrollTop=sec?sec.offsetTop-20:0;box.querySelector('.rclose').focus({preventScroll:true})}
+function closeR(){box.hidden=true;document.getElementById('rulesBtn').focus()}
+document.getElementById('rulesBtn').addEventListener('click',openR);
+box.addEventListener('click',e=>{if(e.target===box||e.target.closest('.rclose,.rok'))closeR()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!box.hidden)closeR()});}
+</script>
+</body>
+</html>

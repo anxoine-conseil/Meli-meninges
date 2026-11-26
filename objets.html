@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="icon" type="image/png" href="logo/mm-32.png">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Méli-Méninges — Les mots en objets</title>
+<link rel="stylesheet" href="jeu-alphabet.css">
+<script>if(window!==window.parent)document.documentElement.classList.add('emb')</script>
+</head>
+<body>
+<h1 class="flower-title">Les mots en objets</h1>
+<div class="mode" role="group" aria-label="Mode de jeu">
+  <button data-mode="ecrire" aria-pressed="false">Écrire avec les objets</button>
+  <button data-mode="secret" aria-pressed="false">Le message secret</button>
+  <button data-mode="abc" aria-pressed="true">L'abécédaire</button>
+</div>
+
+<div id="play" class="hidden">
+  <div class="bar"><b>Niveau</b><div class="seg" id="lv"></div></div>
+  <div class="stats"><span>Mot <b id="nW">1</b> / 5</span><span><b id="pts">0</b> points</span></div>
+  <div class="target">
+    <p class="ask" id="ask"></p>
+    <div class="word" id="word"></div>
+    <div class="guess hidden" id="guessBox"><input id="guess" autocomplete="off" aria-label="Votre réponse" placeholder="Votre réponse"><button class="big" id="guessBtn">Valider</button></div>
+  </div>
+  <p class="msg" id="msg" aria-live="polite"></p>
+  <div class="actions">
+    <button class="ghost" id="hintBtn">Un indice</button>
+    <button class="ghost" id="clearBtn">Effacer le dernier objet</button>
+    <button class="big" id="nextBtn">Mot suivant</button>
+  </div>
+  <div class="tray" id="tray" style="--t:78px"></div>
+  <p class="note" id="note"></p>
+</div>
+
+<div id="abcView">
+  <p class="ask">Les objets de A à Z. Survolez ou touchez une photo pour la voir en grand.</p>
+  <div class="abc" id="abc"></div>
+</div>
+<figure class="photo-zoom hidden" id="photoZoom" aria-hidden="true">
+  <img id="photoZoomImage" alt="">
+  <figcaption id="photoZoomName"></figcaption>
+</figure>
+
+<script>
+window.meliAlphabet = {"assets": "objets-alphabet", "levelKey": "ob-lv", "withItems": "les objets", "one": "un objet", "theItem": "l’objet", "thisItem": "cet objet", "eachItem": "chaque objet", "theseItems": "ces objets", "missingLabel": "Objet ", "removed": "Objet retiré.", "fallback": "En attendant les photos, certains objets portent encore leur nom. ", "introSecret": "Un message secret en objets… Saurez-vous le lire ?", "introAlphabet": "Voici les objets de A à Z. Retenez bien leur nom !"};
+window.meliAlphabet.rows = [["A", "Assiette", "#8f99a2", "assiette"], ["B", "Bouteille", "#658677", "bouteille"], ["C", "Cuillère", "#758a95", "cuillere"], ["D", "Dessous-de-plat", "#98603f", "dessous-de-plat"], ["E", "Éponge", "#c19338", "eponge"], ["F", "Fouet", "#788998", "fouet"], ["G", "Gourde", "#238782", "gourde"], ["H", "Hachoir", "#6d7a84", "hachoir"], ["I", "Infuseur", "#71808b", "infuseur"], ["J", "Jatte", "#4a70a0", "jatte"], ["K", "Ketchup", "#b33e31", "ketchup"], ["L", "Louche", "#718294", "louche"], ["M", "Manique", "#b44f48", "manique"], ["N", "Nappe", "#6d8d6f", "nappe"], ["O", "Ouvre-boîte", "#4b6898", "ouvre-boite"], ["P", "Passoire", "#9b7851", "passoire"], ["Q", "Quiche", "#ab793d", "quiche"], ["R", "Râpe", "#697d91", "rape"], ["S", "Serviette", "#ab6856", "serviette"], ["T", "Torchon", "#6389ab", "torchon"], ["U", "Ustensiles en bois", "#926b48", "ustensiles"], ["V", "Verre", "#667d8c", "verre"], ["W", "Wok", "#59616e", "wok"], ["X", "Xylophone", "#a6674c", "xylophone"], ["Y", "Yaourtière", "#867f77", "yaourtiere"], ["Z", "Zesteur", "#a18431", "zesteur"]];
+window.meliAlphabet.words = {"1": ["BOL", "SEL", "RIZ", "THE", "EAU", "MIEL", "FOUR", "MUG", "PAIN", "NOIX", "CAFE", "LAIT", "KIWI", "JUS", "FLAN"], "2": ["SUCRE", "TASSE", "TABLE", "POMME", "FARCE", "CREME", "POIRE", "OEUFS", "SOUPE", "POELE", "TOAST", "AROME"], "3": ["ASSIETTE", "CUILLERE", "CUISINE", "CASSEROLE", "FOURCHETTE", "BOUTEILLE", "SERVIETTE", "PASSOIRE", "TOASTER", "YAOURT", "QUICHE", "FROMAGE", "EPLUCHEUR", "ZESTEUR", "HACHOIR", "KETCHUP"], "4": ["PAIN GRILLE", "TARTE SALEE", "BOL BLEU", "JUS FRAIS", "SOUPE CHAUDE", "TORCHON PROPRE", "GRANDE ASSIETTE", "VERRE PLEIN", "SUCRE ROUX", "PETIT DEJEUNER"], "5": ["POSE LE VERRE", "RINCE LES FRUITS", "PREPARE LA TABLE", "VERSE LE LAIT", "JE PREPARE UN FLAN", "FERME LA BOUTEILLE", "MELANGE LA PATE", "DECOUPE LA QUICHE"], "6": ["LA SOUPE EST DANS LA JATTE", "JE COUPE LE PAIN EN TRANCHES", "ON PREPARE UN GATEAU AU CITRON", "LES CUILLERES SONT SUR LA TABLE", "LA QUICHE DORE DANS LE FOUR", "LE TORCHON SECHE PRES DE LA FENETRE", "JE RANGE LES ASSIETTES DANS LE PLACARD", "LE FOUET EST DANS LE GRAND TIROIR"]};
+</script>
+<script src="jeu-alphabet.js"></script>
+</body>
+</html>

@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Les Réussites de Monsieur Méninge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a calm, friendly card table for playing alone, readable for older eyes
+   IDEA: a green felt card table with a proper French deck and a helpful companion
+   PICTURE: the live tableau itself on felt, large clear cards with real pip layouts and crowned faces
+   COLOUR and TYPE: felt green field, white cards in red and black, navy and gold card backs; DM Serif Display + Instrument Sans
+   LAYOUT: Méninge strip, felt table left, game card right; phones stack table then controls */
+:root{color-scheme:light dark;
+--bg:light-dark(#fbf9f7,#1a0d12);--ink:light-dark(#1e1216,#f4ebee);--soft:light-dark(#6b5a60,#b9a5ac);
+--wine:light-dark(#7b1e3a,#c94a6e);--wineD:#5a0f27;--vine:light-dark(#3f6b3a,#7fb276);--gold:#c99a2e;
+--land:light-dark(#ebe4df,#33232a);--edge:light-dark(#ffffff,#1a0d12);--sea:light-dark(#efe9e4,#24151b);
+--card:light-dark(#ffffff,#26161d);--line:light-dark(#e6dcd8,#3d2a32);--bad:light-dark(#b3261e,#ff7a70)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Instrument Sans",system-ui,sans-serif;overflow-x:clip}
+header{background:var(--wineD);color:#fff}
+.hin{max-width:1280px;margin:auto;padding:16px max(4vw,16px) 0;display:flex;flex-wrap:wrap;gap:10px 28px;align-items:flex-end;justify-content:space-between}
+h1{font:400 clamp(30px,3.6vw,44px)/1.05 "DM Serif Display",Georgia,serif;margin:0 0 12px}
+h1 small{display:block;font:500 15px "Instrument Sans",sans-serif;color:#e9c8d2;margin-top:6px}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{font:600 15px "Instrument Sans",sans-serif;color:#f3dbe2;background:transparent;border:0;padding:12px 16px;border-radius:12px 12px 0 0;cursor:pointer;min-height:44px}
+nav button[aria-selected=true]{background:var(--bg);color:var(--ink)}
+nav button:focus-visible,button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+main{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:20px;padding:18px max(4vw,16px) 36px;max-width:1280px;margin:auto;align-items:start}
+.mapbox{background:var(--sea);border-radius:18px;position:relative;overflow:hidden;aspect-ratio:1/0.965;box-shadow:inset 0 0 0 1px var(--line)}
+#map{position:absolute;inset:0;width:100%;height:100%}
+#map path{fill:var(--land);stroke:var(--edge);stroke-width:1;vector-effect:non-scaling-stroke;transition:fill .25s,opacity .25s;cursor:pointer}
+#map path:hover{filter:brightness(1.12)}
+#map path.dim{opacity:.28}
+#map path.ok{fill:var(--vine)!important;opacity:1}
+#map path.no{fill:var(--bad)!important;opacity:1}
+#map path.sel{stroke:var(--ink);stroke-width:2.4}
+#tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:13px;padding:4px 9px;border-radius:7px;white-space:nowrap;opacity:0;transform:translate(-50%,-140%);transition:opacity .1s}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px}
+.card h2{font:400 clamp(28px,3vw,36px)/1.08 "DM Serif Display",Georgia,serif;margin:0 0 6px;text-wrap:balance}
+.card h3{font:600 15px "Instrument Sans",sans-serif;margin:16px 0 6px;color:var(--soft)}
+.card p{margin:0 0 10px}
+.kick{font-size:14px;font-weight:600;color:var(--wine);margin:0 0 4px}
+.fun{background:light-dark(#f7eef1,#331c25);border-radius:12px;padding:10px 14px;font-size:15px}
+.tags{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0;padding:0}
+.tags li,.tags button{font:500 14px "Instrument Sans",sans-serif;padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.tags .r{border-color:var(--wine);color:var(--wine)}
+.tags .b{border-color:var(--gold);color:light-dark(#8a6512,#e2bd62)}
+.tags button{cursor:pointer;min-height:36px}
+.tags button:hover{border-color:var(--wine)}
+.legend button{display:inline-flex;align-items:center;gap:7px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.app{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
+.app b{font:400 22px "DM Serif Display",Georgia,serif;font-weight:400}
+.meta{font-size:14px;color:var(--soft)}
+.score{display:flex;gap:18px;font-size:14px;color:var(--soft);margin-bottom:12px}
+.score b{display:block;font:400 26px/1.1 "DM Serif Display",Georgia,serif;color:var(--ink)}
+.bar{height:8px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:16px}
+.bar i{display:block;height:100%;background:var(--wine);transition:width .3s}
+.q{font:400 clamp(24px,2.6vw,30px)/1.15 "DM Serif Display",Georgia,serif;margin:0 0 14px;text-wrap:balance}
+.opts{display:grid;gap:8px}
+.opt{font:500 16px "Instrument Sans",sans-serif;text-align:left;padding:12px 16px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;min-height:48px}
+.opt:hover:not(:disabled){border-color:var(--wine)}
+.opt.ok{background:var(--vine);border-color:var(--vine);color:#fff}
+.opt.no{border-color:var(--bad);color:var(--bad);text-decoration:line-through}
+.opt:disabled{cursor:default}
+.hint{font-size:15px;color:var(--soft);display:flex;gap:8px;align-items:center}
+.msg{font-weight:600;margin:14px 0 4px;min-height:24px}.msg.ok{color:var(--vine)}.msg.no{color:var(--bad)}
+.btn{font:600 15px "Instrument Sans",sans-serif;padding:12px 18px;border-radius:12px;border:0;cursor:pointer;min-height:46px;background:var(--wine);color:#fff;margin-top:14px}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.lv{display:grid;gap:8px}.lvb{text-align:left;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;cursor:pointer}
+.lvb b{display:block;font-size:16px}.lvb span{font-size:14px;color:var(--soft)}.lvb[aria-pressed=true]{border-color:var(--wine);box-shadow:inset 0 0 0 1.5px var(--wine)}
+.pr{display:flex;gap:8px;align-items:center;margin-bottom:6px}.pr i{width:14px;height:14px;border-radius:50%;flex:none}
+.pr input{flex:1;font:16px "Instrument Sans",sans-serif;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);min-height:44px}
+.pr input:focus{outline:none;border-color:var(--wine)}
+.x{width:44px;height:44px;flex:none;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:20px;cursor:pointer}
+.seg{display:flex;gap:6px}.seg.wrap{flex-wrap:wrap}.seg button{flex:1 1 auto;min-height:44px;padding:0 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font:600 15px "Instrument Sans",sans-serif;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--wine);border-color:var(--wine);color:#fff}
+.btn.sm{margin-top:2px;padding:8px 14px;min-height:40px}.btn.wide{width:100%;margin-top:18px;font-size:17px}
+.board{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px;padding:0;list-style:none}
+.board li{display:flex;gap:6px;align-items:center;padding:5px 11px;border-radius:999px;border:1.5px solid var(--line);font-size:14px}
+.board li i{width:10px;height:10px;border-radius:50%;background:var(--pc)}.board li.on{border-color:var(--pc);box-shadow:inset 0 0 0 1px var(--pc);font-weight:600}
+.turn{font:400 24px/1.2 "DM Serif Display",Georgia,serif;padding:10px 14px;border-radius:12px;background:var(--pc);color:#fff;margin-bottom:6px}.turn b{font-weight:400}
+.timer{height:6px;background:var(--line);border-radius:4px;overflow:hidden;margin:8px 0 12px}.timer i{display:block;height:100%;width:100%;background:var(--gold)}
+.podium{list-style:none;padding:0;margin:14px 0;display:grid;gap:8px}
+.podium li{display:grid;grid-template-columns:auto 1fr auto;gap:2px 12px;align-items:center;padding:10px 14px;border-radius:12px;border-left:6px solid var(--pc);background:var(--bg)}
+.podium span{font:400 28px "DM Serif Display",Georgia,serif;grid-row:span 2}.podium b{font-size:17px}.podium em{font-style:normal;font-weight:700;font-size:17px;white-space:nowrap}
+.podium small{grid-column:2/4;color:var(--soft);font-size:13px}
+.rack{display:grid;gap:12px}
+.shelf h4{margin:0 0 4px;font:600 15px "Instrument Sans",sans-serif;display:flex;justify-content:space-between;gap:8px}
+.shelf h4 span{color:var(--soft);font-weight:500}
+.btls{display:flex;flex-wrap:wrap;gap:3px;padding:6px 8px 4px;border-bottom:5px solid light-dark(#8b5e3c,#6b4528);background:light-dark(#f4efeb,#211217);border-radius:8px 8px 0 0}
+.btls svg{width:16px;height:46px;overflow:visible}
+.btls .e{opacity:.22}
+.big{font:400 clamp(40px,5vw,56px)/1 "DM Serif Display",Georgia,serif;color:var(--wine)}
+#hangbox{display:none}main.hang .mapbox{display:none}
+main.hang #hangbox{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:12px;align-content:start}
+.hp{background:var(--card);border:1px solid var(--line);border-top:6px solid var(--pc);border-radius:16px;padding:12px 14px}
+.hp.demo{grid-column:1/-1;max-width:420px;justify-self:center;width:100%}
+.hp h4{margin:0 0 4px;display:flex;justify-content:space-between;gap:8px;font:600 16px "Instrument Sans",sans-serif}
+.hp h4 i{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--pc);margin-right:7px}
+.hp h4 span:last-child{color:var(--soft);font-weight:500;white-space:nowrap}
+.hp.hanged{background:light-dark(#fbeaea,#3a1a1f)}
+.gal{width:100%;height:210px;display:block;overflow:visible}
+.ground{stroke:var(--line);stroke-width:2}
+.wd{fill:#b07a42;stroke:#6e4521;stroke-width:1.4}.grain{stroke:#8a5a2e;stroke-width:1;fill:none;opacity:.7}.nail{fill:#555}
+.rope{stroke:#c9a35b;stroke-width:3;fill:none;stroke-linecap:round}
+.skin{fill:#f3cfb3;stroke:#3a2a22;stroke-width:1.3}.eyes circle{fill:#1d1d1d}.mouth{stroke:#3a2a22;stroke-width:1.3;fill:none;stroke-linecap:round}
+.xeyes{display:none}.hanged .eyes{display:none}.hanged .xeyes{display:inline}
+.shirt{fill:var(--pc);stroke:#2a1a20;stroke-width:1.3}.arm{stroke:var(--pc);stroke-width:5;stroke-linecap:round;fill:none}
+.leg{stroke:#34313f;stroke-width:5.5;stroke-linecap:round}.shoe{fill:#4a2c16}
+.gal g[class]{transform-box:fill-box}
+.new.p0,.new.p1,.new.p2{animation:drop .75s cubic-bezier(.34,1.56,.64,1) both}
+.new.p3{transform-origin:top;animation:unroll .6s ease-out both}
+.new.p4,.new.p5,.new.p6,.new.p7{transform-origin:center;animation:pop .55s cubic-bezier(.34,1.7,.64,1) both}
+@keyframes drop{from{transform:translateY(-70px) rotate(-6deg);opacity:0}70%{opacity:1}}
+@keyframes unroll{from{transform:scaleY(0)}}
+@keyframes pop{from{transform:scale(0)}}
+.hp.hit{animation:shake .45s .2s}
+@keyframes shake{25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+.hanged .trap,.hangedg .trap{transform-origin:left center;animation:trap .35s .5s ease-in forwards}
+.hanged .sw,.hangedg .sw{transform-box:view-box;transform-origin:157px 21px;animation:swing 1.6s .85s ease-in-out infinite alternate}
+@keyframes trap{to{transform:rotate(80deg)}}
+@keyframes swing{from{transform:rotate(6deg)}to{transform:rotate(-6deg)}}
+.trap{transform-box:fill-box}.hangedg .trap{animation-delay:1.7s}.hangedg .sw{animation-delay:2s;transform-origin:157px 31px}
+.lh{transform-box:view-box;transform-origin:186px 144px;animation:lever .45s 1.2s ease-in forwards}
+@keyframes lever{to{transform:rotate(55deg)}}
+.handle{stroke:#4a4a4a;stroke-width:3.5;stroke-linecap:round}.knob{fill:#c0392b;stroke:#6e1d14}
+.mmpull{transform-box:fill-box;transform-origin:bottom center;animation:pull .5s 1.15s ease-in-out}
+@keyframes pull{50%{transform:translate(-3px,9px) rotate(-3deg)}}
+.mskin{fill:#f6d2b8;stroke:#2a1d18;stroke-width:2.2}.mshirt{fill:#f3ead7;stroke:#2a1d18;stroke-width:2}
+.marmo{stroke:#2a1d18;stroke-width:13;stroke-linecap:round;fill:none}.marm{stroke:#f3ead7;stroke-width:9;stroke-linecap:round;fill:none}
+.dung{fill:#8cc63f;stroke:#2a1d18;stroke-width:2}.strap{stroke:#8cc63f;stroke-width:5;stroke-linecap:round}
+.btn2{fill:#f2c21b;stroke:#2a1d18;stroke-width:1.2}.pocket{fill:#7db236;stroke:#2a1d18;stroke-width:1.4}.cuff{fill:#a5d65f;stroke:#2a1d18;stroke-width:1.4}
+.shoe2{fill:#7a4a24;stroke:#2a1d18;stroke-width:2}.mask{fill:#1d1d1d}.cheek{fill:#f4a3a8;opacity:.85}.nose{fill:#d63a2f;stroke:#2a1d18;stroke-width:1.5}
+.msmile{stroke:#2a1d18;stroke-width:2.2;fill:none;stroke-linecap:round}
+.smoke circle{stroke:#9bb7d4;stroke-width:1.2;animation:puff 2.6s ease-in-out infinite}
+.smoke circle:nth-child(2){animation-delay:.5s}.smoke circle:nth-child(3){animation-delay:1s}
+@keyframes puff{50%{transform:translateY(-4px);opacity:.6}}
+.mmbar{grid-column:1/-1;display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 14px}
+.mm{width:96px;height:140px;flex:none;overflow:visible}
+.bubble{position:relative;margin:0;background:var(--bg);border:1.5px solid var(--line);border-radius:16px;padding:10px 14px;font:400 19px/1.3 "DM Serif Display",Georgia,serif}
+.bubble::before{content:"";position:absolute;left:-9px;top:50%;width:14px;height:14px;background:var(--bg);border-left:1.5px solid var(--line);border-bottom:1.5px solid var(--line);transform:translateY(-50%) rotate(45deg)}
+.bubble.pop{animation:bub .45s cubic-bezier(.34,1.56,.64,1)}
+@keyframes bub{from{transform:scale(.6);opacity:0}}
+.mmbar.fin .mm,.mmbar.fin .bubble::before{display:none}
+.stage{grid-column:1/-1;background:var(--card);border:1px solid var(--line);border-top:6px solid var(--pc);border-radius:16px;padding:10px;text-align:center}
+.stage{padding:0;overflow:hidden}.stage svg{width:100%;display:block}.stage-cap{padding:8px}.stage-cap{margin:0;font:400 24px "DM Serif Display",Georgia,serif}
+.hb{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:6px}
+.hb button{min-height:48px;border-radius:10px;border:1.5px solid var(--pc);background:var(--bg);color:var(--ink);font:400 22px "DM Serif Display",Georgia,serif;cursor:pointer}
+.hb button:hover{background:var(--pc);color:#fff}
+.res{margin:6px 0 0;min-height:48px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:var(--bg);font-weight:600;color:var(--soft);text-align:center}
+.res.ok{color:var(--vine)}.res.no{color:var(--bad)}
+.hopt{display:flex;gap:12px;align-items:center;padding:10px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg)}
+.hopt b{font:400 20px "DM Serif Display",Georgia,serif;color:var(--wine);width:22px;flex:none}
+.hopt.ok{background:var(--vine);border-color:var(--vine);color:#fff}.hopt.ok b{color:#fff}
+@media(max-width:860px){main.hang .card{order:-1}main.hang.hend .card{order:0}}
+.bubble{flex:1 1 180px}.crowd{width:200px;height:88px;flex:none;margin-left:auto;overflow:visible}
+.cp{animation:idle 2.6s ease-in-out infinite;animation-delay:var(--d)}@keyframes idle{50%{transform:translateY(-1.3px)}}
+.mo,.ar{opacity:0}.crowd.ko .mo,.crowd.near .mo{opacity:1}.crowd.ko .ms,.crowd.near .ms{opacity:0}
+.crowd.ok .ar.up{opacity:1}.crowd.ok .cj{animation:jump .42s var(--j) 3 ease-out}.crowd.ko .cj,.crowd.near .cj{animation:recoil .55s var(--j) ease-out}
+@keyframes jump{50%{transform:translateY(-6px)}}@keyframes recoil{40%{transform:translateY(2.5px) rotate(-4deg)}}
+.shout{opacity:0;transform-box:fill-box;transform-origin:center bottom;animation:pop2 .4s calc(.2s + var(--k)) cubic-bezier(.34,1.56,.64,1) forwards}
+.shout text{font:600 10px "Instrument Sans",sans-serif;fill:#2a1d18}
+@keyframes pop2{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+.stage .mo{animation:show 0s 1.85s forwards}.stage .ms{animation:hide 0s 1.85s forwards}.stage .ar.up{animation:show 0s 1.9s forwards}
+.stage .cj{animation:jump .42s calc(1.9s + var(--j)) 4 ease-out}.stage .shout{animation-delay:calc(2.1s + var(--k))}
+@keyframes show{to{opacity:1}}@keyframes hide{to{opacity:0}}
+@media(max-width:600px){.mmbar{flex-wrap:wrap}.crowd{width:100%;height:70px}}
+footer{max-width:1280px;margin:auto;padding:0 max(4vw,16px) 30px;font-size:13px;color:var(--soft)}
+@media(max-width:860px){main{grid-template-columns:minmax(0,1fr)}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}.shout,.stage .mo{opacity:1}.stage .ms{opacity:0}.hanged .trap,.hangedg .trap{transform:rotate(80deg)}.lh{transform:rotate(55deg)}}
+
+:root{--wine:light-dark(#1d6a44,#7fcf9f);--wineD:#123f2a}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+main{grid-template-columns:minmax(0,1.9fr) minmax(0,1fr)}
+#area{display:grid;gap:12px;align-content:start}
+.board{background:radial-gradient(ellipse at 50% 30%,#2a8a59,#176040 60%,#0f4a31);border-radius:18px;padding:14px;box-shadow:inset 0 0 0 6px #6b4019,inset 0 0 0 8px #3f230e,inset 0 6px 30px rgba(0,0,0,.35);--cw:80px;--gap:8px;min-height:420px;touch-action:none;user-select:none;-webkit-user-select:none}
+.toprow,.cols{display:grid;gap:var(--gap);justify-content:center}.kl .toprow,.kl .cols{grid-template-columns:repeat(7,var(--cw))}.fc .toprow,.fc .cols{grid-template-columns:repeat(8,var(--cw))}
+.cols{margin-top:calc(var(--gap) * 1.6);align-items:start}
+.pile{position:relative;width:var(--cw);height:calc(var(--cw)*1.4);border-radius:calc(var(--cw)*.09);box-shadow:inset 0 0 0 2px rgba(255,255,255,.22);background:rgba(0,0,0,.08)}
+.pile .ph,.pslot .ph,.cpile .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4);font:400 calc(var(--cw)*.42) "DM Serif Display",serif;text-align:center}
+.pslot .ph{font-size:13px;font-family:"Instrument Sans",sans-serif}
+.col{background:transparent;box-shadow:inset 0 0 0 2px rgba(255,255,255,.14)}.wastefan{background:transparent;box-shadow:none}
+.cell{background:rgba(0,0,0,.14)}
+.pc{position:absolute;left:0;top:0;width:var(--cw);height:calc(var(--cw)*1.4);border-radius:calc(var(--cw)*.09);background:linear-gradient(160deg,#fff,#f6f2ea);border:1px solid #bdb5a6;box-shadow:0 1px 2px rgba(0,0,0,.35);color:#1d1d24;font-family:"DM Serif Display",Georgia,serif;cursor:pointer;transition:transform .12s,box-shadow .12s;overflow:hidden}
+.pc.red{color:#c0392b}
+.ix{position:absolute;left:5%;top:3%;display:flex;flex-direction:column;align-items:center;font-size:calc(var(--cw)*.25);line-height:.95;letter-spacing:-.04em}.ix b{font-weight:400;font-size:calc(var(--cw)*.2);font-family:"Segoe UI Symbol","DejaVu Sans",serif}
+.ix.br{left:auto;top:auto;right:5%;bottom:3%;transform:rotate(180deg)}
+.pp{position:absolute;transform:translate(-50%,-50%);font-size:calc(var(--cw)*.21);line-height:1;font-family:"Segoe UI Symbol","DejaVu Sans",serif}.pp.dn{transform:translate(-50%,-50%) rotate(180deg)}
+.ace{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:calc(var(--cw)*.62);font-family:"Segoe UI Symbol","DejaVu Sans",serif}
+.face{position:absolute;inset:17% 17%;border:1.5px solid currentColor;border-radius:calc(var(--cw)*.05);background:linear-gradient(#fbf1d6,#f3e2b8);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2%}
+.face .crown{width:62%}.face em{font-style:normal;font-size:calc(var(--cw)*.4);line-height:1}.face i{font-style:normal;font-size:calc(var(--cw)*.18);font-family:"Segoe UI Symbol","DejaVu Sans",serif}
+.pc.back{background:repeating-linear-gradient(45deg,#1f3f78 0 4px,#274d8f 4px 8px);border:calc(var(--cw)*.05) solid #fff;box-shadow:0 1px 2px rgba(0,0,0,.35),inset 0 0 0 2px #d9b45a}
+.pc.sel,.pslot.sel .pc{box-shadow:0 0 0 3px #ffd24a,0 6px 12px rgba(0,0,0,.4);transform:translateY(-4px)}
+.hint,.hint .pc{animation:hint .6s ease-in-out 3}.pile.hint{box-shadow:0 0 0 4px #ffd24a}
+@keyframes hint{50%{box-shadow:0 0 0 5px #ffd24a,0 0 18px #ffd24a}}
+.pc.drag{z-index:60;box-shadow:0 12px 24px rgba(0,0,0,.45);transition:none;cursor:grabbing}
+.selp{box-shadow:inset 0 0 0 2px #ffd24a}
+.pyr{position:relative;margin:0 auto}.pslot{position:absolute;width:var(--cw);height:calc(var(--cw)*1.4)}.pslot .pc{position:absolute;inset:0}.pslot:not(.free) .pc{filter:brightness(.93)}
+.pyrow{display:flex;gap:var(--gap);align-items:center;justify-content:center;margin-top:14px}.pslot.w{position:relative;border-radius:calc(var(--cw)*.09);box-shadow:inset 0 0 0 2px rgba(255,255,255,.22)}.pyrow .meta{color:#e1f2e8;max-width:12em}
+.clockface{position:relative;width:100%}.cpile{position:absolute;width:var(--cw);height:calc(var(--cw)*1.4)}.cpile .pc{position:absolute;inset:0}
+.pc.onclock.off{top:32%;z-index:0;filter:brightness(.92)}.cpile .back{z-index:1}
+.cnt{position:absolute;z-index:2;right:-8px;top:-8px;background:#ffd24a;color:#123f2a;border-radius:999px;font:600 12px "Instrument Sans",sans-serif;padding:2px 7px}
+.hr{position:absolute;z-index:2;left:50%;bottom:-22px;transform:translateX(-50%);color:#e1f2e8;font:600 13px "Instrument Sans",sans-serif}
+.cpile.hot .pc.back{box-shadow:0 0 0 4px #ffd24a,0 0 22px #ffd24a;animation:hint 1s ease-in-out infinite}.cpile.hot{cursor:pointer}
+.showcase{--cw:116px;position:relative;height:230px;background:radial-gradient(ellipse at 50% 30%,#2a8a59,#176040 60%,#0f4a31);border-radius:18px;box-shadow:inset 0 0 0 6px #6b4019,inset 0 0 0 8px #3f230e;overflow:hidden}
+.showcase .fan{left:calc(50% - var(--cw)/2 + (var(--k) - 2) * 64px);top:38px;transform-origin:50% 120%;transform:rotate(calc((var(--k) - 2) * 9deg));animation:deal .7s cubic-bezier(.3,1.3,.5,1) both;animation-delay:calc(var(--k) * .08s)}
+@keyframes deal{from{transform:translateY(160px) rotate(0)}}
+.glist{display:grid;gap:8px;margin:10px 0}
+.gbtn{display:grid;gap:2px;text-align:left;padding:12px 14px;border-radius:14px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;cursor:pointer}
+.gbtn:hover{border-color:var(--wine)}.gbtn b{font:400 22px "DM Serif Display",Georgia,serif}.gbtn span{font-size:14px;color:var(--soft)}.gbtn .gl{color:var(--wine);font-weight:600;font-size:13px}.gbtn em{font-style:normal;font-size:13px;color:var(--soft)}
+.opt2{display:flex;gap:10px;align-items:flex-start;margin:10px 0;font-size:15px;cursor:pointer}.opt2 input{width:20px;height:20px;margin-top:2px;flex:none;accent-color:var(--wine)}
+.bravo{background:linear-gradient(135deg,#ffd24a,#ffb02e);color:#123f2a;border-radius:14px;padding:14px;font:400 22px/1.2 "DM Serif Display",serif;text-align:center;margin:10px 0}
+.rules{margin-top:14px;font-size:15px}.rules summary{cursor:pointer;font-weight:600;min-height:32px}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:80;overflow:hidden}.confetti i{position:absolute;top:-20px;width:10px;height:16px;background:var(--c);border-radius:2px;animation:fall 3.2s ease-in var(--d) forwards}
+@keyframes fall{to{transform:translate(var(--x),110vh) rotate(720deg)}}
+@media(max-width:860px){main{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.board{padding:8px;border-radius:12px}.showcase{--cw:84px;height:180px}.showcase .fan{left:calc(50% - var(--cw)/2 + (var(--k) - 2) * 44px)}}
+
+
+.rbtn{align-self:center;background:#ffd24a;color:#1d1d24;border:0;border-radius:999px;font:600 15px "Instrument Sans",sans-serif;padding:10px 18px;min-height:44px;cursor:pointer;margin:0 0 12px;box-shadow:0 2px 0 rgba(0,0,0,.2)}
+.rbtn:hover{background:#ffe07a}.rbtn:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.rmodal{position:fixed;inset:0;z-index:90;background:rgba(10,8,20,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+.rmodal[hidden]{display:none}
+.rpanel{position:relative;background:var(--card);color:var(--ink);border-radius:18px;max-width:680px;width:100%;max-height:88vh;overflow:auto;padding:26px 26px 20px;box-shadow:0 20px 60px rgba(0,0,0,.4);animation:pop .35s cubic-bezier(.34,1.56,.64,1)}
+.rpanel h2{font:400 clamp(26px,3.4vw,34px)/1.1 "DM Serif Display",Georgia,serif;margin:0 40px 10px 0}
+.rpanel h3{font:400 21px/1.2 "DM Serif Display",Georgia,serif;margin:20px 0 6px;color:var(--wine)}
+.rpanel p,.rpanel li{font-size:16px;line-height:1.55}.rpanel ol,.rpanel ul{padding-left:1.3em;margin:6px 0}.rpanel li{margin:4px 0}
+.rpanel .lead{font-size:17px}.rpanel .tip{background:var(--bg);border-radius:10px;padding:8px 12px;font-size:15px}
+.rclose{position:sticky;top:0;float:right;margin:-10px -10px 0 8px;z-index:2;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:24px;line-height:1;cursor:pointer}
+@keyframes pop{from{transform:scale(.92);opacity:0}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="artdefs"></defs></svg>
+<header><div class="hin"><h1>Les Réussites de Monsieur Méninge<small>Quatre jeux de cartes pour jouer seul, du plus simple au plus réfléchi</small></h1>
+<button class="rbtn" id="rulesBtn" type="button">Comment jouer ?</button></div></header>
+<main>
+<div id="area"></div>
+<section class="card" id="side" aria-live="polite"></section>
+</main>
+<script>
+{
+const DEFS=`<linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9cc6e8"/><stop offset=".7" stop-color="#dcebf3"/><stop offset="1" stop-color="#f6ead2"/></linearGradient><linearGradient id="gV" x1="0" x2="1"><stop offset="0" stop-color="#6e421d"/><stop offset=".3" stop-color="#b9834b"/><stop offset=".65" stop-color="#a26b36"/><stop offset="1" stop-color="#5f3817"/></linearGradient>
+<linearGradient id="gH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c8935a"/><stop offset=".45" stop-color="#a87039"/><stop offset="1" stop-color="#6b4019"/></linearGradient>
+<linearGradient id="gI" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7c7f84"/><stop offset="1" stop-color="#34363a"/></linearGradient>
+<radialGradient id="gS" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#fbe2cf"/><stop offset="1" stop-color="#dfa983"/></radialGradient>
+<radialGradient id="gM" cx=".38" cy=".3" r=".85"><stop offset="0" stop-color="#fde6d4"/><stop offset=".7" stop-color="#f1c3a3"/><stop offset="1" stop-color="#d99a76"/></radialGradient>
+<linearGradient id="gSh" x1="0" x2="1"><stop offset="0" stop-color="#f8f1e2"/><stop offset="1" stop-color="#d4c5a6"/></linearGradient>
+<linearGradient id="gD" x1="0" x2="1"><stop offset="0" stop-color="#a6dc5a"/><stop offset=".6" stop-color="#86c13a"/><stop offset="1" stop-color="#5f9622"/></linearGradient>
+<linearGradient id="gB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8d5a33"/><stop offset="1" stop-color="#3f230e"/></linearGradient>
+<linearGradient id="gT" x1="0" x2="1"><stop offset="0" stop-color="#4a4757"/><stop offset="1" stop-color="#2a2833"/></linearGradient>
+<radialGradient id="gN" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#f5675a"/><stop offset="1" stop-color="#a8221a"/></radialGradient>
+<radialGradient id="gF" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cddcee"/></radialGradient>
+<linearGradient id="gW" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></linearGradient>`;
+const O='stroke="#2e1b0e" stroke-width=".9"';
+const GR=(d)=>`<path d="${d}" fill="none" stroke="#4e2e12" stroke-width=".6" opacity=".55"/>`;
+const PARTS=[
+// 0 échafaud : escalier, croisillons, pieds, plancher, trappe
+`<path d="M58 150L121 182M121 150L58 182M124 150L188 182M188 150L124 182" stroke="#3e2410" stroke-width="4.6"/><path d="M58 150L121 182M121 150L58 182M124 150L188 182M188 150L124 182" stroke="#8e5c2c" stroke-width="3.2"/>
+<rect x="53" y="146" width="7" height="38" fill="url(#gV)" ${O}/><rect x="118" y="146" width="7" height="38" fill="url(#gV)" ${O}/><rect x="186" y="146" width="7" height="38" fill="url(#gV)" ${O}/>
+${[0,1,2,3].map(i=>{const y=175-i*9.2,x=8+(184-y)*.9545;return `<rect x="${(x-4).toFixed(1)}" y="${y.toFixed(1)}" width="13" height="3.2" rx=".6" fill="url(#gH)" ${O}/>`}).join('')}
+<path d="M8 184L50 140" stroke="#3e2410" stroke-width="6.4" stroke-linecap="round"/><path d="M8 184L50 140" stroke="#9a6532" stroke-width="4.6" stroke-linecap="round"/>
+<path d="M14 184V152M44 146V118M14 154L46 120" stroke="#3e2410" stroke-width="3.4" stroke-linecap="round"/><path d="M14 184V152M44 146V118M14 154L46 120" stroke="#a87039" stroke-width="2" stroke-linecap="round"/>
+<rect x="47" y="137" width="152" height="4.5" fill="#cf9c62" ${O}/><rect x="47" y="141.5" width="152" height="7" fill="url(#gH)" ${O}/>
+${[62,77,92,107,173,188].map(x=>`<path d="M${x} 141.5v7" stroke="#4e2e12" stroke-width=".7"/><circle cx="${x-3}" cy="145" r=".7" fill="#2b2b2b"/>`).join('')}
+${GR('M50 144.5q20 1 40 0t36 0M164 145q12-1 32 0')}
+<g class="trap"><rect x="127" y="137" width="36" height="11.5" fill="url(#gH)" stroke="#2e1b0e" stroke-width="1.1"/>${GR('M130 142q15 1.5 30 0M130 146q12-1 30 .5')}<rect x="127.5" y="138.5" width="7" height="3" fill="url(#gI)"/><circle cx="133" cy="140" r=".7" fill="#ccc"/></g>`,
+// 1 mât
+`<rect x="69" y="10" width="12.5" height="128" fill="url(#gV)" ${O}/>${GR('M72.5 18q1.5 30 0 60t.8 55M77.5 14q-1 40 .5 80')}<ellipse cx="76.5" cy="62" rx="1.6" ry="3.2" fill="none" stroke="#4e2e12" stroke-width=".7"/>
+<rect x="62" y="129" width="26" height="9" rx="1" fill="url(#gH)" ${O}/><rect x="66" y="114" width="18.5" height="12" rx="1" fill="url(#gI)" stroke="#1f2023" stroke-width=".7"/><circle cx="70" cy="120" r="1.4" fill="#c9cbd0"/><circle cx="80.5" cy="120" r="1.4" fill="#c9cbd0"/>`,
+// 2 potence : poutre, jambe de force, ferrures
+`<path d="M81.5 62V50L111 19.5H124Z" fill="url(#gV)" ${O}/>${GR('M84 55L110 26')}<rect x="60" y="8" width="114" height="11.5" rx="1" fill="url(#gH)" ${O}/><rect x="170" y="8" width="4" height="11.5" fill="#5f3817"/>${GR('M64 12q30 1.5 60 0t44 .5M66 16q40-1 100 .5')}
+<rect x="64.5" y="5.5" width="22" height="17" rx="1.2" fill="url(#gI)" stroke="#1f2023" stroke-width=".7"/><circle cx="69" cy="10" r="1.3" fill="#c9cbd0"/><circle cx="82" cy="10" r="1.3" fill="#c9cbd0"/><circle cx="69" cy="18" r="1.3" fill="#c9cbd0"/><circle cx="82" cy="18" r="1.3" fill="#c9cbd0"/>
+<rect x="104" y="18" width="13" height="6" rx="1" fill="url(#gI)" transform="rotate(-46 110 21)"/>`,
+// 3 corde : tours sur la poutre, corde torsadée, nœud coulant
+`${[151.5,154.9,158.3].map(x=>`<rect x="${x}" y="6" width="3" height="15.5" rx="1.5" fill="#c9a35b" stroke="#6b4c22" stroke-width=".6"/>`).join('')}
+<path d="M157 21V45" stroke="#6b4c22" stroke-width="3.6"/><path d="M157 21V45" stroke="#d2ae6a" stroke-width="2.4"/><path d="M157 21V45" stroke="#8f6a33" stroke-width="2.4" stroke-dasharray="1 2.4"/>
+${[0,1,2,3,4,5].map(i=>`<ellipse cx="157" cy="${45.5+i*2.4}" rx="3.4" ry="1.6" fill="#cfa962" stroke="#6b4c22" stroke-width=".6"/>`).join('')}
+<path d="M156.6 59.5Q156 66.5 150.5 70.6" stroke="#6b4c22" stroke-width="3.2" fill="none"/><path d="M156.6 59.5Q156 66.5 150.5 70.6" stroke="#d2ae6a" stroke-width="2" fill="none"/>`,
+// 4 tête
+`<rect x="142.3" y="82" width="5.4" height="7" fill="url(#gS)" stroke="#2b1d16" stroke-width=".8"/>
+<ellipse cx="138.3" cy="77" rx="1.5" ry="2.4" fill="url(#gS)" stroke="#2b1d16" stroke-width=".7"/><ellipse cx="151.7" cy="77" rx="1.5" ry="2.4" fill="url(#gS)" stroke="#2b1d16" stroke-width=".7"/>
+<ellipse cx="145" cy="76" rx="7" ry="8.4" fill="url(#gS)" stroke="#2b1d16" stroke-width=".9"/>
+<path d="M137.8 75.5C137 66 142 66.4 145 66.4C150.5 66.4 153.2 68.6 152.2 75.5C151 71 148.5 70.2 145.8 70.6C142.6 70.2 139.6 71.6 137.8 75.5Z" fill="#4a2f1d" stroke="#2b1d16" stroke-width=".6"/>
+<ellipse cx="141.6" cy="81.3" rx="1.6" ry=".9" fill="#ee9f95" opacity=".55"/><ellipse cx="148.4" cy="81.3" rx="1.6" ry=".9" fill="#ee9f95" opacity=".55"/>
+<g class="eyes"><path d="M140.4 73.6L143.6 72.6M146.4 72.6L149.6 73.6" stroke="#3a2518" stroke-width=".9" stroke-linecap="round"/><ellipse cx="142.3" cy="75.8" rx=".95" ry="1.15" fill="#1f1410"/><ellipse cx="147.7" cy="75.8" rx=".95" ry="1.15" fill="#1f1410"/><path d="M142.6 82q2.4-1.4 4.8 0" stroke="#5a2c22" stroke-width=".9" fill="none" stroke-linecap="round"/></g>
+<g class="xeyes"><path d="M141 74.6l2.6 2.6M143.6 74.6L141 77.2M146.4 74.6l2.6 2.6M149 74.6l-2.6 2.6M143 82.2h4" stroke="#1f1410" stroke-width=".9" stroke-linecap="round"/></g>
+<path d="M145 76.4q1.3 2.4-.3 3" stroke="#a5705a" stroke-width=".8" fill="none"/>`,
+// 5 torse : chemise, gilet à la couleur du joueur, ceinture
+`<path d="M134.6 92.5Q135 88.6 140.5 88.2L149.5 88.2Q155 88.6 155.4 92.5L153.6 113.5H136.4Z" fill="url(#gSh)" stroke="#2b1d16" stroke-width=".8"/>
+<path d="M135.6 92.4Q136 89 141.4 88.6L145 99.5L144.6 112.5H137Z" fill="var(--pc)" stroke="#2b1d16" stroke-width=".8"/><path d="M154.4 92.4Q154 89 148.6 88.6L145 99.5L145.4 112.5H153Z" fill="var(--pc)" stroke="#2b1d16" stroke-width=".8"/>
+<path d="M148.6 88.6L145 99.5L145.4 112.5H153L154.4 92.4Q154 89 148.6 88.6Z" fill="#000" opacity=".16"/>
+<path d="M142 88.4L145 92.6L148 88.4" fill="#fff" stroke="#2b1d16" stroke-width=".6"/><circle cx="144" cy="103" r=".8" fill="#ecd697"/><circle cx="144" cy="107.4" r=".8" fill="#ecd697"/>
+<rect x="136.3" y="111.4" width="17.4" height="3.2" fill="#3b2414" stroke="#1d120a" stroke-width=".5"/><rect x="143.3" y="111" width="3.4" height="4" fill="none" stroke="#d9b45a" stroke-width=".9"/>`,
+// 6 bras
+`<path d="M136.4 91.5Q132.4 95.5 132 103.5Q131.7 108 133 112M153.6 91.5Q157.6 95.5 158 103.5Q158.3 108 157 112" stroke="#2b1d16" stroke-width="6.6" fill="none" stroke-linecap="round"/><path d="M136.4 91.5Q132.4 95.5 132 103.5Q131.7 108 133 112M153.6 91.5Q157.6 95.5 158 103.5Q158.3 108 157 112" stroke="#efe6d2" stroke-width="5" fill="none" stroke-linecap="round"/>
+<path d="M131 109.5h4M155 109.5h4" stroke="#b8a888" stroke-width="1"/><ellipse cx="133.2" cy="114.4" rx="2" ry="2.6" fill="url(#gS)" stroke="#2b1d16" stroke-width=".7"/><ellipse cx="156.8" cy="114.4" rx="2" ry="2.6" fill="url(#gS)" stroke="#2b1d16" stroke-width=".7"/>`,
+// 7 jambes : pantalon, bottes
+`<path d="M136.8 114.4H145L144.3 134H139.2Z" fill="url(#gT)" stroke="#16151b" stroke-width=".8"/><path d="M145 114.4H153.2L150.8 134H145.7Z" fill="url(#gT)" stroke="#16151b" stroke-width=".8"/>
+<path d="M141.5 117V132M148.8 117L148 132" stroke="#5c596b" stroke-width=".5"/>
+<path d="M139 133.4h5.6v4.6h-8q-1.1 0-.6-1.5q.6-1.6 3-1.6Z" fill="url(#gB)" stroke="#1d120a" stroke-width=".7"/><path d="M145.4 133.4H151q2.4 0 3 1.6q.5 1.5-.6 1.5h-8Z" fill="url(#gB)" stroke="#1d120a" stroke-width=".7"/>`];
+const LEVER=`<g class="lever"><g class="lh"><path d="M186 134L201 112" stroke="#2e2e2e" stroke-width="4" stroke-linecap="round"/><path d="M186 134L201 112" stroke="#6d6f74" stroke-width="2.2" stroke-linecap="round"/><circle cx="201" cy="112" r="4.2" fill="#c0392b" stroke="#5e1a12" stroke-width=".9"/><circle cx="199.7" cy="110.7" r="1.2" fill="#fff" opacity=".6"/></g><rect x="180" y="131" width="12" height="6.5" rx="1" fill="url(#gI)" stroke="#1f2023" stroke-width=".7"/></g>`;
+function mmArt(pose){const K='stroke="#2a1d18" stroke-width="2"';
+ const armL=pose==='pull'
+  ?`<path d="M44 114Q30 116 22 122" stroke="#2a1d18" stroke-width="13" stroke-linecap="round" fill="none"/><path d="M44 114Q30 116 22 122" stroke="url(#gSh)" stroke-width="10" stroke-linecap="round" fill="none"/><path d="M27 116l-3 9" stroke="#2a1d18" stroke-width="1.4"/><path d="M24 121L10 124" stroke="#2a1d18" stroke-width="10.5" stroke-linecap="round"/><path d="M24 121L10 124" stroke="#f1c3a3" stroke-width="8" stroke-linecap="round"/><circle cx="8" cy="124" r="6" fill="url(#gM)" ${K}/>`
+  :`<rect x="17.5" y="56" width="6" height="104" rx="2.5" fill="url(#gV)" stroke="#2e1b0e" stroke-width="1.2"/><rect x="3" y="34" width="34" height="24" rx="3" fill="url(#gH)" stroke="#2e1b0e" stroke-width="1.4"/><rect x="8" y="34" width="4" height="24" fill="url(#gI)"/><rect x="28" y="34" width="4" height="24" fill="url(#gI)"/>${GR('M14 40q7 1 13 0M14 50q7-1 13 .5')}
+    <path d="M44 114Q32 120 28 132" stroke="#2a1d18" stroke-width="13" stroke-linecap="round" fill="none"/><path d="M44 114Q32 120 28 132" stroke="url(#gSh)" stroke-width="10" stroke-linecap="round" fill="none"/><path d="M28 126l9 3" stroke="#2a1d18" stroke-width="1.4"/><path d="M29 131L22 138" stroke="#2a1d18" stroke-width="10.5" stroke-linecap="round"/><path d="M29 131L22 138" stroke="#f1c3a3" stroke-width="8" stroke-linecap="round"/><ellipse cx="20.5" cy="137" rx="7" ry="6" fill="url(#gM)" ${K}/><path d="M15 135h11M15 139h11" stroke="#b9805e" stroke-width="1"/>`;
+ return `<g class="smoke"><circle cx="72" cy="27" r="7.5" fill="url(#gF)"/><circle cx="82" cy="16" r="6.5" fill="url(#gF)"/><circle cx="69" cy="7" r="5" fill="url(#gF)"/><circle cx="78" cy="1" r="3" fill="url(#gF)"/></g>
+ <path d="M44 109Q70 101 96 109L102 136H38Z" fill="url(#gSh)" ${K}/>
+ <path d="M96 114Q110 120 112 132" stroke="#2a1d18" stroke-width="13" stroke-linecap="round" fill="none"/><path d="M96 114Q110 120 112 132" stroke="url(#gSh)" stroke-width="10" stroke-linecap="round" fill="none"/><path d="M104 126l10-2" stroke="#2a1d18" stroke-width="1.4"/><path d="M112 131Q112 140 104 142" stroke="#2a1d18" stroke-width="10.5" stroke-linecap="round" fill="none"/><path d="M112 131Q112 140 104 142" stroke="#f1c3a3" stroke-width="8" stroke-linecap="round" fill="none"/>
+ <path d="M38 128Q70 121 102 128L108 170Q70 177 32 170Z" fill="url(#gD)" ${K}/><path d="M51 112H89L91 131H49Z" fill="url(#gD)" ${K}/>
+ <path d="M53 115H87L88.6 129M51.5 129L53 115" fill="none" stroke="#e8f6cf" stroke-width=".9" stroke-dasharray="2 1.6"/>
+ <path d="M52 113L45 101M88 113L95 101" stroke="#2a1d18" stroke-width="8" stroke-linecap="round"/><path d="M52 113L45 101M88 113L95 101" stroke="#86c13a" stroke-width="5.4" stroke-linecap="round"/>
+ <circle cx="55" cy="117" r="3.6" fill="#f2c21b" stroke="#2a1d18" stroke-width="1.4"/><circle cx="85" cy="117" r="3.6" fill="#f2c21b" stroke="#2a1d18" stroke-width="1.4"/><circle cx="54" cy="116" r="1" fill="#fff" opacity=".7"/><circle cx="84" cy="116" r="1" fill="#fff" opacity=".7"/>
+ <rect x="60" y="136" width="20" height="14" rx="2" fill="#7fb734" ${K} stroke-width="1.5"/><rect x="62" y="138" width="16" height="10" rx="1.4" fill="none" stroke="#e8f6cf" stroke-width=".8" stroke-dasharray="1.6 1.4"/><path d="M70 156V172" stroke="#2a1d18" stroke-width="1.4"/>
+ <path d="M38 128Q70 121 102 128L108 170Q70 177 32 170Z" fill="url(#gW)"/>
+ <rect x="44" y="168" width="19" height="12" fill="url(#gD)" ${K}/><rect x="77" y="168" width="19" height="12" fill="url(#gD)" ${K}/><rect x="42" y="176" width="23" height="6" rx="2.5" fill="#b4e070" ${K} stroke-width="1.5"/><rect x="75" y="176" width="23" height="6" rx="2.5" fill="#b4e070" ${K} stroke-width="1.5"/>
+ <path d="M34 190Q34 181 48 181Q63 181 66 189Q66 194 50 194Q34 194 34 190Z" fill="url(#gB)" ${K}/><path d="M74 189Q77 181 92 181Q106 181 106 190Q106 194 90 194Q74 194 74 189Z" fill="url(#gB)" ${K}/><ellipse cx="44" cy="185" rx="5" ry="1.8" fill="#fff" opacity=".35"/><ellipse cx="96" cy="185" rx="5" ry="1.8" fill="#fff" opacity=".35"/>
+ <path d="M57 104L70 113L83 104L77 101.5L70 107L63 101.5Z" fill="#fff" ${K} stroke-width="1.5"/>
+ <ellipse cx="36" cy="77" rx="8.5" ry="12" fill="url(#gM)" ${K}/><ellipse cx="104" cy="77" rx="8.5" ry="12" fill="url(#gM)" ${K}/><path d="M35 71q4 6 0 12M105 71q-4 6 0 12" stroke="#c98a67" stroke-width="1.6" fill="none"/>
+ <circle cx="70" cy="70" r="34" fill="url(#gM)" ${K} stroke-width="2.2"/><ellipse cx="57" cy="47" rx="10" ry="5" fill="#fff" opacity=".45" transform="rotate(-22 57 47)"/>
+ <path d="M38 61L22 52L25 63L22 74L39 69" fill="#1e1b1f" stroke="#000" stroke-width="1"/><path d="M37 60Q70 49 103 60L102 73Q70 64 38 73Z" fill="#1e1b1f" stroke="#000" stroke-width="1"/>
+ <path d="M47 53Q55 47 64 51M76 51Q85 47 93 53" stroke="#3b2a20" stroke-width="3.4" stroke-linecap="round" fill="none"/>
+ <ellipse cx="56" cy="65" rx="6.4" ry="5.8" fill="#fff"/><ellipse cx="84" cy="65" rx="6.4" ry="5.8" fill="#fff"/><circle cx="57.5" cy="66" r="3" fill="#1d1d1d"/><circle cx="82.5" cy="66" r="3" fill="#1d1d1d"/><circle cx="58.6" cy="64.8" r="1" fill="#fff"/><circle cx="83.6" cy="64.8" r="1" fill="#fff"/>
+ <ellipse cx="49" cy="84" rx="7.5" ry="4.6" fill="#f08d97" opacity=".6"/><ellipse cx="91" cy="84" rx="7.5" ry="4.6" fill="#f08d97" opacity=".6"/>
+ <path d="M53 91Q70 107 87 91Q70 99 53 91Z" fill="#7a2323" ${K} stroke-width="1.8"/><path d="M57 92.6Q70 99.5 83 92.6L82 95.2Q70 101 58 95.2Z" fill="#fff"/><path d="M63 103Q70 106.5 77 103" stroke="#c98a67" stroke-width="1.4" fill="none"/>
+ <circle cx="70" cy="79" r="9" fill="url(#gN)" ${K} stroke-width="1.8"/><circle cx="66.6" cy="75.8" r="2.4" fill="#fff" opacity=".6"/>
+ ${armL}`}
+
+
+const $=id=>document.getElementById(id),area=$('area'),side=$('side');
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+$('artdefs').innerHTML=DEFS;
+const SU=['♠︎','♥︎','♦︎','♣︎'],RK=['','A','2','3','4','5','6','7','8','9','10','V','D','R'],RN=['','as','2','3','4','5','6','7','8','9','10','valet','dame','roi'];
+const red=c=>c.s===1||c.s===2;
+const GAMES={
+ clock:{n:'L\'Horloge',lvl:'Très facile',d:'Pur hasard : on retourne les cartes une à une et on les range à leur heure. Idéal pour se détendre.'},
+ pyramid:{n:'La Pyramide',lvl:'Facile',d:'Retirez les cartes par paires qui font 13 (le valet vaut 11, la dame 12, le roi part seul) pour démonter la pyramide.'},
+ klondike:{n:'La Réussite classique',lvl:'Moyen',d:'La plus connue : montez les quatre familles de l\'as au roi, en alternant rouge et noir dans les colonnes.'},
+ freecell:{n:'Les Cellules libres',lvl:'Réfléchi',d:'Toutes les cartes sont visibles et presque toutes les donnes se gagnent : c\'est une affaire de stratégie, avec quatre cases de réserve.'}};
+let opt={draw3:false};try{Object.assign(opt,JSON.parse(localStorage.getItem('sol-opt')||'{}'))}catch(e){}
+let stats={};try{stats=JSON.parse(localStorage.getItem('sol-stats')||'{}')}catch(e){}
+const saveStats=()=>{try{localStorage.setItem('sol-stats',JSON.stringify(stats))}catch(e){}};
+let S=null,say='Bonjour ! Choisissez une réussite. La règle est dans « Comment jouer ? », en haut.',sayNew=true,sel=null,hintT=null,tick=null,autoT=null;
+function talk(t){say=t;sayNew=true;const b=document.querySelector('.bubble');if(b){b.textContent=t;b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop');sayNew=false}}
+function mmPlain(){return mmArt('pull').replace(/<path d="M38 61L22 52[^>]*\/>/,'').replace(/<path d="M37 60Q70 49 103 60[^>]*\/>/,'')+
+ `<g transform="rotate(-14 8 118)"><rect x="-6" y="100" width="22" height="30" rx="2.5" fill="#fff" stroke="#2a1d18" stroke-width="1.4"/><text x="5" y="121" text-anchor="middle" font-size="16" fill="#c0392b" font-family="serif">♥︎</text></g>`}
+function bar(){const s=`<div class="mmbar"><svg viewBox="-12 -6 152 206" class="mm" role="img" aria-label="Monsieur Méninge">${mmPlain()}</svg><p class="bubble${sayNew?' pop':''}">${esc(say)}</p></div>`;sayNew=false;return s}
+function deck(){const d=[];for(let s=0;s<4;s++)for(let r=1;r<=13;r++)d.push({r,s,up:false});return shuf(d)}
+const PIPS={2:[[50,20],[50,80]],3:[[50,20],[50,50],[50,80]],4:[[30,20],[70,20],[30,80],[70,80]],5:[[30,20],[70,20],[50,50],[30,80],[70,80]],6:[[30,20],[70,20],[30,50],[70,50],[30,80],[70,80]],7:[[30,20],[70,20],[50,35],[30,50],[70,50],[30,80],[70,80]],8:[[30,20],[70,20],[50,35],[30,50],[70,50],[50,65],[30,80],[70,80]],9:[[30,18],[70,18],[30,39],[70,39],[50,50],[30,61],[70,61],[30,82],[70,82]],10:[[30,18],[70,18],[50,29],[30,39],[70,39],[30,61],[70,61],[50,71],[30,82],[70,82]]};
+const CROWN='<svg viewBox="0 0 40 22" class="crown"><path d="M3 20L1 5l9 7 10-11 10 11 9-7-2 15Z" fill="#e2b43a" stroke="#7a5a12" stroke-width="1.4"/><circle cx="20" cy="4" r="2.4" fill="#c0392b"/><circle cx="1.5" cy="5" r="1.8" fill="#2f6fc0"/><circle cx="38.5" cy="5" r="1.8" fill="#2f6fc0"/></svg>';
+function cardHTML(c,a='',cls=''){if(!c.up)return `<div class="pc back ${cls}" ${a}></div>`;const col=red(c)?'red':'blk';
+ let mid;if(c.r===1)mid=`<span class="ace">${SU[c.s]}</span>`;else if(c.r>10)mid=`<span class="face">${CROWN}<em>${RK[c.r]}</em><i>${SU[c.s]}</i></span>`;else mid=PIPS[c.r].map(([x,y])=>`<span class="pp${y>50?' dn':''}" style="left:${x}%;top:${y}%">${SU[c.s]}</span>`).join('');
+ return `<div class="pc ${col} ${cls}" ${a} aria-label="${RN[c.r]} de ${['pique','cœur','carreau','trèfle'][c.s]}"><span class="ix">${RK[c.r]}<b>${SU[c.s]}</b></span>${mid}<span class="ix br">${RK[c.r]}<b>${SU[c.s]}</b></span></div>`}
+
+// ---- Démarrage ----
+function home(){S=null;sel=null;clearInterval(tick);clearInterval(autoT);document.body.className='';
+ area.innerHTML=bar()+`<div class="showcase">${[{r:1,s:1},{r:13,s:0},{r:12,s:2},{r:7,s:3},{r:11,s:1}].map((c,k)=>cardHTML({...c,up:true},`style="--k:${k}"`,'fan')).join('')}</div>`;
+ side.innerHTML=`<p class="kick">Réussites pour jouer seul</p><h2>Quelle réussite aujourd'hui ?</h2>
+ <div class="glist">${Object.entries(GAMES).map(([k,g])=>{const st=stats[k]||{p:0,w:0};return `<button class="gbtn" data-g="${k}"><span class="gl">${g.lvl}</span><b>${g.n}</b><span>${g.d}</span><em>${st.p?`${st.w} gagnée${st.w>1?'s':''} sur ${st.p}`:'Jamais jouée'}</em></button>`}).join('')}</div>
+ <label class="opt2"><input type="checkbox" id="draw3"${opt.draw3?' checked':''}> Réussite classique : retourner les cartes trois par trois (plus difficile)</label>`}
+function start(g){clearInterval(tick);clearInterval(autoT);sel=null;const d=deck();S={g,p:{},hist:[],moves:0,t0:Date.now(),over:false,won:false,passes:0};document.body.className='g-'+g;
+ if(g==='klondike'){for(let i=0;i<7;i++){S.p['t'+i]=d.splice(0,i+1);S.p['t'+i][i].up=true}for(let i=0;i<4;i++)S.p['f'+i]=[];S.p.stock=d;S.p.waste=[];talk('Bonne réussite ! Touchez une carte pour l\'envoyer au bon endroit, ou faites-la glisser.')}
+ if(g==='freecell'){d.forEach(c=>c.up=true);for(let i=0;i<8;i++)S.p['t'+i]=d.splice(0,i<4?7:6);for(let i=0;i<4;i++){S.p['f'+i]=[];S.p['c'+i]=[]}talk('Toutes les cartes sont visibles : prenez le temps de réfléchir, les quatre cases du haut servent de réserve.')}
+ if(g==='pyramid'){S.py=d.splice(0,28).map(c=>(c.up=true,c));S.p.stock=d;S.p.waste=[];talk('Touchez deux cartes libres qui font 13 ensemble. Un roi part tout seul !')}
+ if(g==='clock'){S.cl=[];for(let i=0;i<13;i++)S.cl.push({down:d.splice(0,4),up:[]});S.h=12;talk('Touchez le tas qui brille : la carte retournée va se ranger à son heure. Le roi va au centre.')}
+ stats[g]=stats[g]||{p:0,w:0};stats[g].p++;saveStats();
+ tick=setInterval(()=>{const e=$('clk');if(e&&S&&!S.over)e.textContent=fmt(Date.now()-S.t0)},1000);render()}
+const fmt=ms=>{const s=Math.floor(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+function snap(){S.hist.push(JSON.stringify({p:S.p,py:S.py,passes:S.passes,moves:S.moves}));if(S.hist.length>300)S.hist.shift()}
+function undo(){if(!S.hist.length||S.over)return;const o=JSON.parse(S.hist.pop());S.p=o.p;S.py=o.py;S.passes=o.passes;S.moves=o.moves;sel=null;talk('Coup annulé.');render()}
+
+// ---- Règles : classique et cellules libres ----
+const top=p=>p[p.length-1];
+function pick(pid,i){const p=S.p[pid];if(!p||!p.length)return null;if(i==null)i=p.length-1;const c=p[i];if(!c||!c.up)return null;
+ if(pid==='stock')return null;if(pid==='waste'||pid[0]==='f'||pid[0]==='c')return i===p.length-1?[c]:null;
+ const run=p.slice(i);for(let k=1;k<run.length;k++){if(red(run[k])===red(run[k-1])||run[k].r!==run[k-1].r-1)return null}return run}
+function maxRun(to){let fc=0,ec=0;for(let k=0;k<4;k++)if(!S.p['c'+k].length)fc++;for(let k=0;k<8;k++)if(!S.p['t'+k].length&&'t'+k!==to)ec++;return (fc+1)*Math.pow(2,ec)}
+function canDrop(run,to,from){if(to===from||!S.p[to])return false;const p=S.p[to],t=top(p),c=run[0];
+ if(to[0]==='f')return run.length===1&&(t?t.s===c.s&&c.r===t.r+1:c.r===1);
+ if(to[0]==='c')return run.length===1&&!p.length;
+ if(to[0]==='t'){if(S.g==='freecell'&&run.length>maxRun(to))return false;if(!t)return S.g==='freecell'||c.r===13;return t.up&&red(t)!==red(c)&&t.r===c.r+1}return false}
+function apply(from,i,to,noSnap){if(!noSnap)snap();const run=S.p[from].splice(i);S.p[to].push(...run);const f=S.p[from];if(from[0]==='t'&&f.length&&!top(f).up)top(f).up=true;S.moves++}
+function smartTarget(from,i){const run=pick(from,i);if(!run)return null;
+ if(run.length===1)for(let k=0;k<4;k++)if(canDrop(run,'f'+k,from))return 'f'+k;
+ const n=S.g==='freecell'?8:7,ts=[];for(let k=0;k<n;k++)ts.push('t'+k);
+ const ne=ts.find(t=>S.p[t].length&&canDrop(run,t,from));if(ne)return ne;
+ const kingAlone=from[0]==='t'&&i===0;const em=ts.find(t=>!S.p[t].length&&canDrop(run,t,from));if(em&&!kingAlone)return em;
+ if(S.g==='freecell'&&run.length===1&&from[0]!=='c'){for(let k=0;k<4;k++)if(canDrop(run,'c'+k,from))return 'c'+k}return null}
+function autoSafe(){if(S.g!=='freecell')return;let moved=true;while(moved){moved=false;const fr=['c0','c1','c2','c3','t0','t1','t2','t3','t4','t5','t6','t7'];
+ for(const pid of fr){const c=top(S.p[pid]);if(!c)continue;const fd=[0,1,2,3].map(k=>top(S.p['f'+k])).filter(Boolean);
+  const lowOpp=Math.min(...[0,1,2,3].filter(s=>(s===1||s===2)!==red(c)).map(s=>{const f=[0,1,2,3].map(k=>S.p['f'+k]).find(f=>f.length&&f[0].s===s);return f?f.length:0}));
+  if(c.r<=2||lowOpp>=c.r-1){for(let k=0;k<4;k++)if(canDrop([c],'f'+k,pid)){apply(pid,S.p[pid].length-1,'f'+k,true);S.moves--;moved=true;break}}if(moved)break}}}
+function tryMove(from,i,to){const run=pick(from,i);if(!run||!canDrop(run,to,from))return false;apply(from,i,to);autoSafe();after();return true}
+function after(){sel=null;const f=[0,1,2,3].reduce((a,k)=>a+S.p['f'+k].length,0);if(f===52){win();return}render()}
+function hint(){if(S.over)return;let h=null;
+ if(S.g==='klondike'||S.g==='freecell'){const srcs=[];Object.keys(S.p).forEach(pid=>{if(pid[0]==='f'||pid==='stock')return;const p=S.p[pid];p.forEach((c,i)=>{if(c.up&&pick(pid,i))srcs.push([pid,i])})});
+  for(const [pid,i] of srcs){const run=pick(pid,i);if(run.length===1)for(let k=0;k<4;k++)if(canDrop(run,'f'+k,pid)){h=[pid,i,'f'+k];break}if(h)break}
+  if(!h)for(const [pid,i] of srcs){const t=smartTarget(pid,i);if(!t||t[0]==='f'||t[0]==='c')continue;const below=S.p[pid][i-1];const useful=pid==='waste'||pid[0]==='c'||i===0&&S.p[t].length||below&&!below.up;if(useful){h=[pid,i,t];break}}
+  if(!h&&S.g==='freecell')for(const [pid,i] of srcs){if(pid[0]!=='t')continue;const t=smartTarget(pid,i);if(t&&t[0]==='c'&&S.p[pid].length>1){h=[pid,i,t];break}}
+  if(h){flash(h[0],h[1]);talk(`Essayez de déplacer ${desc(S.p[h[0]][h[1]])} ${h[2][0]==='f'?'sur les familles en haut':h[2][0]==='c'?'dans une case libre':'sur une autre colonne'}.`);return}
+  if(S.g==='klondike'&&(S.p.stock.length||S.p.waste.length)){flash('stock');talk('Pas de coup dans les colonnes : retournez une carte du talon.');return}}
+ if(S.g==='pyramid'){const av=pyAvail();for(const a of av){if(a.c.r===13){flash(a.id);talk(`Le ${desc(a.c)} part tout seul !`);return}for(const b of av)if(a!==b&&a.c.r+b.c.r===13){flash(a.id);flash(b.id);talk(`${cap(desc(a.c))} et ${desc(b.c)} font 13 !`);return}}
+  if(S.p.stock.length||S.passes<2){flash('stock');talk('Aucune paire visible : piochez dans le talon.');return}}
+ talk('Je ne vois plus de coup utile… Vous pouvez annuler quelques coups ou recommencer une donne.')}
+const desc=c=>`le ${RN[c.r]} de ${['pique','cœur','carreau','trèfle'][c.s]}`,cap=s=>s[0].toUpperCase()+s.slice(1);
+function flash(pid,i){const el=area.querySelector(i==null?`[data-pile="${pid}"]`:`[data-p="${pid}"][data-i="${i}"]`)||area.querySelector(`[data-pid="${pid}"]`);if(el){el.classList.add('hint');setTimeout(()=>el.classList.remove('hint'),1800)}}
+function drawStock(){if(S.over)return;if(S.p.stock.length){snap();const n=S.g==='klondike'&&opt.draw3?3:1;for(let k=0;k<n&&S.p.stock.length;k++){const c=S.p.stock.pop();c.up=true;S.p.waste.push(c)}S.moves++}
+ else if(S.p.waste.length){if(S.g==='pyramid'&&S.passes>=2){talk('Le talon est épuisé : plus de nouvelle tournée possible.');return}snap();S.p.stock=S.p.waste.reverse().map(c=>(c.up=false,c));S.p.waste=[];S.passes++;S.moves++;if(S.g==='pyramid')talk(`On reprend le talon. Tournées restantes : ${2-S.passes}.`)}
+ sel=null;render();if(S.g==='pyramid')pyCheck()}
+function canAuto(){return S.g==='klondike'&&!S.over&&!S.p.stock.length&&!S.p.waste.length&&[0,1,2,3,4,5,6].every(k=>S.p['t'+k].every(c=>c.up))}
+function autoFinish(){if(!canAuto())return;talk('Je range tout ça pour vous…');clearInterval(autoT);autoT=setInterval(()=>{let done=false;
+ for(let k=0;k<7&&!done;k++){const p=S.p['t'+k];if(!p.length)continue;for(let f=0;f<4;f++)if(canDrop([top(p)],'f'+f,'t'+k)){apply('t'+k,p.length-1,'f'+f,true);done=true;break}}
+ if(!done){clearInterval(autoT);after();return}render();if([0,1,2,3].reduce((a,k)=>a+S.p['f'+k].length,0)===52){clearInterval(autoT);win()}},90)}
+
+// ---- Pyramide ----
+const pyRow=i=>{let r=0;while((r+1)*(r+2)/2<=i)r++;return r};
+function pyFree(i){if(!S.py[i])return false;const r=pyRow(i);if(r===6)return true;return !S.py[i+r+1]&&!S.py[i+r+2]}
+function pyAvail(){const a=[];S.py.forEach((c,i)=>{if(c&&pyFree(i))a.push({id:'py'+i,c})});const w=top(S.p.waste);if(w)a.push({id:'waste',c:w});return a}
+function pyGet(id){return id==='waste'?top(S.p.waste):S.py[+id.slice(2)]}
+function pyRemove(ids){snap();ids.forEach(id=>{if(id==='waste')S.p.waste.pop();else S.py[+id.slice(2)]=null});S.moves++;sel=null;
+ if(S.py.every(c=>!c)){win();return}render();pyCheck()}
+function pyTap(id){if(S.over)return;const c=pyGet(id);if(!c)return;if(id!=='waste'&&!pyFree(+id.slice(2))){talk('Cette carte est encore couverte.');return}
+ if(c.r===13){pyRemove([id]);talk(rnd(['Le roi s\'en va tout seul !','Et un roi de moins !']));return}
+ if(sel&&sel!==id){const o=pyGet(sel);if(o&&o.r+c.r===13){pyRemove([sel,id]);talk(rnd(['13 ! Bien vu.','Parfait, ça fait 13 !','Et hop, une paire de plus !']));return}talk(`${o.r} + ${c.r} = ${o.r+c.r}, ça ne fait pas 13.`)}
+ sel=sel===id?null:id;render()}
+function pyCheck(){const av=pyAvail();const pair=av.some(a=>a.c.r===13||av.some(b=>a!==b&&a.c.r+b.c.r===13));if(!pair&&!S.p.stock.length&&(S.passes>=2||!S.p.waste.length)){S.over=true;talk('Plus aucun coup possible… La pyramide a résisté cette fois !');render()}}
+
+// ---- Horloge ----
+function clockTap(){if(S.over)return;const pile=S.cl[S.h];if(!pile.down.length)return;const c=pile.down.pop();c.up=true;S.cl[c.r-1].up.push(c);S.moves++;S.h=c.r-1;S.lastC=c;
+ if(!S.cl[S.h].down.length){const all=S.cl.every(p=>!p.down.length);if(all){win();return}S.over=true;talk(`Le quatrième roi est sorti… ${S.cl.reduce((a,p)=>a+p.down.length,0)} cartes restaient cachées. Ce sera pour la prochaine !`)}
+ else talk(`${cap(desc(c))} va ${c.r===13?'au centre':'à '+c.r+' heure'+(c.r>1?'s':'')}.`);render()}
+function clockAuto(){clearInterval(autoT);autoT=setInterval(()=>{if(!S||S.over||S.won){clearInterval(autoT);return}clockTap()},260)}
+
+// ---- Victoire ----
+function win(){S.over=true;S.won=true;clearInterval(autoT);const t=Date.now()-S.t0,st=stats[S.g];st.w++;if(!st.best||t<st.best)st.best=t;saveStats();
+ talk(rnd(['Bravo ! Réussite réussie !','Magnifique ! Toutes les cartes sont rangées !','Chapeau bas ! Quelle réussite !']));render();confetti()}
+function confetti(){const box=document.createElement('div');box.className='confetti';box.innerHTML=Array.from({length:50},(_,k)=>`<i style="left:${Math.random()*100}%;--d:${(Math.random()*1.5).toFixed(2)}s;--c:${rnd(['#c0392b','#e2b43a','#2f6fc0','#3f9b3a','#a23fa8'])};--x:${(Math.random()*200-100).toFixed(0)}px"></i>`).join('');document.body.appendChild(box);setTimeout(()=>box.remove(),4500)}
+
+// ---- Affichage ----
+function sizeBoard(){const b=area.querySelector('.board');if(!b||!S)return;const pad=parseFloat(getComputedStyle(b).paddingLeft)||0,W=b.clientWidth-2*pad-4,gap=W<500?5:9;let n={klondike:7,freecell:8,pyramid:7.2,clock:8.6}[S.g];const cw=Math.max(36,Math.min({klondike:104,freecell:96,pyramid:84,clock:74}[S.g],Math.floor((W-(Math.ceil(n)-1)*gap)/n)));
+ b.style.setProperty('--cw',cw+'px');b.style.setProperty('--gap',gap+'px');layout(b,cw,gap)}
+function layout(b,cw,gap){const ch=cw*1.4;
+ b.querySelectorAll('.col').forEach(col=>{let y=0;const cs=[...col.querySelectorAll('.pc')];cs.forEach((el,k)=>{el.style.top=y+'px';y+=el.classList.contains('back')?ch*.13:ch*(S.g==='freecell'?.27:.29)});col.style.height=(cs.length?y-(cs[cs.length-1].classList.contains('back')?ch*.13:ch*(S.g==='freecell'?.27:.29))+ch:ch)+'px'});
+ b.querySelectorAll('.wastefan .pc').forEach((el,k,a)=>{el.style.left=(Math.max(0,k-(a.length-3))*cw*.28)+'px'});
+ if(S.g==='pyramid'){const pyr=b.querySelector('.pyr');let i=0;for(let r=0;r<7;r++)for(let c=0;c<=r;c++,i++){const el=pyr.querySelector(`[data-pid="py${i}"]`);if(el){el.style.left=((6-r)*(cw+gap)/2+c*(cw+gap))+'px';el.style.top=(r*ch*.46)+'px'}}pyr.style.height=(6*ch*.46+ch)+'px';pyr.style.width=(7*cw+6*gap)+'px'}
+ if(S.g==='clock'){const fw=b.querySelector('.clockface').clientWidth,R=Math.min(fw/2-cw*.7,ch*2.6),cx=fw/2,cy=R*.86+ch*.65;b.querySelector('.clockface').style.height=(2*R*.86+ch*1.5)+'px';
+  b.querySelectorAll('.cpile').forEach(el=>{const k=+el.dataset.k;let x=cx,y=cy;if(k<12){const a=(k+1)/12*2*Math.PI;x=cx+R*Math.sin(a)*.98;y=cy-R*Math.cos(a)*.86}el.style.left=(x-cw/2)+'px';el.style.top=(y-ch/2)+'px'})}}
+function pileHTML(pid,cls,label){const p=S.p[pid];const isTop=(i)=>i===p.length-1;
+ return `<div class="pile ${cls}${sel&&sel[0]===pid?' selp':''}" data-pile="${pid}">${p.length?'':`<span class="ph">${label||''}</span>`}${p.map((c,i)=>cardHTML(c,`data-p="${pid}" data-i="${i}"`,(sel&&sel[0]===pid&&i>=sel[1]?'sel':'')+(pid==='waste'&&!isTop(i)?' under':''))).join('')}</div>`}
+function render(){if(!S){home();return}clearTimeout(hintT);const g=S.g,G=GAMES[g];let board='';
+ if(g==='klondike')board=`<div class="board kl"><div class="toprow">${`<div class="pile stockp" data-pile="stock">${S.p.stock.length?cardHTML({up:false},'data-p="stock"'):'<span class="ph">↻</span>'}</div>`}<div class="pile wastefan" data-pile="waste">${S.p.waste.slice(-3).map((c,k,a)=>cardHTML(c,`data-p="waste" data-i="${S.p.waste.length-a.length+k}"`,k<a.length-1?'under':'')).join('')}</div><div></div>${[0,1,2,3].map(k=>pileHTML('f'+k,'fnd',SU[k])).join('')}</div><div class="cols">${[0,1,2,3,4,5,6].map(k=>pileHTML('t'+k,'col')).join('')}</div></div>`;
+ if(g==='freecell')board=`<div class="board fc"><div class="toprow">${[0,1,2,3].map(k=>pileHTML('c'+k,'cell','')).join('')}${[0,1,2,3].map(k=>pileHTML('f'+k,'fnd',SU[k])).join('')}</div><div class="cols">${[0,1,2,3,4,5,6,7].map(k=>pileHTML('t'+k,'col')).join('')}</div></div>`;
+ if(g==='pyramid')board=`<div class="board py"><div class="pyr">${S.py.map((c,i)=>c?`<div class="pslot${sel==='py'+i?' sel':''}${pyFree(i)?' free':''}" data-pid="py${i}">${cardHTML(c)}</div>`:'').join('')}</div><div class="pyrow"><div class="pile stockp" data-pile="stock">${S.p.stock.length?cardHTML({up:false},'data-p="stock"'):`<span class="ph">${S.passes<2&&S.p.waste.length?'↻':'×'}</span>`}</div><div class="pslot w${sel==='waste'?' sel':''}" data-pid="waste">${top(S.p.waste)?cardHTML(top(S.p.waste)):'<span class="ph">Défausse</span>'}</div><p class="meta">Talon : ${S.p.stock.length} carte${S.p.stock.length>1?'s':''} · tournées restantes : ${2-S.passes}</p></div></div>`;
+ if(g==='clock')board=`<div class="board ck"><div class="clockface">${S.cl.map((p,k)=>`<div class="cpile${k===S.h&&!S.over?' hot':''}" data-k="${k}">${p.down.length?`<div class="pc back" data-ck="${k}"></div><span class="cnt">${p.down.length}</span>`:''}${p.up.slice(-1).map(c=>cardHTML(c,`data-ck="${k}"`,'onclock'+(p.down.length?' off':''))).join('')}<span class="hr">${k===12?'R':k+1}</span></div>`).join('')}</div></div>`;
+ const won=S.won,st=stats[g];
+ area.innerHTML=bar()+board;
+ side.innerHTML=`<p class="kick">${G.lvl}</p><h2>${G.n}</h2>
+ <div class="score"><div><b id="clk">${fmt(Date.now()-S.t0)}</b>temps</div><div><b>${S.moves}</b>coups</div><div><b>${st.w}/${st.p}</b>gagnées</div></div>
+ ${won?`<div class="bravo">Gagné en ${fmt(Date.now()-S.t0)} et ${S.moves} coups !</div>`:''}
+ <div class="row">${g!=='clock'?`<button class="btn ghost" id="undo"${S.hist.length&&!S.over?'':' disabled'}>Annuler</button><button class="btn ghost" id="hint"${S.over?' disabled':''}>Indice</button>`:`<button class="btn" id="cauto"${S.over?' disabled':''}>Tout retourner</button>`}${canAuto()?'<button class="btn" id="auto">Terminer pour moi</button>':''}</div>
+ <div class="row"><button class="btn${S.over?'':' ghost'}" id="new">Nouvelle donne</button><button class="btn ghost" id="menu">Autres réussites</button></div>
+ <details class="rules"><summary>La règle</summary><p>${G.d}</p>${RULES[g]}</details>`;
+ requestAnimationFrame(sizeBoard)}
+const RULES={klondike:'<p>Touchez le talon pour retourner une carte. Dans les colonnes, on pose une carte plus petite d\'un rang et de l\'autre couleur (un 6 rouge sur un 7 noir). Seul un roi va dans une colonne vide. Les familles se montent de l\'as au roi, par couleur. Les cartes cachées se retournent quand on les libère.</p>',
+ freecell:'<p>On déplace une carte à la fois, sur une carte plus forte d\'un rang et de l\'autre couleur, ou dans une case libre du haut (une carte par case). Une colonne vide accepte n\'importe quelle carte. On peut déplacer plusieurs cartes d\'un coup s\'il y a assez de cases libres. Les cartes qui ne servent plus montent seules sur les familles.</p>',
+ pyramid:'<p>Une carte est libre quand plus aucune carte ne la recouvre. Retirez deux cartes libres dont la somme fait 13 : as = 1, valet = 11, dame = 12. Le roi (13) part seul. La carte de la défausse compte aussi. On peut parcourir le talon trois fois.</p>',
+ clock:'<p>Treize tas de quatre cartes : un par heure, et les rois au centre. On retourne la carte du tas qui brille et on la range sous l\'heure de sa valeur (un 5 à 5 heures, un valet à 11 heures, une dame à midi). On continue avec le tas de cette heure. On gagne si toutes les cartes sont retournées avant le quatrième roi.</p>'};
+
+// ---- Toucher et glisser ----
+let drag=null;
+area.addEventListener('pointerdown',e=>{if(!S||S.over)return;const card=e.target.closest('.pc[data-p]');if(!card||!(S.g==='klondike'||S.g==='freecell'))return;const pid=card.dataset.p,i=+card.dataset.i;if(pid==='stock'||!pick(pid,i))return;
+ drag={pid,i,x:e.clientX,y:e.clientY,on:false,el:card};card.setPointerCapture&&card.setPointerCapture(e.pointerId)});
+area.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(!drag.on&&Math.hypot(dx,dy)>8){drag.on=true;drag.els=[...area.querySelectorAll(`.pc[data-p="${drag.pid}"]`)].filter(el=>+el.dataset.i>=drag.i);drag.els.forEach(el=>el.classList.add('drag'))}
+ if(drag.on)drag.els.forEach(el=>el.style.transform=`translate(${dx}px,${dy}px)`)});
+area.addEventListener('pointerup',e=>{if(!drag)return;const d=drag;drag=null;if(d.on){d.els.forEach(el=>el.style.visibility='hidden');const under=document.elementFromPoint(e.clientX,e.clientY);d.els.forEach(el=>el.style.visibility='');const pile=under&&under.closest('[data-pile]');
+  if(pile&&tryMove(d.pid,d.i,pile.dataset.pile))return;d.els.forEach(el=>{el.classList.remove('drag');el.style.transform=''});return}
+ tapCard(d.pid,d.i)});
+area.addEventListener('pointercancel',()=>{if(drag&&drag.els)drag.els.forEach(el=>{el.classList.remove('drag');el.style.transform=''});drag=null});
+function tapCard(pid,i){if(sel){const [sp,si]=sel;if(sp===pid&&si===i){sel=null;render();return}if(tryMove(sp,si,pid))return;sel=null}
+ const t=smartTarget(pid,i);if(t){tryMove(pid,i,t);return}
+ sel=[pid,i];talk('Pas de place évidente pour cette carte : touchez la colonne où vous voulez la poser.');render()}
+area.addEventListener('click',e=>{if(!S)return;
+ if(S.g==='clock'){if(e.target.closest('.cpile.hot'))clockTap();return}
+ if(S.g==='pyramid'){if(e.target.closest('[data-pile="stock"]')){drawStock();return}const s=e.target.closest('[data-pid]');if(s)pyTap(s.dataset.pid);return}
+ if(e.target.closest('[data-pile="stock"]')){drawStock();return}
+ const pile=e.target.closest('[data-pile]');if(pile&&!e.target.closest('.pc[data-p]')&&sel){if(!tryMove(sel[0],sel[1],pile.dataset.pile)){sel=null;render()}}});
+side.addEventListener('click',e=>{const t=e.target,gb=t.closest('[data-g]');if(gb){start(gb.dataset.g);return}
+ if(t.id==='draw3'){opt.draw3=t.checked;try{localStorage.setItem('sol-opt',JSON.stringify(opt))}catch(x){}return}
+ if(t.id==='undo')undo();if(t.id==='hint')hint();if(t.id==='auto')autoFinish();if(t.id==='cauto')clockAuto();if(t.id==='new')start(S.g);if(t.id==='menu')home()});
+document.addEventListener('keydown',e=>{if(!S)return;if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undo()}});
+
+new ResizeObserver(()=>sizeBoard()).observe(area);
+home();
+
+}
+</script>
+<div class="rmodal" id="rulesBox" hidden role="dialog" aria-modal="true" aria-labelledby="rtitle"><div class="rpanel"><button class="rclose" type="button" aria-label="Fermer">×</button><h2 id="rtitle">Comment jouer aux réussites</h2>
+<p class="lead">Une réussite se joue seul, avec un jeu de 52 cartes. Le but : ranger toutes les cartes selon la règle du jeu choisi.</p>
+<h3>Jouer sur l'écran</h3>
+<ol><li><b>Touchez une carte</b> : elle part toute seule vers la meilleure place possible.</li>
+<li>Si elle ne peut aller nulle part d'évidence, elle s'entoure de jaune : <b>touchez alors la colonne</b> où vous voulez la poser.</li>
+<li>Vous pouvez aussi <b>faire glisser</b> une carte (ou une suite de cartes) avec le doigt ou la souris.</li>
+<li><b>Annuler</b> revient d'un coup en arrière, autant de fois que vous voulez. <b>Indice</b> : Monsieur Méninge fait briller une carte à jouer.</li></ol>
+<p class="tip">Valeurs : A = as (1), V = valet (11), D = dame (12), R = roi (13).</p>
+<h3 id="r-clock">L'Horloge · très facile</h3>
+<ol><li>Les cartes forment 13 tas de 4 : un tas par heure du cadran, et un tas au centre pour les rois.</li>
+<li>Touchez le tas qui brille : sa carte se retourne et va se ranger sous son heure (un 5 à 5 heures, un valet à 11 heures, une dame à midi, un roi au centre).</li>
+<li>On continue avec le tas de cette heure-là.</li>
+<li><b>Gagné</b> si toutes les cartes sont retournées avant que le quatrième roi sorte. C'est le hasard qui décide : laissez-vous porter, ou touchez « Tout retourner ».</li></ol>
+<h3 id="r-pyramid">La Pyramide · facile</h3>
+<ol><li>28 cartes forment une pyramide. Une carte est <b>libre</b> quand plus rien ne la recouvre.</li>
+<li>Touchez deux cartes libres dont la somme fait <b>13</b> : elles disparaissent. Exemples : 6 + 7, 9 + 4, valet + 2, dame + as.</li>
+<li>Un <b>roi</b> fait 13 à lui seul : touchez-le, il part.</li>
+<li>Touchez le talon (en bas) pour retourner une carte sur la défausse : elle peut aussi servir à faire 13. On peut parcourir le talon trois fois.</li>
+<li><b>Gagné</b> quand la pyramide a disparu.</li></ol>
+<h3 id="r-klondike">La Réussite classique · moyen</h3>
+<ol><li>But : monter quatre familles en haut à droite, une par couleur, <b>de l'as au roi</b>.</li>
+<li>Dans les sept colonnes, on pose une carte <b>d'un rang plus petit et de l'autre couleur</b> : un 6 rouge sur un 7 noir, une dame noire sur un roi rouge.</li>
+<li>On peut déplacer toute une suite de cartes visibles d'un coup. Seul un <b>roi</b> peut aller dans une colonne vide.</li>
+<li>Quand une carte cachée se libère, elle se retourne.</li>
+<li>Touchez le talon (en haut à gauche) pour retourner une nouvelle carte. Quand il est vide, touchez-le pour le reprendre.</li>
+<li>Option : retourner les cartes trois par trois, c'est plus difficile.</li></ol>
+<h3 id="r-freecell">Les Cellules libres · réfléchi</h3>
+<ol><li>Toutes les cartes sont visibles dès le début, dans huit colonnes.</li>
+<li>En haut à gauche, <b>quatre cases libres</b> : chacune peut garder une carte en attente.</li>
+<li>Dans les colonnes, même règle que la réussite classique : un rang plus petit, de l'autre couleur. Mais <b>n'importe quelle carte</b> peut aller dans une colonne vide.</li>
+<li>On déplace plusieurs cartes d'un coup seulement s'il y a assez de cases libres.</li>
+<li>Les cartes qui ne servent plus montent toutes seules sur les familles.</li>
+<li>Presque toutes les donnes se gagnent : prenez le temps de réfléchir !</li></ol><button class="btn wide rok" type="button">J'ai compris, on joue !</button></div></div>
+<script>
+{const box=document.getElementById('rulesBox');
+function openR(){box.hidden=false;const m=(document.body.className.match(/g-(\w+)/)||[])[1];const sec=m&&document.getElementById('r-'+m);box.querySelector('.rpanel').scrollTop=sec?sec.offsetTop-20:0;box.querySelector('.rclose').focus({preventScroll:true})}
+function closeR(){box.hidden=true;document.getElementById('rulesBtn').focus()}
+document.getElementById('rulesBtn').addEventListener('click',openR);
+box.addEventListener('click',e=>{if(e.target===box||e.target.closest('.rclose,.rok'))closeR()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!box.hidden)closeR()});}
+</script>
+</body>
+</html>

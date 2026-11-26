@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="icon" type="image/png" href="logo/mm-32.png">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Méli-Méninges — Monsieur Méninge le mécano</title>
+<style>
+:root{color-scheme:dark;--bg:#0f1a2e;--card:#16233c;--line:#2a3a5a;--ink:#eef2f8;--soft:#9aa6bb;--gold:#ffd65c;--ok:#4fc38a;--bad:#ff6b7a;--blue:#5fb4ff}
+*{box-sizing:border-box;min-width:0}
+html.emb body{background:transparent}
+html,body{overscroll-behavior:none}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;padding:4px 0 24px}
+button{font:inherit;cursor:pointer}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.bar b{color:var(--soft);font-weight:600;font-size:15px;margin-right:4px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{background:#1d2c4a;color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:9px 14px;min-height:44px;font-weight:600}
+.seg button[aria-pressed=true]{background:#2a4a7a;border-color:var(--blue);box-shadow:0 0 0 2px rgba(95,180,255,.25)}
+.big{background:#e1000f;color:#fff;border:0;border-radius:14px;padding:10px 18px;font-weight:700;min-height:46px}
+.stats{display:flex;flex-wrap:wrap;gap:18px;color:var(--soft);font-size:15px;margin:0 0 10px}
+.stats b{color:var(--ink);font-size:20px}
+.board{background-color:#f2f5f8;background-image:linear-gradient(rgba(60,100,150,.13) 1px,transparent 1px),linear-gradient(90deg,rgba(60,100,150,.13) 1px,transparent 1px),linear-gradient(rgba(60,100,150,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(60,100,150,.06) 1px,transparent 1px);background-size:50px 50px,50px 50px,10px 10px,10px 10px;border-radius:6px;border:2px solid #2f3b4a;padding:8px 8px 0;touch-action:none;position:relative}
+.cart{display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px 14px;border-top:1.5px solid #2f3b4a;margin:6px -8px 0;padding:5px 10px;font:600 12px/1.3 ui-monospace,Menlo,Consolas,monospace;color:#2f3b4a;letter-spacing:.04em;text-transform:uppercase;background:rgba(255,255,255,.55)}
+.mk{pointer-events:none}
+.mk text{font:700 12px ui-monospace,Menlo,Consolas,monospace;fill:#1f2933}
+.nomen{background:#f2f5f8;color:#1f2933;border:2px solid #2f3b4a;border-radius:6px;margin:0 0 10px;font:13px/1.35 ui-monospace,Menlo,Consolas,monospace}
+.nomen h3{margin:0;padding:6px 10px;border-bottom:1.5px solid #2f3b4a;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.nomen ol{list-style:none;margin:0;padding:6px 10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:2px 16px}
+.nomen li{display:flex;gap:8px;border-bottom:1px dotted #b8c2cc;padding:2px 0}
+.nomen li b{min-width:24px}
+.nomen:empty,.nomen.none{display:none}
+.board svg{display:block;width:100%;height:auto;max-height:58vh}
+html.emb .board svg{max-height:none}
+.ghost{opacity:.42}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;padding:6px 10px;margin:0 -8px;border-top:1px dashed #9aa8b6;font:600 12px/1.3 ui-monospace,Menlo,Consolas,monospace;color:#2f3b4a;background:rgba(255,255,255,.55)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px;border:1px solid #1f2933}
+.ghost.hl{opacity:.55;filter:none}
+.placed{filter:url(#ol);animation:pop .45s cubic-bezier(.2,1.5,.4,1);transform-box:fill-box;transform-origin:center}
+@keyframes pop{from{transform:scale(1.25);opacity:.2}}
+.info{min-height:70px;margin:10px 0;padding:12px 16px;border-radius:14px;background:var(--card);border:1px solid var(--line)}
+.info b{color:var(--gold)}
+.info.no{border-color:var(--bad)}
+.tray{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:10px;touch-action:none}
+.pc{background:#f2f5f8 linear-gradient(rgba(60,100,150,.08) 1px,transparent 1px) 0 0/10px 10px;border:2px solid #2f3b4a;border-radius:8px;padding:4px;display:flex;flex-direction:column;align-items:center;gap:2px;color:#1d2233;touch-action:none;user-select:none;-webkit-user-select:none}
+.pc svg{width:100%;height:68px;display:block;pointer-events:none}
+.pc small{font:700 11px/1.1 ui-monospace,Menlo,Consolas,monospace;text-transform:uppercase;letter-spacing:.02em;line-height:1.1;text-align:center;pointer-events:none}
+.pc{position:relative}
+.pc.wait{opacity:.72}
+.pc.wait::after{content:'🔒';position:absolute;top:2px;right:4px;font-size:13px}
+.pc.sel{border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,214,92,.5)}
+.pc:focus-visible{outline:3px solid var(--blue)}
+.fly{position:fixed;z-index:50;pointer-events:none;width:110px;height:90px;transform:translate(-50%,-50%) scale(1.1);filter:drop-shadow(0 8px 10px rgba(0,0,0,.5))}
+.fly svg{width:100%;height:100%}
+.soon{color:var(--soft);font-size:14px;margin:8px 0 0}
+.win{text-align:center;padding:18px;border-radius:18px;background:linear-gradient(135deg,#1f3b2c,#16233c);border:1px solid var(--ok);margin-bottom:10px}
+.win h2{margin:0 0 6px;color:var(--gold)}
+.hidden{display:none!important}
+.shake{animation:sh .35s}
+@keyframes sh{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@media(max-width:700px){.tray{display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,auto);grid-template-columns:none;grid-auto-columns:88px;overflow-x:auto;overflow-y:hidden;touch-action:pan-x;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}.pc{touch-action:pan-x;scroll-snap-align:start}.pc svg{height:58px}}
+.tray{margin-top:10px}
+@media(prefers-reduced-motion:reduce){.placed,.shake{animation:none}}
+
+/* Atelier vélo */
+.atelierTitle { font-size: clamp(23px, 4vw, 34px); margin: 0 0 22px; }
+html.emb .atelierTitle { display: none; }
+body.velo, html.emb body.velo {
+  color-scheme: light;
+  --ink: #241c41;
+  --soft: #51486b;
+  --card: #fff;
+  --line: #e2daef;
+  --gold: #5935bd;
+  --blue: #7351c9;
+  --bad: #a43555;
+  background: #f8f6ff;
+  max-width: 1280px;
+  margin: auto;
+  padding: clamp(12px, 3vw, 25px);
+  border-radius: 18px;
+}
+.velo .bar b { color: var(--soft); }
+.velo .seg button { color: var(--ink); background: #fff; }
+.velo .seg button[aria-pressed=true] { background: #eee6ff; border-color: #9275d7; box-shadow: none; }
+.velo #restart { background: #5935bd; }
+.velo .stats { gap: 10px 18px; align-items: center; }
+.velo .workbench { display: grid; grid-template-columns: minmax(0, 2.55fr) minmax(180px, 1fr); gap: 12px; }
+.velo .board {
+  background-color: #eef5f8;
+  background-image:
+    linear-gradient(#95b4cc24 1px, transparent 1px),
+    linear-gradient(90deg, #95b4cc24 1px, transparent 1px);
+  background-size: 22px 22px;
+  border: 1px solid #cbdce9;
+  border-radius: 14px;
+}
+.velo .board svg { max-height: none; }
+.velo .cart { border-color: #cbdce9; color: #33465c; border-radius: 0 0 14px 14px; }
+.velo .ghost { opacity: .45; filter: grayscale(1); }
+.velo .ghost.hl { opacity: .88; filter: url(#repereVelo); }
+.velo .placed { filter: none; }
+.velo .closeup {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 8px;
+  padding: 12px;
+  min-height: 0;
+  text-align: center;
+  color: var(--soft);
+  background: #f1eaff;
+  border: 1px solid #ded1f9;
+  border-radius: 14px;
+}
+.velo .closeup b { color: #432393; }
+.velo .closeup svg { width: 100%; max-width: 360px; height: clamp(145px, 26vw, 315px); }
+.velo .closeup p { margin: 0; }
+.velo .tray {
+  grid-template-columns: repeat(auto-fill, minmax(126px, 1fr));
+  gap: 9px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  touch-action: auto;
+}
+.velo .pc {
+  padding: 7px 7px 10px;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid #ded1eb;
+  border-radius: 13px;
+}
+.velo .pc svg { height: clamp(90px, 11vw, 126px); }
+.velo .pc small { font: 650 13px/1.2 system-ui, sans-serif; text-transform: none; }
+.velo .pc.wait { opacity: 1; background-color: #f6f3fb; }
+.velo .pc.sel { background: #f1eaff; border-color: #7351c9; box-shadow: 0 0 0 2px #d8c6fa; }
+.velo .win { color: var(--ink); background: #e8f7ec; border-color: #94c9a4; }
+.velo .win h2 { color: #215a37; }
+.velo .nomen { border: 1px solid #ded7ed; border-radius: 12px; background: #fff; }
+.velo .nomen h3 { border-color: #ded7ed; }
+@media(max-width:700px) {
+  .velo .workbench { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .velo .closeup { display: flex; justify-content: center; align-items: center; gap: 10px; padding: 5px 10px; }
+  .velo .closeup:not(.has-part) { display: none; }
+  .velo .closeup svg { width: 56%; height: clamp(106px, 36vw, 166px); flex: none; }
+  .velo .tray { grid-template-columns: none; grid-auto-columns: 110px; touch-action: pan-x; padding: 3px; }
+  .velo .pc { touch-action: pan-x; }
+  .velo .pc svg { height: 76px; }
+}
+</style>
+<script>if(window!==window.parent)document.documentElement.classList.add('emb')</script>
+</head>
+<body>
+<h1 class="atelierTitle">Monsieur Méninge le mécano</h1>
+<div class="bar"><b>Objet</b><div class="seg" id="obj"></div></div>
+<div class="bar"><b>Niveau</b><div class="seg" id="lv"></div><button class="big" id="restart">Recommencer</button></div>
+<div class="stats"><span><b id="cnt">0</b> / <span id="tot">0</span> pièces posées</span><span><b id="time">0 s</b></span><button class="big" id="mkBtn" style="background:#2f3b4a;min-height:36px;padding:4px 12px;font-size:14px">Repères : oui</button></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="defs"><filter id="ol" x="-10%" y="-10%" width="120%" height="120%"><feMorphology in="SourceAlpha" operator="dilate" radius="1.4" result="d"/><feFlood flood-color="#1c2530"/><feComposite in2="d" operator="in" result="o"/><feMerge><feMergeNode in="o"/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="repereVelo" x="-20%" y="-20%" width="140%" height="140%">
+  <feMorphology in="SourceAlpha" operator="dilate" radius="1.35" result="bord"/>
+  <feFlood flood-color="#7651cc"/>
+  <feComposite in2="bord" operator="in"/>
+</filter></defs></svg>
+<div class="win hidden" id="win"></div>
+<div class="workbench">
+  <div class="board" id="board"></div>
+  <aside class="closeup hidden" id="closeup" aria-label="Vue agrandie de la pièce">
+    <p id="closeupPrompt">Sélectionnez une pièce pour l’agrandir.</p>
+    <svg id="closeupImage" class="hidden" aria-hidden="true"></svg>
+    <b id="closeupName" class="hidden"></b>
+  </aside>
+</div>
+<div class="tray" id="tray"></div>
+<div class="info" id="info" aria-live="polite">Faites glisser chaque pièce à sa place sur le vélo. Vous pouvez aussi toucher une pièce, puis toucher l'endroit où elle va.</div>
+<div class="nomen none" id="nomen"></div>
+
+<p class="soon">Bientôt dans l'atelier : la visseuse électrique, la lampe de poche, le robinet…</p>
+
+<script src="mecano-velo/calques.js"></script>
+<script>
+{
+// ---------- géométrie du vélo ----------
+const RA = [250, 430], FA = [770, 430], BB = [470, 450], TR = 128, RIM = 114;
+const C = { frame: '#d7263d', metal: '#8d99ae', dark: '#2b2d42', tire: '#23252f', rim: '#c9ced6', spoke: '#9aa3b0', saddle: '#5b3a29' };
+const ln = (a, b, col, w, extra = '') => { let o = `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${col}" stroke-width="${w}" stroke-linecap="round" ${extra}/>`;
+  if (w >= 7) { const L0 = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1, nx = -(b[1] - a[1]) / L0 * w * .22, ny = (b[0] - a[0]) / L0 * w * .22; o += `<line x1="${a[0] - nx}" y1="${a[1] - ny}" x2="${b[0] - nx}" y2="${b[1] - ny}" stroke="#fff" stroke-opacity=".45" stroke-width="${(w * .22).toFixed(1)}" stroke-linecap="round"/>`; }
+  return o; };
+const ci = (c, r, fill, stroke = 'none', w = 0, extra = '') => `<circle cx="${c[0]}" cy="${c[1]}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${w}" ${extra}/>`;
+const pa = (d, stroke, w, fill = 'none', extra = '') => `<path d="${d}" stroke="${stroke}" stroke-width="${w}" fill="${fill}" stroke-linecap="round" stroke-linejoin="round" ${extra}/>`;
+const re = (x, y, w, h, fill, extra = '') => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${Math.min(w, h) / 3}" fill="${fill}" ${extra}/>`;
+const pol = (c, r, a) => [c[0] + r * Math.cos(a), c[1] + r * Math.sin(a)];
+const arc = (c, r, a1, a2) => { const p1 = pol(c, r, a1), p2 = pol(c, r, a2); return `M${p1[0].toFixed(1)} ${p1[1].toFixed(1)} A${r} ${r} 0 ${Math.abs(a2 - a1) > Math.PI ? 1 : 0} 1 ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`; };
+const spokes = c => Array.from({ length: 18 }, (_, i) => { const a = i * Math.PI / 9; return ln(pol(c, 14, a), pol(c, RIM - 4, a + 0.35), C.spoke, 1.6); }).join('');
+const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+// points du cadre
+const ST = [428, 232], HTt = [690, 236], HTb = [708, 300];
+const crown = HTb, forkEnd = FA;
+const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+const along = (from, to, dFromTo) => lerp(to, from, dFromTo / dist(from, to)); // point à dFromTo de "to" vers "from"
+const rb = along([430, 262], RA, TR + 12);   // frein arrière sur les haubans
+const fb = along(crown, FA, TR + 10);        // frein avant sur la fourche
+const crankA = [495, 516], crankB = [445, 384];
+
+// ---------- les pièces : t = niveau où la pièce devient séparée, p = pièce « mère » ----------
+const VELO = [
+  // roues
+  { id: 'pneuAR', t: 3, p: 'roueAR', n: 'Le pneu arrière', i: 'Le pneu, gonflé d’air, amortit les chocs et accroche la route.', s: ci(RA, TR, 'none', C.tire, 14) },
+  { id: 'roueAR', t: 1, p: null, n: 'La roue arrière', nAt: { 3: 'La roue arrière (jante et rayons)', 4: 'La jante arrière' }, i: 'C’est la roue motrice : la chaîne la fait tourner.', s: ci(RA, RIM, 'none', C.rim, 7) },
+  { id: 'rayonsAR', t: 4, p: 'roueAR', n: 'Les rayons arrière', e: 'rayons', i: 'Une trentaine de fils d’acier tendus relient le moyeu à la jante.', s: spokes(RA) },
+  { id: 'moyeuAR', t: 4, p: 'roueAR', n: 'Le moyeu', e: 'moyeu', i: 'Le moyeu, au centre de la roue, tourne sur des roulements à billes.', s: ci(RA, 13, C.metal, '#555', 2) },
+  { id: 'ecrouAR', t: 4, p: 'roueAR', n: 'L’écrou d’axe', i: 'Il serre la roue arrière dans le cadre.', s: ci(RA, 5, '#444') },
+  { id: 'valveAR', t: 4, p: 'pneuAR', n: 'La valve', e: 'valve', i: 'C’est par la valve qu’on gonfle la chambre à air.', s: re(RA[0] - 3, RA[1] - RIM - 12, 6, 12, '#333') },
+  { id: 'catAR', t: 4, p: 'roueAR', n: 'Le catadioptre', e: 'cata', i: 'Il renvoie la lumière des phares : on vous voit la nuit.', s: re(RA[0] + 50, RA[1] - 7, 22, 12, '#f39c12') },
+  { id: 'pneuAV', t: 3, p: 'roueAV', n: 'Le pneu avant', i: 'Le pneu avant guide le vélo dans les virages.', s: ci(FA, TR, 'none', C.tire, 14) },
+  { id: 'roueAV', t: 1, p: null, n: 'La roue avant', nAt: { 3: 'La roue avant (jante et rayons)', 4: 'La jante avant' }, i: 'La roue avant tourne avec le guidon pour diriger le vélo.', s: ci(FA, RIM, 'none', C.rim, 7) },
+  { id: 'rayonsAV', t: 4, p: 'roueAV', n: 'Les rayons avant', e: 'rayons', i: 'Tendus comme des cordes de guitare, ils rendent la roue solide et légère.', s: spokes(FA) },
+  { id: 'moyeuAV', t: 4, p: 'roueAV', n: 'Le moyeu', e: 'moyeu', i: 'Le moyeu avant tourne librement autour de son axe.', s: ci(FA, 13, C.metal, '#555', 2) },
+  { id: 'blocage', t: 4, p: 'roueAV', n: 'Le blocage rapide', i: 'Ce petit levier permet de démonter la roue sans outil.', s: pa(`M${FA[0]} ${FA[1]} L${FA[0] + 30} ${FA[1] + 14}`, '#444', 5) },
+  { id: 'valveAV', t: 4, p: 'pneuAV', n: 'La valve', e: 'valve', i: 'C’est par la valve qu’on gonfle la chambre à air.', s: re(FA[0] - 3, FA[1] - RIM - 12, 6, 12, '#333') },
+  { id: 'catAV', t: 4, p: 'roueAV', n: 'Le catadioptre', e: 'cata', i: 'Il renvoie la lumière des phares : on vous voit la nuit.', s: re(FA[0] - 72, FA[1] - 7, 22, 12, '#f39c12') },
+  // garde-boue et porte-bagages
+  { id: 'gbAR', t: 4, p: 'cadre', n: 'Le garde-boue arrière', i: 'Il évite d’être éclaboussé par temps de pluie.', s: pa(arc(RA, TR + 16, Math.PI * 1.02, Math.PI * 1.72), '#5c677d', 6) },
+  { id: 'rack', t: 4, p: 'cadre', n: 'Le porte-bagages', i: 'On y attache un panier ou des sacoches.', s: pa(`M170 262 L405 256 M190 262 L${RA[0] - 2} ${RA[1] - 6} M330 259 L${RA[0] + 4} ${RA[1] - 6}`, '#555', 5) },
+  { id: 'gbAV', t: 4, p: 'fourche', n: 'Le garde-boue avant', i: 'Il protège le cycliste des projections de la roue avant.', s: pa(arc(FA, TR + 16, Math.PI * 1.15, Math.PI * 1.95), '#5c677d', 6) },
+  // transmission
+  { id: 'chaine', t: 2, p: 'cadre', n: 'La chaîne', i: 'Elle transmet la force des jambes du pédalier à la roue arrière.', s: pa(`M${RA[0]} ${RA[1] - 24} L${BB[0]} ${BB[1] - 40} A40 40 0 0 1 ${BB[0]} ${BB[1] + 40} L${RA[0]} ${RA[1] + 24} A24 24 0 0 1 ${RA[0]} ${RA[1] - 24} Z`, '#3d3d3d', 4, 'none', 'stroke-dasharray="7 3"') },
+  { id: 'pignons', t: 2, p: 'roueAR', n: 'Les pignons', i: 'Plus le pignon est grand, plus il est facile de monter une côte.', s: ci(RA, 22, '#cfd4dc', '#666', 3) + ci(RA, 17, 'none', '#777', 2) + ci(RA, 12, 'none', '#777', 2) },
+  { id: 'derailleur', t: 3, p: 'pignons', n: 'Le dérailleur', i: 'Il fait passer la chaîne d’un pignon à l’autre pour changer de vitesse.', s: pa(`M${RA[0] + 8} ${RA[1] + 10} L${RA[0] + 22} ${RA[1] + 40} L${RA[0] + 6} ${RA[1] + 66}`, '#555', 6) + ci([RA[0] + 22, RA[1] + 40], 5, '#888') + ci([RA[0] + 6, RA[1] + 66], 5, '#888') },
+  { id: 'cableDer', t: 4, p: 'derailleur', n: 'Le câble de dérailleur', i: 'Tiré par la manette, il déplace le dérailleur.', s: pa(`M${RA[0] + 14} ${RA[1] + 8} L460 ${BB[1] - 6} L700 296`, '#1d1d1d', 2) },
+  { id: 'pedalier', t: 2, p: 'cadre', n: 'Le pédalier', nAt: { 4: 'Les manivelles' }, i: 'Les manivelles sont les « bras » qui portent les pédales.', s: ln(BB, crankA, C.metal, 9) + ln(BB, crankB, '#6c7686', 9) },
+  { id: 'plateau', t: 4, p: 'pedalier', n: 'Le plateau', i: 'Cette grande roue dentée entraîne la chaîne.', s: ci(BB, 40, 'none', '#555', 6, 'stroke-dasharray="5 3"') + ci(BB, 29, 'none', '#777', 3) },
+  { id: 'boitier', t: 4, p: 'cadre', n: 'Le boîtier de pédalier', i: 'Il contient l’axe et les roulements sur lesquels tourne le pédalier.', s: ci(BB, 11, '#444') },
+  { id: 'pedale1', t: 2, p: 'pedalier', n: 'Une pédale', e: 'pedale', i: 'On appuie dessus avec le pied pour faire avancer le vélo.', s: re(crankA[0] - 18, crankA[1] - 6, 36, 12, '#2b2d42') },
+  { id: 'catPed', t: 4, p: 'pedale1', n: 'Le catadioptre de pédale', i: 'En bougeant, il signale le cycliste aux voitures.', s: re(crankA[0] - 8, crankA[1] - 3, 16, 6, '#f39c12') },
+  { id: 'pedale2', t: 2, p: 'pedalier', n: 'Une pédale', e: 'pedale', i: 'On appuie dessus avec le pied pour faire avancer le vélo.', s: re(crankB[0] - 18, crankB[1] - 6, 36, 12, '#555a70') },
+  { id: 'gardeChaine', t: 4, p: 'cadre', n: 'Le garde-chaîne', i: 'Il évite que le pantalon se prenne dans la chaîne.', s: pa(`M${BB[0] - 50} ${BB[1] - 44} Q${BB[0]} ${BB[1] - 70} ${BB[0] + 46} ${BB[1] - 44}`, '#333', 6) },
+  // cadre
+  { id: 'haubans', t: 3, p: 'cadre', n: 'Les haubans', i: 'Ces deux tubes fins relient le haut du cadre à la roue arrière.', s: ln([430, 262], RA, C.frame, 10) },
+  { id: 'bases', t: 3, p: 'cadre', n: 'Les bases', i: 'Les bases relient le pédalier à l’axe de la roue arrière.', s: ln(BB, RA, C.frame, 10) },
+  { id: 'tubeSelle', t: 3, p: 'cadre', n: 'Le tube de selle', i: 'Il reçoit la tige de selle.', s: ln(BB, ST, C.frame, 14) },
+  { id: 'tubeDiag', t: 3, p: 'cadre', n: 'Le tube diagonal', i: 'C’est le tube le plus solide du cadre : il encaisse les efforts du pédalage.', s: ln([704, 294], BB, C.frame, 15) },
+  { id: 'tubeHoriz', t: 3, p: 'cadre', n: 'Le tube horizontal', i: 'Il relie la selle au guidon et rigidifie le cadre.', s: ln([432, 252], [690, 248], C.frame, 13) },
+  { id: 'cadre', t: 1, p: null, n: 'Le cadre', nAt: { 3: 'Le tube de direction' }, iAt: { 1: 'Le cadre est le squelette du vélo : toutes les autres pièces s’y attachent.', 3: 'Le tube de direction tient la fourche et lui permet de tourner.' }, i: '', s: ln(HTt, HTb, C.frame, 18) },
+  { id: 'jeuDir', t: 4, p: 'cadre', n: 'Le jeu de direction', i: 'Ses roulements à billes permettent au guidon de tourner sans effort.', s: re(HTt[0] - 12, HTt[1] - 8, 24, 8, '#333') + re(HTb[0] - 12, HTb[1] - 2, 24, 8, '#333') },
+  { id: 'porteBidon', t: 4, p: 'cadre', n: 'Le porte-bidon', i: 'Il tient la gourde à portée de main.', s: re(538, 338, 76, 30, 'none', 'stroke="#333" stroke-width="3" transform="rotate(-34 576 353)"') },
+  { id: 'bidon', t: 4, p: 'cadre', n: 'Le bidon', i: 'Une gourde pour boire en roulant.', s: re(542, 342, 68, 22, '#4cc9f0', 'transform="rotate(-34 576 353)"') },
+  { id: 'bequille', t: 3, p: 'cadre', n: 'La béquille', i: 'Elle tient le vélo debout à l’arrêt.', s: ln([405, 446], [388, 556], '#555', 7) + ln([380, 558], [398, 558], '#555', 7) },
+  // avant
+  { id: 'fourche', t: 2, p: 'cadre', n: 'La fourche', i: 'Elle tient la roue avant et tourne avec le guidon.', s: pa(`M${crown[0]} ${crown[1]} L${forkEnd[0] - 14} ${forkEnd[1] - 38} Q${forkEnd[0] - 6} ${forkEnd[1] - 8} ${forkEnd[0]} ${forkEnd[1]}`, C.metal, 10) },
+  { id: 'freinAV', t: 2, p: 'fourche', n: 'Le frein avant', i: 'Il freine la roue avant : c’est le frein le plus efficace.', s: pa(`M${fb[0] - 18} ${fb[1] + 8} Q${fb[0]} ${fb[1] - 14} ${fb[0] + 18} ${fb[1] + 8}`, '#444', 5) },
+  { id: 'patinsAV', t: 4, p: 'freinAV', n: 'Les patins de frein', e: 'patins', i: 'Ces gommes frottent sur la jante pour ralentir la roue.', s: re(fb[0] - 22, fb[1] + 8, 9, 14, '#111') + re(fb[0] + 13, fb[1] + 8, 9, 14, '#111') },
+  { id: 'phare', t: 3, p: 'guidon', n: 'Le phare', i: 'Il éclaire la route la nuit.', s: ci([742, 240], 10, '#fff3b0', '#333', 3) },
+  { id: 'potence', t: 2, p: 'guidon', n: 'La potence', i: 'Elle relie le guidon à la fourche.', s: ln([692, 228], [730, 214], C.metal, 10) },
+  { id: 'guidon', t: 1, p: null, n: 'Le guidon', i: 'On le tourne pour diriger le vélo.', s: pa('M730 214 C752 205 747 176 714 176 L676 178', C.metal, 8) },
+  { id: 'poignee', t: 3, p: 'guidon', n: 'La poignée', i: 'Elle protège les mains et évite qu’elles glissent.', s: ln([650, 179], [676, 178], '#1d1d1d', 13) },
+  { id: 'bouchon', t: 4, p: 'guidon', n: 'Le bouchon de guidon', i: 'Il ferme le bout du tube pour éviter de se blesser.', s: ci([645, 179], 6, '#555') },
+  { id: 'levierFrein', t: 3, p: 'guidon', n: 'Le levier de frein', i: 'On le serre avec les doigts pour freiner.', s: pa('M690 184 Q672 198 660 212', '#444', 6) },
+  { id: 'cableAV', t: 4, p: 'levierFrein', n: 'Le câble de frein avant', i: 'Il transmet la force du levier au frein avant.', s: pa(`M694 186 Q745 200 ${fb[0]} ${fb[1] - 10}`, '#1d1d1d', 2) },
+  { id: 'manette', t: 4, p: 'guidon', n: 'La manette de vitesses', i: 'Elle tire le câble du dérailleur pour changer de vitesse.', s: re(694, 184, 14, 10, '#333') },
+  { id: 'sonnette', t: 3, p: 'guidon', n: 'La sonnette', i: 'Dring ! Elle prévient les piétons.', s: ci([716, 196], 7, '#ffd166', '#333', 2) },
+  { id: 'compteur', t: 4, p: 'guidon', n: 'Le compteur', i: 'Il affiche la vitesse et la distance parcourue.', s: re(700, 162, 18, 12, '#333') },
+  // arrière et selle
+  { id: 'freinAR', t: 2, p: 'cadre', n: 'Le frein arrière', i: 'Il freine la roue arrière, en douceur.', s: pa(`M${rb[0] - 16} ${rb[1] - 12} Q${rb[0] + 4} ${rb[1] - 20} ${rb[0] + 16} ${rb[1] + 6}`, '#444', 5) },
+  { id: 'patinsAR', t: 4, p: 'freinAR', n: 'Les patins de frein', e: 'patins', i: 'Ces gommes frottent sur la jante pour ralentir la roue.', s: re(rb[0] - 22, rb[1] - 6, 9, 14, '#111') + re(rb[0] + 10, rb[1] + 2, 9, 14, '#111') },
+  { id: 'cableAR', t: 3, p: 'freinAR', n: 'Le câble de frein arrière', i: 'Il court le long du cadre, du levier jusqu’au frein arrière.', s: pa(`M690 190 Q600 236 560 244 L420 248 Q${rb[0] + 30} ${rb[1] - 50} ${rb[0]} ${rb[1] - 18}`, '#1d1d1d', 2) },
+  { id: 'tigeSelle', t: 2, p: 'selle', n: 'La tige de selle', i: 'On la monte ou on la descend pour régler la hauteur de la selle.', s: ln(ST, [420, 182], C.metal, 9) },
+  { id: 'collier', t: 4, p: 'tigeSelle', n: 'Le collier de selle', i: 'Il serre la tige de selle à la bonne hauteur.', s: re(417, 230, 22, 9, '#333') },
+  { id: 'feuAR', t: 3, p: 'tigeSelle', n: 'Le feu arrière', i: 'Rouge, il signale le vélo aux voitures qui arrivent derrière.', s: re(400, 196, 12, 18, '#e63946') },
+  { id: 'selle', t: 1, p: null, n: 'La selle', i: 'On s’assoit dessus. Bien réglée, elle évite le mal de dos !', s: pa('M360 176 Q380 162 420 166 L470 170 Q480 176 468 182 L420 186 Q385 190 360 176 Z', '#3a2418', 2, C.saddle) }
+];
+// ================= LA VOITURE =================
+const VR = [280, 482], VF = [800, 482];
+const vSpokes = c => Array.from({ length: 5 }, (_, i) => ln(pol(c, 8, i * 1.2566), pol(c, 34, i * 1.2566), '#8a939e', 5)).join('');
+const VOITURE = [
+  { id: 'carrosserie', t: 1, p: null, n: 'La carrosserie', i: 'C’est la « coque » de la voiture : elle protège les passagers et porte toutes les autres pièces.', s: pa('M150 470 L210 470 A74 74 0 0 1 350 470 L730 470 A74 74 0 0 1 870 470 L948 470 L948 410 Q945 372 900 365 L740 350 L675 272 Q660 260 640 258 L450 258 Q430 260 420 270 L340 360 L200 365 Q155 370 150 400 Z', '#1d6f65', 3, '#2a9d8f') },
+  { id: 'coffre', t: 3, p: 'carrosserie', n: 'Le coffre', i: 'À l’arrière, on y range les bagages et les courses.', s: pa('M158 376 Q200 364 338 360', '#16594f', 9) },
+  { id: 'capot', t: 2, p: 'carrosserie', n: 'Le capot', i: 'Ce grand couvercle à l’avant s’ouvre pour accéder au moteur.', s: pa('M744 352 L898 366 Q925 370 936 380', '#16594f', 9) },
+  { id: 'sieges', t: 1, p: null, n: 'Les sièges', i: 'Ils portent le conducteur et les passagers. Ils se règlent en hauteur et en longueur.', s: pa('M582 330 L600 326 L615 430 L655 430 L655 448 L590 448 Z', '#3e2a22', 2, '#6d4c41') + pa('M452 330 L470 326 L482 430 L530 430 L530 448 L462 448 Z', '#3e2a22', 2, '#6d4c41') },
+  { id: 'appuie', t: 4, p: 'sieges', n: 'Les appuie-tête', i: 'En cas de choc, ils protègent la nuque.', s: re(581, 310, 22, 16, '#4e342e') + re(451, 310, 22, 16, '#4e342e') },
+  { id: 'ceinture', t: 4, p: 'sieges', n: 'La ceinture de sécurité', i: 'Elle retient le corps en cas de freinage brutal : on l’attache toujours !', s: ln([600, 334], [644, 430], '#111', 4) },
+  { id: 'tableau', t: 4, p: 'volant', n: 'Le tableau de bord', i: 'Il affiche la vitesse, l’essence restante et les voyants.', s: pa('M652 330 L722 340 L716 362 L656 354 Z', '#222', 2, '#3a3a3a') },
+  { id: 'volant', t: 2, p: 'sieges', n: 'Le volant', i: 'On le tourne pour diriger les roues avant.', s: `<ellipse cx="666" cy="348" rx="7" ry="24" transform="rotate(-25 666 348)" fill="none" stroke="#111" stroke-width="6"/>` },
+  { id: 'colonne', t: 4, p: 'volant', n: 'La colonne de direction', i: 'Cette barre relie le volant aux roues avant.', s: ln([672, 356], [716, 400], '#555', 6) },
+  { id: 'pedales', t: 3, p: 'volant', n: 'Les pédales', i: 'Accélérateur, frein et embrayage : on les actionne avec les pieds.', s: re(700, 438, 16, 8, '#111') + re(716, 428, 16, 8, '#111') + ln([712, 410], [706, 438], '#333', 3) },
+  { id: 'levier', t: 3, p: 'boite', n: 'Le levier de vitesses', i: 'On le bouge pour passer d’une vitesse à l’autre.', s: ln([646, 432], [634, 396], '#111', 5) + ci([633, 392], 7, '#333') },
+  { id: 'boite', t: 2, p: 'moteur', n: 'La boîte de vitesses', i: 'Avec ses engrenages, elle adapte la force du moteur à la vitesse de la voiture.', s: re(722, 422, 46, 36, '#5c677d') },
+  { id: 'cardans', t: 4, p: 'boite', n: 'Les cardans', i: 'Ces axes transmettent la rotation de la boîte de vitesses aux roues.', s: ln([760, 456], [800, 482], '#444', 7) },
+  { id: 'moteur', t: 1, p: null, n: 'Le moteur', i: 'Le cœur de la voiture : il brûle l’essence pour faire tourner les roues.', s: re(770, 400, 82, 58, '#6c757d') + re(772, 386, 78, 16, '#495057') },
+  { id: 'filtreAir', t: 4, p: 'moteur', n: 'Le filtre à air', i: 'Il nettoie l’air avant qu’il entre dans le moteur.', s: `<ellipse cx="808" cy="376" rx="24" ry="9" fill="#343a40"/>` },
+  { id: 'courroie', t: 4, p: 'moteur', n: 'La courroie', i: 'Entraînée par le moteur, elle fait tourner l’alternateur.', s: `<rect x="852" y="402" width="14" height="48" rx="7" fill="none" stroke="#111" stroke-width="4"/>` },
+  { id: 'alternateur', t: 4, p: 'moteur', n: 'L’alternateur', i: 'C’est une petite dynamo : il recharge la batterie quand le moteur tourne.', s: ci([859, 456], 9, '#adb5bd', '#555', 2) },
+  { id: 'batterie', t: 2, p: 'moteur', n: 'La batterie', i: 'Elle fournit l’électricité pour démarrer et pour les phares.', s: re(872, 392, 34, 26, '#222') + re(876, 386, 7, 6, '#e63946') + re(895, 386, 7, 6, '#333') },
+  { id: 'radiateur', t: 3, p: 'moteur', n: 'Le radiateur', i: 'L’air qui le traverse refroidit l’eau du moteur.', s: re(914, 382, 16, 64, '#adb5bd') + [394, 406, 418, 430].map(y => ln([914, y], [930, y], '#6c757d', 2)).join('') },
+  { id: 'lunette', t: 3, p: 'pareBrise', n: 'La lunette arrière', i: 'C’est la vitre de l’arrière. Des fils chauffants la dégivrent.', s: pa('M432 268 L352 356 L380 356 L446 274 Z', '#5d9ab8', 2, '#bde0fe', 'fill-opacity=".75"') },
+  { id: 'pareBrise', t: 2, p: 'carrosserie', n: 'Le pare-brise', i: 'Cette grande vitre protège du vent, de la pluie et des insectes.', s: pa('M668 270 L736 350 L700 350 L648 272 Z', '#5d9ab8', 2, '#bde0fe', 'fill-opacity=".75"') },
+  { id: 'retroInt', t: 4, p: 'pareBrise', n: 'Le rétroviseur intérieur', i: 'Il permet de voir derrière la voiture, à travers la lunette.', s: re(640, 276, 18, 8, '#222') },
+  { id: 'essuie', t: 3, p: 'pareBrise', n: 'L’essuie-glace', i: 'Il balaie l’eau de pluie du pare-brise.', s: ln([704, 348], [672, 302], '#111', 4) },
+  { id: 'porteAR', t: 3, p: 'porte', n: 'La portière arrière', i: 'Elle permet aux passagers de monter à l’arrière.', s: pa('M452 268 L548 268 L548 462 L420 462 L420 372 Z', '#16594f', 4) + pa('M458 280 L540 280 L540 346 L396 346 Z', '#5d9ab8', 2, '#cfe8ff', 'fill-opacity=".45"') },
+  { id: 'porte', t: 2, p: 'carrosserie', n: 'La portière avant', i: 'Elle s’ouvre pour monter. Sa vitre descend quand on veut de l’air.', s: pa('M555 268 L640 268 L700 350 L700 462 L555 462 Z', '#16594f', 4) + pa('M564 280 L635 280 L686 346 L564 346 Z', '#5d9ab8', 2, '#cfe8ff', 'fill-opacity=".45"') },
+  { id: 'poignee', t: 3, p: 'porte', n: 'La poignée de porte', i: 'On la tire pour ouvrir la portière.', s: re(568, 368, 28, 8, '#222') },
+  { id: 'retro', t: 3, p: 'porte', n: 'Le rétroviseur', i: 'Il montre ce qui arrive sur le côté et derrière.', s: re(690, 320, 24, 16, '#16594f', 'stroke="#0d3b35" stroke-width="2"') },
+  { id: 'antenne', t: 4, p: 'carrosserie', n: 'L’antenne', i: 'Elle capte les ondes de la radio.', s: ln([450, 258], [428, 212], '#222', 3) },
+  { id: 'phare', t: 2, p: 'carrosserie', n: 'Le phare', i: 'Il éclaire la route la nuit et permet d’être vu.', s: `<ellipse cx="932" cy="386" rx="13" ry="10" fill="#fff3b0" stroke="#333" stroke-width="2"/>` },
+  { id: 'cligno', t: 4, p: 'phare', n: 'Le clignotant', i: 'Orange, il clignote pour annoncer qu’on va tourner.', s: re(920, 402, 16, 9, '#f4a261') },
+  { id: 'feuAR', t: 2, p: 'carrosserie', n: 'Le feu arrière', i: 'Rouge, il s’allume plus fort quand on freine.', s: re(146, 378, 13, 24, '#e63946') },
+  { id: 'pcAV', t: 3, p: 'carrosserie', n: 'Le pare-chocs avant', i: 'Il absorbe les petits chocs pour protéger la carrosserie.', s: re(900, 452, 58, 18, '#333') },
+  { id: 'pcAR', t: 3, p: 'carrosserie', n: 'Le pare-chocs arrière', i: 'Il protège l’arrière de la voiture lors des manœuvres.', s: re(140, 452, 52, 18, '#333') },
+  { id: 'plaqueAV', t: 4, p: 'pcAV', n: 'La plaque avant', i: 'La plaque d’immatriculation : c’est la carte d’identité de la voiture.', s: re(951, 426, 9, 22, '#fff', 'stroke="#1d3557" stroke-width="2"') },
+  { id: 'plaqueAR', t: 4, p: 'pcAR', n: 'La plaque arrière', i: 'Le même numéro qu’à l’avant, pour reconnaître la voiture.', s: re(138, 418, 9, 24, '#fff', 'stroke="#1d3557" stroke-width="2"') },
+  { id: 'reservoir', t: 2, p: 'carrosserie', n: 'Le réservoir', i: 'Il contient l’essence ou le gazole, souvent sous les sièges arrière.', s: re(360, 440, 92, 26, '#e9c46a', 'stroke="#8a6d1c" stroke-width="2"') },
+  { id: 'bouchon', t: 4, p: 'reservoir', n: 'Le bouchon de réservoir', i: 'C’est par là qu’on fait le plein à la station.', s: ci([214, 396], 7, '#333') },
+  { id: 'echap', t: 2, p: 'moteur', n: 'Le pot d’échappement', i: 'Il évacue les gaz du moteur vers l’arrière de la voiture.', s: pa('M742 470 Q738 498 704 498 L170 498', '#777', 7) },
+  { id: 'cata', t: 4, p: 'echap', n: 'Le pot catalytique', i: 'Il rend les gaz d’échappement moins polluants.', s: re(590, 489, 54, 18, '#999') },
+  { id: 'silencieux', t: 4, p: 'echap', n: 'Le silencieux', i: 'Comme son nom l’indique, il rend le moteur moins bruyant.', s: re(372, 488, 74, 20, '#888') },
+  { id: 'amortAV', t: 4, p: 'roueAV', n: 'L’amortisseur', e: 'amort', i: 'Avec son ressort, il adoucit les bosses de la route.', s: pa('M826 468 L818 456 L834 448 L818 440 L834 432 L818 424 L826 412', '#e76f51', 5) },
+  { id: 'amortAR', t: 4, p: 'roueAR', n: 'L’amortisseur', e: 'amort', i: 'Avec son ressort, il adoucit les bosses de la route.', s: pa('M256 468 L248 456 L264 448 L248 440 L264 432 L248 424 L256 412', '#e76f51', 5) },
+  { id: 'roueAR', t: 1, p: null, n: 'La roue arrière', nAt: { 3: 'La jante arrière' }, i: 'Les roues portent la voiture et la font avancer.', s: ci(VR, 38, '#ced4da', '#868e96', 3) + vSpokes(VR) + ci(VR, 7, '#495057') },
+  { id: 'pneuAR', t: 3, p: 'roueAR', n: 'Le pneu', e: 'pneu', i: 'Le pneu en caoutchouc accroche la route, même sous la pluie.', s: ci(VR, 48, 'none', '#1b1b1b', 20) },
+  { id: 'freinAR', t: 3, p: 'roueAR', n: 'Le frein arrière', i: 'Un tambour : des mâchoires frottent à l’intérieur pour ralentir la roue.', s: ci(VR, 22, 'none', '#9e9e9e', 6) },
+  { id: 'roueAV', t: 1, p: null, n: 'La roue avant', nAt: { 3: 'La jante avant' }, i: 'Les roues avant tournent avec le volant pour diriger la voiture.', s: ci(VF, 38, '#ced4da', '#868e96', 3) + vSpokes(VF) + ci(VF, 7, '#495057') },
+  { id: 'pneuAV', t: 3, p: 'roueAV', n: 'Le pneu', e: 'pneu', i: 'Le pneu en caoutchouc accroche la route, même sous la pluie.', s: ci(VF, 48, 'none', '#1b1b1b', 20) },
+  { id: 'freinAV', t: 3, p: 'roueAV', n: 'Le frein à disque', i: 'L’étrier rouge pince le disque pour arrêter la roue.', s: ci(VF, 24, 'none', '#b0b0b0', 6) + re(VF[0] + 14, VF[1] - 30, 14, 22, '#d62828') }
+];
+
+// ================= LA CAFETIÈRE ITALIENNE =================
+const MOKA = [
+  { id: 'chaudiere', t: 1, p: null, n: 'La chaudière', i: 'C’est le réservoir du bas : on le remplit d’eau froide.', s: pa('M215 560 L385 560 L362 396 L238 396 Z', '#6c757d', 3, '#c0c4cc') + [262, 300, 338].map(x => ln([x, 400], [x + (x - 300) * 0.25, 556], '#a4a9b1', 2)).join('') },
+  { id: 'eau', t: 3, p: 'chaudiere', n: 'L’eau', i: 'En chauffant, l’eau fait de la vapeur qui la pousse vers le haut.', s: pa('M226 550 L374 550 L362 470 L238 470 Z', 'none', 0, '#4cc9f0', 'fill-opacity=".7"') },
+  { id: 'soupape', t: 2, p: 'chaudiere', n: 'La soupape de sécurité', i: 'Si la pression monte trop, elle laisse s’échapper la vapeur.', s: ci([368, 452], 9, '#d4a017', '#8a6d1c', 2) },
+  { id: 'entonnoir', t: 1, p: null, n: 'L’entonnoir', i: 'Ce petit panier reçoit le café moulu. Son tube plonge dans l’eau.', s: pa('M246 382 L354 382 L342 410 L258 410 Z', '#5f6670', 2, '#9aa1ab') + re(292, 408, 16, 128, '#9aa1ab', 'stroke="#5f6670" stroke-width="2"') },
+  { id: 'moulu', t: 3, p: 'entonnoir', n: 'Le café moulu', i: 'L’eau chaude le traverse et emporte son goût et son arôme.', s: pa('M252 386 L348 386 L338 406 L262 406 Z', 'none', 0, '#6f4e37') },
+  { id: 'verseuse', t: 1, p: null, n: 'La verseuse', i: 'C’est la partie du haut, où arrive le café prêt à servir.', s: pa('M238 380 L362 380 L385 200 L215 200 Z', '#6c757d', 3, '#d0d4da') + [262, 300, 338].map(x => ln([x, 376], [x + (x - 300) * 0.4, 206], '#a4a9b1', 2)).join('') },
+  { id: 'cafe', t: 3, p: 'verseuse', n: 'Le café', i: 'Le café monte par la cheminée et se dépose ici. Il est prêt !', s: pa('M232 330 L368 330 L364 362 L236 362 Z', 'none', 0, '#4a2c17', 'fill-opacity=".85"') },
+  { id: 'cheminee', t: 3, p: 'verseuse', n: 'La cheminée', i: 'Ce petit tube fait monter le café au milieu de la verseuse.', s: re(293, 250, 14, 116, '#868e96') + re(286, 244, 28, 10, '#868e96') },
+  { id: 'filtre', t: 2, p: 'verseuse', n: 'Le filtre', i: 'Cette grille retient la poudre de café : seul le liquide passe.', s: re(244, 364, 112, 7, '#888', 'stroke="#555" stroke-width="1" stroke-dasharray="3 2"') },
+  { id: 'joint', t: 2, p: 'verseuse', n: 'Le joint', i: 'Ce rond en caoutchouc rend la cafetière étanche quand on la visse.', s: re(240, 373, 120, 8, '#222') },
+  { id: 'bec', t: 3, p: 'verseuse', n: 'Le bec verseur', i: 'Sa forme pointue permet de servir sans en mettre partout.', s: pa('M218 204 L176 186 L212 236 Z', '#6c757d', 2, '#c0c4cc') },
+  { id: 'couvercle', t: 2, p: 'verseuse', n: 'Le couvercle', i: 'Il garde le café chaud et évite les éclaboussures.', s: pa('M208 200 L392 200 L370 170 L230 170 Z', '#6c757d', 3, '#c8ccd3') },
+  { id: 'bouton', t: 3, p: 'couvercle', n: 'Le bouton du couvercle', i: 'Il reste froid : on peut ouvrir le couvercle sans se brûler.', s: `<ellipse cx="300" cy="162" rx="18" ry="10" fill="#222"/>` },
+  { id: 'poignee', t: 1, p: null, n: 'La poignée', i: 'Elle ne chauffe pas : on tient la cafetière sans se brûler.', s: pa('M386 214 Q452 212 456 258 L446 330 Q440 350 372 346', '#1e1e1e', 16) }
+];
+
+// ordre de montage : pièces à poser AVANT (comme un vrai mécano)
+const REQ_VELO = { boitier: ['cadre'], jeuDir: ['cadre'], fourche: ['cadre', 'jeuDir'], potence: ['fourche'], guidon: ['potence', 'fourche'],
+  poignee: ['guidon'], bouchon: ['poignee'], levierFrein: ['guidon'], manette: ['guidon'], sonnette: ['guidon'], compteur: ['guidon'], phare: ['guidon'],
+  collier: ['tubeSelle'], tigeSelle: ['collier', 'tubeSelle'], selle: ['tigeSelle', 'tubeSelle'], feuAR: ['tigeSelle'],
+  rayonsAR: ['moyeuAR'], roueAR: ['rayonsAR', 'bases', 'haubans'], pneuAR: ['roueAR'], valveAR: ['pneuAR'], ecrouAR: ['roueAR'], catAR: ['roueAR'], pignons: ['roueAR'],
+  rayonsAV: ['moyeuAV'], roueAV: ['rayonsAV', 'fourche'], pneuAV: ['roueAV'], valveAV: ['pneuAV'], blocage: ['roueAV'], catAV: ['roueAV'],
+  plateau: ['boitier'], pedalier: ['boitier', 'plateau'], pedale1: ['pedalier'], pedale2: ['pedalier'], catPed: ['pedale1'],
+  derailleur: ['pignons'], chaine: ['pedalier', 'pignons', 'derailleur'], cableDer: ['derailleur', 'manette'], gardeChaine: ['chaine'],
+  freinAV: ['roueAV'], patinsAV: ['freinAV'], cableAV: ['freinAV', 'levierFrein'], freinAR: ['roueAR'], patinsAR: ['freinAR'], cableAR: ['freinAR', 'levierFrein'],
+  gbAR: ['roueAR'], gbAV: ['roueAV'], rack: ['roueAR'], bequille: ['cadre'], porteBidon: ['tubeDiag'], bidon: ['porteBidon'] };
+const REQ_VOITURE = { moteur: ['carrosserie'], boite: ['moteur'], cardans: ['boite', 'roueAV'], filtreAir: ['moteur'], alternateur: ['moteur'], courroie: ['alternateur'],
+  batterie: ['moteur'], radiateur: ['moteur'], echap: ['moteur'], cata: ['echap'], silencieux: ['echap'], reservoir: ['carrosserie'], bouchon: ['reservoir'],
+  amortAV: ['carrosserie'], freinAV: ['carrosserie'], roueAV: ['carrosserie', 'amortAV', 'freinAV'], pneuAV: ['roueAV'],
+  amortAR: ['carrosserie'], freinAR: ['carrosserie'], roueAR: ['carrosserie', 'amortAR', 'freinAR'], pneuAR: ['roueAR'],
+  sieges: ['carrosserie', 'reservoir'], ceinture: ['sieges'], appuie: ['sieges'], colonne: ['carrosserie'], tableau: ['carrosserie'], volant: ['colonne', 'tableau', 'carrosserie'],
+  pedales: ['colonne'], levier: ['boite'], pareBrise: ['carrosserie', 'tableau'], lunette: ['carrosserie'], retroInt: ['pareBrise'], essuie: ['pareBrise'],
+  porte: ['sieges', 'carrosserie'], porteAR: ['sieges'], poignee: ['porte'], retro: ['porte'], capot: ['moteur', 'batterie', 'radiateur'],
+  coffre: ['carrosserie'], antenne: ['carrosserie'], phare: ['carrosserie'], cligno: ['phare'], feuAR: ['carrosserie'],
+  pcAV: ['phare', 'radiateur'], pcAR: ['feuAR', 'echap'], plaqueAV: ['pcAV'], plaqueAR: ['pcAR'] };
+const REQ_MOKA = { eau: ['chaudiere'], soupape: ['chaudiere'], entonnoir: ['eau', 'chaudiere'], moulu: ['entonnoir'], verseuse: ['entonnoir', 'moulu'],
+  filtre: ['verseuse'], joint: ['filtre'], cheminee: ['verseuse'], bec: ['verseuse'], poignee: ['verseuse'], couvercle: ['verseuse'], bouton: ['couvercle'],
+  cafe: ['cheminee', 'joint', 'couvercle', 'moulu', 'eau', 'verseuse'] };
+
+// familles de pièces : une couleur par famille, comme dans une notice de montage
+const SYS_VELO = { 'Cadre': ['#d7263d', 'cadre tubeSelle tubeDiag tubeHoriz haubans bases jeuDir boitier'], 'Roues': ['#2f6fde', 'roueAR roueAV rayonsAR rayonsAV moyeuAR moyeuAV pneuAR pneuAV valveAR valveAV ecrouAR blocage catAR catAV'],
+  'Transmission': ['#f28c28', 'chaine pignons derailleur cableDer pedalier plateau pedale1 pedale2 catPed gardeChaine'], 'Direction': ['#2e9e5b', 'fourche potence guidon poignee bouchon manette sonnette compteur'],
+  'Freins': ['#8e44ad', 'freinAV freinAR patinsAV patinsAR cableAV cableAR levierFrein'], 'Selle': ['#a0522d', 'selle tigeSelle collier'], 'Éclairage': ['#e6b800', 'phare feuAR'],
+  'Accessoires': ['#159aa8', 'gbAR gbAV rack bidon porteBidon bequille'] };
+const SYS_VOITURE = { 'Carrosserie': ['#d7263d', 'carrosserie coffre capot porte porteAR poignee retro antenne pcAV pcAR plaqueAV plaqueAR'], 'Vitres': ['#3fa7d6', 'pareBrise lunette retroInt essuie'],
+  'Moteur et boîte': ['#f28c28', 'moteur filtreAir courroie alternateur radiateur boite cardans levier'], 'Roues et freins': ['#2f6fde', 'roueAR roueAV pneuAR pneuAV freinAR freinAV amortAR amortAV'],
+  'Habitacle': ['#2e9e5b', 'sieges appuie ceinture volant colonne tableau pedales'], 'Électricité': ['#e6b800', 'batterie phare cligno feuAR'], 'Carburant': ['#8e44ad', 'reservoir bouchon echap cata silencieux'] };
+const SYS_MOKA = { 'Le bas': ['#2f6fde', 'chaudiere soupape'], 'L’entonnoir': ['#f28c28', 'entonnoir'], 'Le haut': ['#2e9e5b', 'verseuse filtre joint cheminee bec'], 'Le couvercle': ['#8e44ad', 'couvercle bouton poignee'] };
+
+const OBJ = {
+  velo: { name: 'Le vélo', P: VELO, req: REQ_VELO, sys: SYS_VELO, map: { '#d7263d': '#8e98a5', '#8d99ae': '#bcc4cd', '#5b3a29': '#34373c', '#2b2d42': '#3d4148', '#555a70': '#5d6470', '#4cc9f0': '#c9d0d8', '#5c677d': '#7d8692', '#ffd166': '#c9a227', '#6c7686': '#79838f', '#c9ced6': '#d3d8de' }, vb: '140 140 790 440', done: 'le vélo est remonté', eu: 'Eurêka ! Le vélo roule !', start: 'Remettez chaque pièce du vélo à sa place.' },
+  voiture: { name: 'La voiture', P: VOITURE, req: REQ_VOITURE, sys: SYS_VOITURE, map: { '#2a9d8f': '#b3bbc4', '#1d6f65': '#5f6872', '#16594f': '#56606b', '#0d3b35': '#3a4048', '#6d4c41': '#62666e', '#3e2a22': '#30343a', '#4e342e': '#474b52', '#e9c46a': '#9aa2ab', '#8a6d1c': '#5d646d', '#bde0fe': '#d3dee6', '#cfe8ff': '#dde6ec', '#5d9ab8': '#7d8b96', '#e76f51': '#7a838d', '#5c677d': '#6e7782' }, vb: '120 196 860 360', done: 'la voiture est remontée', eu: 'Eurêka ! Le moteur démarre : vroum !', start: 'Remettez chaque pièce de la voiture à sa place.' },
+  moka: { name: 'La cafetière italienne', P: MOKA, req: REQ_MOKA, sys: SYS_MOKA, map: {}, vb: '150 140 330 440', tall: true, done: 'la cafetière est remontée', eu: 'Eurêka ! Ça sent bon le café !', start: 'Remontez la cafetière italienne : vous saurez comment le café monte tout seul !' }
+};
+let OK = 'velo', P = VELO, byId = {}, MAXL = 4;
+// rendu « plan de montage » : teintes métal + reflets en dégradé
+const hexMix = (h, t) => { const n = parseInt(h.length === 4 ? h.slice(1).split('').map(c => c + c).join('') : h.slice(1), 16), r = n >> 16, g = n >> 8 & 255, b = n & 255, m = c => Math.round(t > 0 ? c + (255 - c) * t : c * (1 + t)); return '#' + [m(r), m(g), m(b)].map(v => v.toString(16).padStart(2, '0')).join(''); };
+const grads = new Set();
+function grad(h) { const id = 'm' + h.slice(1); if (!grads.has(id)) { grads.add(id); document.getElementById('defs').insertAdjacentHTML('beforeend', `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${hexMix(h, .55)}"/><stop offset=".35" stop-color="${hexMix(h, .12)}"/><stop offset=".55" stop-color="${h}"/><stop offset="1" stop-color="${hexMix(h, -.3)}"/></linearGradient>`); } return `url(#${id})`; }
+const tints = new Set();
+function tint(h) { const id = 't' + h.slice(1); if (!tints.has(id)) { tints.add(id); const n = parseInt(h.slice(1), 16), c = [n >> 16, n >> 8 & 255, n & 255].map(v => v / 255);
+  const row = t => { const k = .5 + 1.15 * t; return `${(.3 * k).toFixed(3)} ${(.59 * k).toFixed(3)} ${(.11 * k).toFixed(3)} 0 0`; };
+  document.getElementById('defs').insertAdjacentHTML('beforeend', `<filter id="${id}" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${row(c[0])} ${row(c[1])} ${row(c[2])} 0 0 0 1 0"/></filter>`); } return `url(#${id})`; }
+function sysOf(id) { for (const [name, [c, ids]] of Object.entries(OBJ[OK].sys || {})) if (ids.split(' ').includes(id)) return { name, c }; return null; }
+function tech(str) { const M = OBJ[OK].map || {};
+  return str.replace(/stroke="(#[0-9a-fA-F]{3,6})"/g, (_, c) => `stroke="${M[c] || c}"`).replace(/fill="(#[0-9a-fA-F]{3,6})"/g, (_, c) => `fill="${grad(M[c] || c)}"`); }
+const pieceOf = (p, L) => { while (p.t > L) p = byId[p.p]; return p; };
+const infoOf = (p, L) => { let n = p.i; for (const k of Object.keys(p.iAt || {}).sort()) if (L >= +k) n = p.iAt[k]; return n; };
+const nameOf = (p, L) => { let n = p.n; for (const k of Object.keys(p.nAt || {}).sort()) if (L >= +k) n = p.nAt[k]; return n; };
+
+// ---------- jeu ----------
+const $ = id => document.getElementById(id);
+const P0 = window.parent !== window ? window.parent : null;
+const api = () => { try { return P0 && P0.mmApi; } catch (e) { return null; } };
+const snd = k => { try { api()?.[k]?.(); } catch (e) {} };
+const mm = (pose, t, ms) => { try { api()?.mm(pose, t, ms); } catch (e) {} };
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+let L = 1; try { OK = OBJ[localStorage.getItem('meca-obj')] ? localStorage.getItem('meca-obj') : 'velo'; } catch (e) {}
+let pieces = [], placed = new Set(), t0 = 0, tick = 0, sel = null, drag = null, svg = null;
+
+const bicycleArtwork = window.mecanoVelo;
+function bicycleImage(id, detailed = false) {
+  const [x, y, width, height, thumbnail = `mecano-velo/${id}.webp`,
+    detail = `mecano-velo/detail/${id}.webp`] = bicycleArtwork.images[id];
+  return `<image href="${detailed ? detail : thumbnail}" x="${x}" y="${y}" width="${width}" height="${height}"/>`;
+}
+
+function partMarkup(part, renderedBike) {
+  if (renderedBike) return bicycleImage(part.id);
+  const family = sysOf(part.id);
+  return family ? `<g filter="${tint(family.c)}">${tech(part.s)}</g>` : tech(part.s);
+}
+
+function pieceImage(piece) {
+  const content = piece.pictureBox ? piece.svg : `<g filter="url(#ol)">${piece.svg}</g>`;
+  const box = piece.pictureBox || piece.box;
+  return `<svg viewBox="${box.join(' ')}" aria-hidden="true">${content}</svg>`;
+}
+
+function showCloseup(id) {
+  if (OK !== 'velo' || !bicycleArtwork) return;
+  const piece = pieces.find(p => p.id === id);
+  $('closeup').classList.toggle('has-part', !!piece);
+  $('closeupPrompt').classList.toggle('hidden', !!piece);
+  $('closeupImage').classList.toggle('hidden', !piece);
+  $('closeupName').classList.toggle('hidden', !piece);
+  if (piece) {
+    $('closeupImage').setAttribute('viewBox', piece.pictureBox.join(' '));
+    $('closeupImage').innerHTML = piece.pictureParts.map(id => bicycleImage(id, true)).join('');
+    $('closeupName').textContent = L <= 2 ? piece.name : 'Pièce sélectionnée';
+  }
+}
+
+function build() {
+  const renderedBike = OK === 'velo' && !!bicycleArtwork;
+  document.body.classList.toggle('velo', renderedBike);
+  $('closeup').classList.toggle('hidden', !renderedBike);
+  P = OBJ[OK].P; byId = Object.fromEntries(P.map(p => [p.id, p])); MAXL = Math.max(...P.map(p => p.t)); if (L > MAXL) L = MAXL;
+  renderLv();
+  pieces = P.filter(p => p.t <= L).map(p => ({ id: p.id, name: nameOf(p, L), info: infoOf(p, L), eq: p.e || p.id, need: [...new Set((OBJ[OK].req[p.id] || []).map(id => pieceOf(byId[id], L).id))].filter(x => x !== p.id), parts: P.filter(q => pieceOf(q, L) === p) }));
+  // dessin : un groupe par pièce, dans l'ordre de superposition
+  const drawing = renderedBike ? bicycleArtwork.order.map(id => byId[id]) : P;
+  const groups = drawing.map(q => `<g data-p="${pieceOf(q, L).id}" class="ghost">${partMarkup(q, renderedBike)}</g>`).join('');
+  const legend = renderedBike ? '' : `<div class="legend">${Object.entries(OBJ[OK].sys || {}).map(([n, [c]]) => `<span><i style="background:${c}"></i>${n}</span>`).join('')}</div>`;
+  $('board').innerHTML = `<svg viewBox="${OBJ[OK].vb}" id="bsvg" role="img" aria-label="${OBJ[OK].name} à remonter"${OBJ[OK].tall ? ' style="max-height:min(560px,58vh)"' : ''}>${groups}<g id="marks"></g></svg><div class="cart"><span>Plan de montage · ${OBJ[OK].name}</span><span>${pieces.length} repères · Atelier M. Méninge</span></div>${legend}`;
+  $('nomen').innerHTML = ''; $('nomen').classList.add('none');
+  svg = $('bsvg');
+  for (const pc of pieces) {
+    const gs = [...svg.querySelectorAll(`g[data-p="${pc.id}"]`)];
+    let x1 = 1e9, y1 = 1e9, x2 = -1e9, y2 = -1e9;
+    pc.rects = gs.map(g => { const b = g.getBBox(); return [b.x, b.y, b.width, b.height]; });
+    gs.forEach(g => { const b = g.getBBox(); x1 = Math.min(x1, b.x); y1 = Math.min(y1, b.y); x2 = Math.max(x2, b.x + b.width); y2 = Math.max(y2, b.y + b.height); });
+    const pad = 10; pc.box = [x1 - pad, y1 - pad, x2 - x1 + 2 * pad, y2 - y1 + 2 * pad]; pc.c = [(x1 + x2) / 2, (y1 + y2) / 2];
+    pc.svg = gs.map(g => g.innerHTML).join('');
+    if (renderedBike) {
+      const width = x2 - x1, height = y2 - y1;
+      const picturePad = Math.max(width, height) * .05;
+      pc.pictureBox = [x1 - picturePad, y1 - picturePad, width + 2 * picturePad, height + 2 * picturePad];
+      pc.pictureParts = drawing.filter(part => pieceOf(part, L).id === pc.id).map(part => part.id);
+    }
+    const big = pc.rects.reduce((a, r) => (r[2] * r[3] > a[2] * a[3] ? r : a), [0, 0, 0, 0]); pc.anchor = big[2] * big[3] > 0 ? [big[0] + big[2] / 2, big[1] + big[3] / 2] : pc.c;
+  }
+  placed = new Set(); sel = null; showCloseup(null);
+  $('tray').innerHTML = shuffle(pieces.slice()).map(pc => `<button class="pc" data-id="${pc.id}" aria-label="${L <= 2 ? pc.name : 'Une pièce'}">${pieceImage(pc)}${L <= 2 ? `<small>${pc.name.replace(/^(Le |La |Les |L’|Une )/, '')}</small>` : ''}</button>`).join('');
+  refreshWait(); $('tray').classList.remove('hidden'); $('tot').textContent = pieces.length; $('cnt').textContent = 0; $('win').classList.add('hidden');
+  say((L <= 2 ? 'Faites glisser chaque pièce à sa place. Vous pouvez aussi toucher une pièce, puis toucher l’endroit où elle va.' : 'Les noms sont cachés : retrouvez chaque pièce et son emplacement. Son nom s’affichera quand elle sera posée.') + '<br><b>Comme un vrai mécano, respectez l’ordre de montage :</b> les pièces avec un cadenas 🔒 attendent qu’une autre soit posée avant elles.');
+  t0 = Date.now(); clearInterval(tick); tick = setInterval(() => { if (placed.size < pieces.length) $('time').textContent = fmt(Date.now() - t0); }, 1000); $('time').textContent = '0 s';
+}
+const fmt = ms => { const s = Math.round(ms / 1000), m = Math.floor(s / 60); return m ? `${m} min ${String(s % 60).padStart(2, '0')} s` : `${s} s`; };
+function say(h, cls = '') { $('info').innerHTML = h; $('info').className = 'info ' + cls; }
+function toSvg(x, y) { const pt = svg.createSVGPoint(); pt.x = x; pt.y = y; return pt.matrixTransform(svg.getScreenCTM().inverse()); }
+const ready = pc => pc.need.every(id => placed.has(id));
+const nm = id => pieces.find(p => p.id === id)?.name || id;
+function refreshWait() { $('tray').querySelectorAll('.pc').forEach(b => { const pc = pieces.find(p => p.id === b.dataset.id); b.classList.toggle('wait', !!pc && !pieces.some(s => s.eq === pc.eq && !placed.has(s.id) && ready(s))); }); }
+function tryPlace(id, x, y) {
+  const pc = pieces.find(p => p.id === id); if (!pc) return false;
+  const b = svg.getBoundingClientRect(); if (x < b.left || x > b.right || y < b.top || y > b.bottom) return false;
+  const pt = toSvg(x, y);
+  // la pièce peut aller dans n'importe quel emplacement libre « équivalent » (deux pédales, deux valves…)
+  const slots = pieces.filter(p => p.eq === pc.eq && !placed.has(p.id));
+  let best = null, bd = 1e9;
+  const M = 28; // marge autour de chaque morceau de la pièce
+  for (const s of slots) {
+    let d = Math.hypot(pt.x - s.c[0], pt.y - s.c[1]); if (d > Math.max(45, Math.min(s.box[2], s.box[3]) * .45)) d = 1e9;
+    for (const r of s.rects) { if (r[2] < 1 && r[3] < 1) continue; const dx = Math.max(r[0] - pt.x, 0, pt.x - r[0] - r[2]), dy = Math.max(r[1] - pt.y, 0, pt.y - r[1] - r[3]); if (dx < M && dy < M) d = Math.min(d, Math.hypot(dx, dy) + 1); }
+    if (d < 1e9 && ready(s)) d -= 0.001; if (d < bd || (d < 1e9 && best && !ready(best) && ready(s))) { bd = d; best = s; }
+  }
+  if (bd >= 1e9) best = null;
+  if (best && !ready(best)) {
+    // bon endroit, mais trop tôt : on respecte l'ordre de montage
+    const miss = best.need.filter(n => !placed.has(n)).map(nm);
+    snd('no'); say(`Pas encore ! C’est bien le bon endroit, mais un mécano respecte l’ordre de montage. Il faut d’abord poser : <b>${miss.join(', ')}</b>.`, 'no');
+    const btn = $('tray').querySelector(`[data-id="${id}"]`); btn?.classList.remove('shake'); void btn?.offsetWidth; btn?.classList.add('shake');
+    mm('question', 'Minute ! Chaque chose en son temps : d’abord ' + miss[0].replace(/^(Le |La |Les |L’)/, m => m.toLowerCase()) + '.', 3500);
+    return true;
+  }
+  if (!best) {
+    snd('no'); say(`Ce n’est pas là… <b>${L <= 2 ? pc.name : 'Cette pièce'}</b> va ailleurs. Regardez bien la forme grise.`, 'no');
+    const btn = $('tray').querySelector(`[data-id="${id}"]`); btn?.classList.remove('shake'); void btn?.offsetWidth; btn?.classList.add('shake');
+    return true;
+  }
+  placed.add(best.id); addMark(best);
+  svg.querySelectorAll(`g[data-p="${best.id}"]`).forEach(g => { g.classList.remove('ghost', 'hl'); g.classList.add('placed'); });
+  $('tray').querySelector(`[data-id="${id}"]`)?.remove();
+  sel = null; showCloseup(null); $('cnt').textContent = placed.size; snd('place'); refreshWait();
+  say(`<b>${best.name}</b> — ${best.info}`);
+  if (placed.size === pieces.length) { $('tray').classList.add('hidden'); win(); }
+  return true;
+}
+let showMk = true; try { showMk = localStorage.getItem('meca-mk') !== '0'; } catch (_) {}
+function addMark(pc) {
+  const n = placed.size, vb = OBJ[OK].vb.split(' ').map(Number), cx = vb[0] + vb[2] / 2, cy = vb[1] + vb[3] / 2;
+  let dx = pc.anchor[0] - cx, dy = pc.anchor[1] - cy; const d = Math.hypot(dx, dy) || 1; dx /= d; dy /= d;
+  const k = vb[2] / 790, off = 34 * k, r = 11 * k;
+  let bx = pc.anchor[0] + dx * off, by = pc.anchor[1] + dy * off;
+  bx = Math.min(vb[0] + vb[2] - r - 2, Math.max(vb[0] + r + 2, bx)); by = Math.min(vb[1] + vb[3] - r - 2, Math.max(vb[1] + r + 2, by));
+  $('marks').insertAdjacentHTML('beforeend', `<g class="mk"><line x1="${pc.anchor[0]}" y1="${pc.anchor[1]}" x2="${bx}" y2="${by}" stroke="#1f2933" stroke-width="${1.2 * k}"/>${`<circle cx="${pc.anchor[0]}" cy="${pc.anchor[1]}" r="${2.4 * k}" fill="#1f2933"/>`}<circle cx="${bx}" cy="${by}" r="${r}" fill="#fff" stroke="#1f2933" stroke-width="${1.5 * k}"/><text x="${bx}" y="${by}" text-anchor="middle" dominant-baseline="central" style="font-size:${(n > 9 ? 10 : 12) * k}px">${n}</text></g>`);
+  $('marks').style.display = showMk ? '' : 'none';
+  const no = $('nomen'); if (!no.firstChild) no.innerHTML = '<h3>Nomenclature — pièces posées</h3><ol></ol>';
+  no.classList.remove('none'); no.querySelector('ol').insertAdjacentHTML('beforeend', `<li><b>${String(n).padStart(2, '0')}</b><span>${pc.name}</span></li>`);
+}
+$('mkBtn').textContent = 'Repères : ' + (showMk ? 'oui' : 'non');
+$('mkBtn').addEventListener('click', () => { showMk = !showMk; try { localStorage.setItem('meca-mk', showMk ? '1' : '0'); } catch (_) {} $('mkBtn').textContent = 'Repères : ' + (showMk ? 'oui' : 'non'); if ($('marks')) $('marks').style.display = showMk ? '' : 'none'; });
+function win() {
+  clearInterval(tick); snd('win');
+  $('win').innerHTML = `<h2>Bravo, ${OBJ[OK].done} !</h2><p style="margin:0">${pieces.length} pièces en ${fmt(Date.now() - t0)}. ${L < MAXL ? 'Prêt pour le niveau suivant ?' : 'Vous êtes un vrai mécano !'}</p>`;
+  $('win').classList.remove('hidden'); mm('eureka', L < MAXL ? OBJ[OK].eu + ' On essaie avec plus de pièces ?' : OBJ[OK].eu + ' Un vrai mécano, bravo !', 6000);
+  $('win').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function highlight(id, on) { showCloseup(on ? id : sel); svg.querySelectorAll(`g[data-p]`).forEach(g => g.classList.remove('hl')); if (on && L <= 2) { const pc = pieces.find(p => p.id === id); pieces.filter(p => p.eq === pc.eq && !placed.has(p.id)).forEach(s => svg.querySelectorAll(`g[data-p="${s.id}"]`).forEach(g => g.classList.add('hl'))); } }
+// glisser-déposer
+$('tray').addEventListener('pointerdown', e => {
+  const b = e.target.closest('.pc'); if (!b) return; e.preventDefault();
+  try { b.setPointerCapture(e.pointerId); } catch (_) {}
+  drag = { id: b.dataset.id, x: e.clientX, y: e.clientY, moved: false, b };
+});
+document.addEventListener('pointermove', e => {
+  if (!drag) return;
+  if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 8) {
+    drag.moved = true; const pc = pieces.find(p => p.id === drag.id);
+    drag.el = document.createElement('div'); drag.el.className = 'fly'; drag.el.innerHTML = pieceImage(pc); document.body.appendChild(drag.el);
+    highlight(drag.id, true);
+  }
+  if (drag.el) { drag.el.style.left = e.clientX + 'px'; drag.el.style.top = e.clientY + 'px'; }
+});
+document.addEventListener('pointerup', e => {
+  if (!drag) return; const d = drag; drag = null; d.el?.remove(); highlight(null, false);
+  if (d.moved) { tryPlace(d.id, e.clientX, e.clientY); return; }
+  // simple toucher : sélectionner la pièce
+  $('tray').querySelectorAll('.pc.sel').forEach(x => x !== d.b && x.classList.remove('sel'));
+  d.b.classList.toggle('sel'); sel = d.b.classList.contains('sel') ? d.id : null;
+  if (!sel) showCloseup(null);
+  if (sel) { highlight(sel, true); const pc = pieces.find(p => p.id === sel); say(L <= 2 ? `<b>${pc.name}</b> : touchez maintenant l’endroit où elle va sur le dessin.` : 'Touchez maintenant l’endroit où va cette pièce.'); }
+});
+document.addEventListener('pointercancel', () => { if (drag) { drag.el?.remove(); drag = null; highlight(null, false); } });
+document.addEventListener('touchmove', e => { if (drag) e.preventDefault(); }, { passive: false });
+$('board').addEventListener('click', e => { if (sel) { const id = sel; if (!tryPlace(id, e.clientX, e.clientY)) return; highlight(null, false); } });
+$('tray').addEventListener('click', e => { if (e.detail === 0) { const b = e.target.closest('.pc'); if (b) { $('tray').querySelectorAll('.pc.sel').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); sel = b.dataset.id; highlight(sel, true); } } });
+// objets et niveaux
+const lvKey = () => 'meca-lv-' + OK;
+function renderLv() {
+  $('lv').innerHTML = Array.from({ length: MAXL }, (_, i) => i + 1).map(k => { const n = P.filter(p => p.t <= k).length; return `<button data-v="${k}" aria-pressed="${k === L}">${k === MAXL && MAXL > 3 ? 'Expert : ' : ''}${n} pièces</button>`; }).join('');
+}
+$('obj').innerHTML = Object.entries(OBJ).map(([k, o]) => `<button data-o="${k}" aria-pressed="${k === OK}">${o.name}</button>`).join('');
+$('obj').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; OK = b.dataset.o; try { localStorage.setItem('meca-obj', OK); L = +localStorage.getItem(lvKey()) || 1; } catch (_) { L = 1; } $('obj').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); build(); mm('jouer', OBJ[OK].start, 5000); });
+$('lv').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; L = +b.dataset.v; try { localStorage.setItem(lvKey(), L); } catch (_) {} build(); });
+$('restart').addEventListener('click', build);
+try { L = +localStorage.getItem(lvKey()) || 1; } catch (_) {}
+build();
+setTimeout(() => mm('jouer', 'Monsieur Méninge le mécano ! ' + OBJ[OK].start, 6000), 400);
+}
+</script>
+</body>
+</html>
