@@ -916,9 +916,14 @@ html.catalogue-open {
 .shareBtn { flex:1 1 260px; min-height:58px; border-radius:16px; border:2px solid #b8862f; background:linear-gradient(#fff6dd,#f3dfae); color:#4a2c10; font:800 17px Sora,system-ui,sans-serif; box-shadow:0 3px 0 #9c6b22, 0 6px 14px rgba(80,45,10,.18); padding:0 18px; }
 .shareBtn:hover { filter:brightness(1.05); }
 .shareBtn:active { transform:translateY(2px); box-shadow:0 1px 0 #9c6b22; }
+.installBtn { background:linear-gradient(#2f8f5b,#1f6e43) !important; color:#fff !important; border-color:#185a36 !important; box-shadow:0 3px 0 #134a2c, 0 6px 14px rgba(20,70,40,.25) !important; }
+#installOk { width:100%; }
+.installSteps { margin:0 0 16px; padding-left:24px; font-size:17px; line-height:1.5; }
+.installSteps li { margin:0 0 10px; }
+.installSteps b { white-space:nowrap; }
 .shareOv { position:fixed; inset:0; z-index:200; display:grid; place-items:center; padding:16px; background:rgba(25,18,8,.55); }
 .shareCard { position:relative; width:min(100%,420px); background:#fffaf0; border:2px solid #d9b56a; border-radius:22px; padding:22px 20px 20px; color:#3b2610; box-shadow:0 18px 40px rgba(0,0,0,.35); }
-#shareOv .shareCard h3 { color:#3b2610; margin:0 0 8px; font:800 22px Sora,system-ui,sans-serif; }
+#shareOv .shareCard h3, #installOv .shareCard h3 { color:#3b2610; margin:0 0 8px; font:800 22px Sora,system-ui,sans-serif; }
 .shareMsg { margin:0 0 16px; font-size:16px; line-height:1.45; background:#f6ecd6; border-radius:12px; padding:10px 12px; }
 .shareOpts { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .shareOpt { display:grid; place-items:center; min-height:54px; border-radius:14px; font:800 16px Sora,system-ui,sans-serif; color:#fff; text-decoration:none; padding:0 10px; }
@@ -971,6 +976,15 @@ html.game-open h2.huge { font-size:clamp(22px,5.5vw,30px) !important; margin:0 0
     <div class="shareRow">
       <button type="button" class="shareBtn" data-share="decouvrir"><span aria-hidden="true">📣</span> Faire découvrir le jeu à un ami</button>
       <button type="button" class="shareBtn" data-share="inviter"><span aria-hidden="true">🎲</span> Inviter un ami à jouer avec moi</button>
+      <button type="button" class="shareBtn installBtn" id="installBtn"><span aria-hidden="true">📲</span> Mettre le jeu sur mon écran d’accueil</button>
+    </div>
+    <div class="shareOv hidden" id="installOv" role="dialog" aria-modal="true" aria-labelledby="installTitle">
+      <div class="shareCard">
+        <button type="button" class="shareClose" id="installClose" aria-label="Fermer">×</button>
+        <h3 id="installTitle">Mettre Méli-Méninges sur l’écran d’accueil</h3>
+        <ol class="installSteps" id="installSteps"></ol>
+        <button type="button" class="shareOpt copy" id="installOk">J’ai compris</button>
+      </div>
     </div>
     <div class="shareOv hidden" id="shareOv" role="dialog" aria-modal="true" aria-labelledby="shareTitle">
       <div class="shareCard">
@@ -2409,7 +2423,7 @@ renderHome();
     };
     ov.classList.remove('hidden');
   }
-  document.querySelectorAll('.shareBtn').forEach(b => b.addEventListener('click', async () => {
+  document.querySelectorAll('.shareBtn[data-share]').forEach(b => b.addEventListener('click', async () => {
     const kind = b.dataset.share, k = MSG[kind];
     if (navigator.share && matchMedia('(pointer:coarse)').matches) {
       try { await navigator.share({ title: 'Méli-Méninges', text: k.m.replace(/ 👉 $/, ''), url }); return; }
@@ -2420,6 +2434,48 @@ renderHome();
   $('shareClose').addEventListener('click', () => ov.classList.add('hidden'));
   ov.addEventListener('click', e => { if (e.target === ov) ov.classList.add('hidden'); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') ov.classList.add('hidden'); });
+})();
+</script>
+<script>
+(function(){
+  // Installation en un clic (Android, ordinateur) ou guide pas à pas (iPhone / iPad)
+  const $ = id => document.getElementById(id);
+  const btn = $('installBtn'), ov = $('installOv');
+  if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {})); }
+  const standalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  if (standalone()) { btn.classList.add('hidden'); return; }
+  let deferred = null;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; });
+  window.addEventListener('appinstalled', () => { btn.classList.add('hidden'); deferred = null; });
+  const ua = navigator.userAgent;
+  const isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/.test(ua);
+  function steps() {
+    if (isIOS) return [
+      'Appuyez sur le bouton <b>Partager</b> <span aria-hidden="true">⬆️</span> (le carré avec une flèche vers le haut, en bas ou en haut de l’écran).',
+      'Faites défiler et choisissez <b>« Sur l’écran d’accueil »</b>.',
+      'Appuyez sur <b>« Ajouter »</b> en haut à droite. C’est fait ! 🎉'];
+    if (isAndroid) return [
+      'Appuyez sur les <b>trois petits points ⋮</b> en haut à droite de Chrome.',
+      'Choisissez <b>« Installer l’application »</b> ou <b>« Ajouter à l’écran d’accueil »</b>.',
+      'Confirmez avec <b>« Installer »</b>. C’est fait ! 🎉'];
+    return [
+      'Dans Chrome ou Edge, cliquez sur la petite icône <b>« Installer »</b> <span aria-hidden="true">⊕</span> à droite de la barre d’adresse.',
+      'Sinon, ouvrez le menu <b>⋮</b> et choisissez <b>« Installer Méli-Méninges »</b>.',
+      'Avec un autre navigateur, ajoutez simplement la page à vos <b>favoris ⭐</b>.'];
+  }
+  btn.addEventListener('click', async () => {
+    if (deferred) {
+      deferred.prompt();
+      try { const r = await deferred.userChoice; if (r.outcome === 'accepted') btn.classList.add('hidden'); } catch (e) {}
+      deferred = null; return;
+    }
+    $('installSteps').innerHTML = steps().map(s => `<li>${s}</li>`).join('');
+    ov.classList.remove('hidden');
+  });
+  const close = () => ov.classList.add('hidden');
+  $('installClose').addEventListener('click', close); $('installOk').addEventListener('click', close);
+  ov.addEventListener('click', e => { if (e.target === ov) close(); });
 })();
 </script>
 </body>
