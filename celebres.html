@@ -62,6 +62,11 @@ main{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);grid-temp
 .bar{flex:1;height:8px;background:#f3dfb0;border-radius:6px;overflow:hidden}.bar i{display:block;height:100%;width:0;background:#1d3fc4;transition:width .3s}
 .token{display:flex;gap:14px;align-items:center;background:#fff;border:2px solid #e8cf8c;border-radius:16px;padding:14px;touch-action:none;cursor:grab;box-shadow:0 3px 0 #e8cf8c}
 .token:active{cursor:grabbing}
+.cphoto{margin:0 0 12px;border-radius:14px;overflow:hidden;background:#efe3c4;border:2px solid #e8cf8c;position:relative}
+.cphoto img{display:block;width:100%;height:clamp(140px,24vh,230px);object-fit:cover;object-position:center 30%}
+.cphoto.portrait img{object-fit:contain;background:#efe3c4}
+.cphoto figcaption{position:absolute;left:0;right:0;bottom:0;padding:16px 10px 5px;font-size:11.5px;line-height:1.3;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.62));text-shadow:0 1px 2px #000}
+.cphoto figcaption a{color:#fff}
 .ico{flex:none;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;color:#fff}
 .ico svg{width:30px;height:30px}
 .t-m .ico{background:#1d3fc4}.t-p .ico{background:#b5179e}.t-h .ico{background:#7a4b16}.t-s .ico{background:#e07b00}
@@ -121,6 +126,7 @@ main{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);grid-temp
   <section class="card" id="panel" aria-live="polite">
     <div id="play">
       <div class="prog"><span id="nCard">Carte 1 / 10</span><div class="bar"><i id="bar"></i></div></div>
+      <figure class="cphoto" id="cphoto" hidden><img id="cphotoImg" alt="" decoding="async"><figcaption id="cphotoCap"></figcaption></figure>
       <div class="token" id="token">
         <div class="ico" id="ico"></div>
         <div><div class="kind" id="kind"></div><h2 class="title" id="title"></h2></div>
@@ -154,6 +160,7 @@ main{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);grid-temp
 </main>
 <script src="deps.js"></script>
 <script src="cartes.js"></script>
+<script src="qui-est-ou/images.js"></script>
 <script>
 {
 const $=id=>document.getElementById(id);
@@ -283,17 +290,35 @@ function paintMap(){
   DEPS.forEach(d=>{const p=$('p'+d.c);p.classList.remove('off','cand','good','miss','near','drop');
     if(allowed&&!allowed.has(d.c))p.classList.add('off');if(lv===1&&cands.includes(d.c)&&!done)p.classList.add('cand')});
 }
+// Photo de la carte (Wikimedia Commons, licences libres) avec son crédit ; voir qui-est-ou/credits.html
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function photoOf(c){return (window.QEO_IMAGES||{})[c.c+'|'+c.n]}
+function showPhoto(c){
+  const f=$('cphoto'),im=$('cphotoImg'),p=photoOf(c);
+  if(!p){f.hidden=true;return}
+  const [src,auteur,lic,licUrl,source,repere,type]=p;
+  f.hidden=false;f.classList.remove('portrait');
+  im.onload=()=>{f.classList.toggle('portrait',im.naturalHeight>im.naturalWidth*1.05)};
+  im.src=src;im.alt=type==='Visuel du sujet'?c.n:(repere||c.n);
+  const what=type&&type!=='Visuel du sujet'&&repere?esc(repere)+' · ':'';
+  $('cphotoCap').innerHTML=`${what}Photo : <a href="${esc(source)}" target="_blank" rel="noopener">${esc(auteur)}</a>, <a href="${esc(licUrl)}" target="_blank" rel="noopener">${esc(lic)}</a> · <a href="qui-est-ou/credits.html" target="_blank">Crédits</a>`;
+  const nx=game[idx+1]&&photoOf(game[idx+1]);if(nx){const i=new Image();i.src=nx[0]}
+}
 function newCard(){
   cur=game[idx];tries=0;done=false;labels=[];
   $('nCard').textContent=`Carte ${idx+1} / ${game.length}`;$('bar').style.width=(idx/game.length*100)+'%';
-  $('token').className='token pop t-'+cur.t;$('ico').innerHTML=icon(cur.t);
+  $('token').className='token pop t-'+cur.t;$('ico').innerHTML=icon(cur.t);showPhoto(cur);
   $('kind').innerHTML=`<span>${TYPES[cur.t][0]}</span>${cur.e==='a'?'<span class="now">Aujourd\'hui</span>':''}`;
   $('title').textContent=cur.n;$('hint').textContent=cur.q;
   $('explain').hidden=true;$('next').hidden=true;$('giveup').hidden=false;$('dragHelp').hidden=false;
   if(lv===1){// trois départements proches les uns des autres, pour que la carte zoome bien
     const nb=shuffle(byCode[cur.c].v.slice());const second=nb[0];
     const ring=shuffle([...new Set([...nb.slice(1),...byCode[second].v])].filter(c=>c!==cur.c&&c!==second));
-    cands=shuffle([cur.c,second,ring[0]]);allowed=new Set(cands);
+    cands=[cur.c,second,ring[0]].filter(c=>c&&byCode[c]);
+    // Corse et départements isolés : pas assez de voisins, on complète avec les plus proches sur la carte
+    if(cands.length<3){const mid=d=>[(d.b[0]+d.b[2])/2,(d.b[1]+d.b[3])/2],m=mid(byCode[cur.c]);
+      DEPS.filter(d=>!cands.includes(d.c)).map(d=>[d.c,Math.hypot(mid(d)[0]-m[0],mid(d)[1]-m[1])]).sort((x,y)=>x[1]-y[1]).slice(0,3-cands.length).forEach(([c])=>cands.push(c))}
+    cands=shuffle(cands);allowed=new Set(cands);
     say(`Trois départements en jaune : lequel est le bon ?`);setVB(box(cands,.45))}
   else if(lv===2){cands=[];allowed=new Set(REG[regOf[cur.c]]);say(`Indice : c'est en ${regOf[cur.c]}.`);setVB(box([...allowed],.12))}
   else{cands=[];allowed=null;say('');setVB([0,0,1000,965])}
