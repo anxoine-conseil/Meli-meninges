@@ -1033,6 +1033,18 @@ html.game-open h2.huge { font-size:clamp(22px,5.5vw,30px) !important; margin:0 0
 .mmNews small a{color:#6b4520}
 .mmNews .nwMsg{margin:10px 0 0;font-weight:700;font-size:15px}
 .mmNews .nwMsg.ok{color:#2f5d3a}.mmNews .nwMsg.err{color:#a3301e}
+.mmPub{position:fixed;left:12px;right:12px;bottom:12px;z-index:60;max-width:430px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 10px;border-radius:16px;background:#fffaf0;border:2px solid #e9c9d6;box-shadow:0 8px 24px rgba(60,30,10,.18);font-family:Sora,system-ui,sans-serif;transform:translateY(140%);opacity:0;transition:transform .5s cubic-bezier(.2,1.2,.4,1),opacity .4s}
+.mmPub.on{transform:none;opacity:1}
+html:not(.catalogue-open) .mmPub{display:none}
+.mmPub a{flex:1;display:flex;align-items:center;gap:10px;text-decoration:none;color:#2b1d0e;min-height:48px}
+.mmPub svg{flex:none;width:40px;height:40px}
+.mmPub .pTxt{display:flex;flex-direction:column;line-height:1.25}
+.mmPub .pTag{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#b04a78}
+.mmPub b{font-size:15px;font-weight:800}
+.mmPub .pSub{font-size:13px;color:#6b4520}
+.mmPub .pGo{flex:none;padding:8px 10px;border-radius:10px;background:#b04a78;color:#fff;font-weight:800;font-size:14px}
+.mmPub button{flex:none;width:36px;height:36px;border:0;border-radius:50%;background:transparent;color:#8a6a55;font-size:22px;line-height:1;cursor:pointer}
+@media (max-width:380px){.mmPub .pGo{display:none}}
 .mmContact{margin:18px 0 6px;text-align:center;font:600 15px/1.5 Sora,system-ui,sans-serif;color:#6b4520}.mmContact a{color:#2f5d3a;font-weight:800;text-decoration:underline;overflow-wrap:anywhere}
 .mmLegal{margin:0 0 8px;text-align:center;font:600 14px/1.6 Sora,system-ui,sans-serif;color:#6b4520}.mmLegal a{color:#6b4520}
 </style>
@@ -2701,6 +2713,28 @@ renderHome();
     btn.disabled=false; btn.textContent='Je m’inscris';
   });
 })();
+
+/* Petit bandeau « Monsieur Pétale » : seulement sur l'accueil, discret, refermable (caché 7 jours) */
+document.addEventListener('DOMContentLoaded', function(){
+  const box=document.getElementById('mmPub'); if(!box) return;
+  let hideUntil=0; try{ hideUntil=+localStorage.getItem('mm-pub-petale')||0; }catch(e){}
+  if(Date.now()<hideUntil){ box.remove(); return; }
+  setTimeout(()=>box.classList.add('on'), 4000);
+  document.getElementById('mmPubX').addEventListener('click',()=>{
+    box.classList.remove('on');
+    try{ localStorage.setItem('mm-pub-petale', Date.now()+7*864e5); }catch(e){}
+    setTimeout(()=>box.remove(),500);
+  });
+  document.getElementById('mmPubLink').addEventListener('click',()=>{ try{ if(window.umami) umami.track('Clic Monsieur Pétale'); }catch(e){} });
+});
 </script>
+<aside class="mmPub" id="mmPub" aria-label="Du même auteur : Monsieur Pétale">
+  <a href="https://www.jlanxoineconseils.fr/product/24751812/la-serie-des-3-tomes-plus-la-regle-d-or-en-cadeau?utm_source=meli-meninges&amp;utm_medium=bandeau&amp;utm_campaign=monsieur-petale" target="_blank" rel="noopener" id="mmPubLink">
+    <svg viewBox="0 0 40 40" aria-hidden="true"><g transform="translate(20 18)"><g fill="#f3a6c4" stroke="#b04a78" stroke-width="1.2"><ellipse rx="5.5" ry="9" transform="rotate(0) translate(0 -8)"/><ellipse rx="5.5" ry="9" transform="rotate(72) translate(0 -8)"/><ellipse rx="5.5" ry="9" transform="rotate(144) translate(0 -8)"/><ellipse rx="5.5" ry="9" transform="rotate(216) translate(0 -8)"/><ellipse rx="5.5" ry="9" transform="rotate(288) translate(0 -8)"/></g><circle r="5" fill="#f6c443" stroke="#b07a10" stroke-width="1.2"/></g><path d="M20 27v11M20 33c3-3 6-3 8-2" stroke="#4f8a3a" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>
+    <span class="pTxt"><span class="pTag">Du même auteur</span><b>Monsieur Pétale, la BD des fleurs</b><span class="pSub">3 tomes, de 5 à 99 ans · livraison offerte</span></span>
+    <span class="pGo">Voir →</span>
+  </a>
+  <button type="button" id="mmPubX" aria-label="Fermer">×</button>
+</aside>
 </body>
 </html>
