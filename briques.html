@@ -74,6 +74,7 @@ canvas{display:block;border-radius:9px;touch-action:none}
         <h2 id="overT">Les Briques</h2>
         <p id="overP">Rangez les briques qui tombent pour remplir des lignes entières.</p>
         <button class="btn" id="startBtn">Commencer</button>
+        <button class="btn alt" id="newBtn" hidden>Nouvelle partie</button>
       </div>
     </div>
   </div>
@@ -164,6 +165,29 @@ function rotate() {
 function softDrop() { if (!live()) return; if (!collide(cur.m, cur.x, cur.y + 1)) { cur.y++; score += 1; dropAcc = 0; upd(); draw(); } else lock(); }
 function hardDrop() { if (!live()) return; let n = 0; while (!collide(cur.m, cur.x, cur.y + 1)) { cur.y++; n++; } score += 2 * n; lock(); }
 function ghostY() { let y = cur.y; while (!collide(cur.m, cur.x, y + 1)) y++; return y; }
+/* ---------- reprise : la partie interrompue est gardée sur l'appareil ---------- */
+function savePartie() {
+  try {
+    if (over || !running || !board) { localStorage.removeItem('mm-briques-partie'); return; }
+    localStorage.setItem('mm-briques-partie', JSON.stringify({ board, cur, next, bag, score, lines, speed, startSpeed, ghost, accel }));
+  } catch (e) {}
+}
+function resumePartie() {
+  let r = null; try { r = JSON.parse(localStorage.getItem('mm-briques-partie') || 'null'); } catch (e) {}
+  if (!r || !r.board || !r.cur) return false;
+  ({ board, cur, next, bag, score, lines, speed, startSpeed, ghost, accel } = r);
+  over = false; running = true; paused = true; dropAcc = 0;
+  $('speeds').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', +x.dataset.s === startSpeed));
+  $('ghostBtn').setAttribute('aria-pressed', ghost); $('accBtn').setAttribute('aria-pressed', accel);
+  upd(); drawNext(); draw();
+  $('overT').textContent = 'Votre partie vous attend';
+  $('overP').innerHTML = `${score} points, ${lines} ligne${lines > 1 ? 's' : ''}.<br>Elle reprend exactement où vous l’aviez laissée.`;
+  $('startBtn').textContent = 'Reprendre'; $('newBtn').hidden = false; $('over').hidden = false;
+  $('pauseBtn').textContent = 'Reprendre';
+  return true;
+}
+addEventListener('pagehide', savePartie);
+document.addEventListener('visibilitychange', () => { if (document.hidden) savePartie(); });
 function lock() {
   for (let r = 0; r < cur.m.length; r++) for (let c = 0; c < cur.m.length; c++)
     if (cur.m[r][c]) { const Y = cur.y + r; if (Y < 0) return gameOver(); board[Y][cur.x + c] = cur.c; }
@@ -177,10 +201,10 @@ function lock() {
     beep(660 + full.length * 120, .12);
     setTimeout(() => {
       for (const r of full) { board.splice(r, 1); board.unshift(Array(COLS).fill(null)); }
-      flash = null; speedUpdate(); draw();
+      flash = null; speedUpdate(); draw(); savePartie();
     }, 260);
   } else beep(200, .03);
-  upd(); spawn(); draw();
+  upd(); spawn(); draw(); savePartie();
 }
 const level = () => speed;
 function speedUpdate() {
@@ -194,7 +218,7 @@ const live = () => running && !paused && !over && cur;
 function start() {
   board = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
   bag = []; next = null; score = 0; lines = 0; speed = startSpeed; over = false; paused = false; running = true; dropAcc = 0;
-  $('over').hidden = true; $('pauseBtn').textContent = 'Pause';
+  $('over').hidden = true; $('pauseBtn').textContent = 'Pause'; $('newBtn').hidden = true;
   $('msg').textContent = `Vitesse : ${SPEED_NAME[startSpeed]}. Bonne partie !`;
   spawn(); upd(); last = performance.now(); requestAnimationFrame(loop);
   showBoard();
@@ -208,7 +232,7 @@ function showBoard() {
   } catch (e) {}
 }
 function gameOver() {
-  over = true; running = false; cur = null;
+  over = true; running = false; cur = null; savePartie();
   if (score > best) { best = score; try { localStorage.setItem('mm-briques-best', best); } catch (e) {} }
   upd(); draw();
   $('overT').textContent = 'Partie terminée';
@@ -220,8 +244,8 @@ function gameOver() {
 function setPause(p) {
   if (over || !running) return;
   paused = p; $('pauseBtn').textContent = p ? 'Reprendre' : 'Pause';
-  if (p) { $('overT').textContent = 'Pause'; $('overP').textContent = 'Prenez votre temps.'; $('startBtn').textContent = 'Reprendre'; $('over').hidden = false; }
-  else { $('over').hidden = true; last = performance.now(); requestAnimationFrame(loop); }
+  if (p) { savePartie(); $('overT').textContent = 'Pause'; $('overP').textContent = 'Prenez votre temps.'; $('startBtn').textContent = 'Reprendre'; $('newBtn').hidden = false; $('over').hidden = false; }
+  else { $('over').hidden = true; $('newBtn').hidden = true; last = performance.now(); requestAnimationFrame(loop); }
 }
 function upd() { $('score').textContent = score; $('lines').textContent = lines; $('best').textContent = Math.max(best, score); }
 function hiddenInPage() { try { return window.frameElement && window.frameElement.offsetParent === null; } catch (e) { return false; } }
@@ -313,7 +337,8 @@ document.addEventListener('keydown', e => {
   if (k === 'p' || k === 'P' || k === 'Escape') { e.preventDefault(); setPause(!paused); }
   if (k === 'Enter' && !$('over').hidden) { e.preventDefault(); $('startBtn').click(); }
 });
-$('startBtn').addEventListener('click', () => { if (paused) setPause(false); else start(); });
+$('startBtn').addEventListener('click', () => { if (paused) { setPause(false); showBoard(); } else start(); });
+$('newBtn').addEventListener('click', () => { paused = false; running = false; start(); });
 $('pauseBtn').addEventListener('click', () => setPause(!paused));
 $('speeds').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
@@ -328,6 +353,7 @@ $('accBtn').addEventListener('click', e => { accel = !accel; e.currentTarget.set
 addEventListener('resize', layout);
 try { window.parent.addEventListener('resize', layout); } catch (e) {}
 layout();
+resumePartie();
 </script>
 </body>
 </html>

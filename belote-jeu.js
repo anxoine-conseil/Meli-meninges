@@ -415,6 +415,7 @@ function showHand() {
 }
 function render() {
   if (!G) return;
+  saveDeal();
   $('status').textContent = G.msg;
   for (let p = 0; p < 4; p++) seatHTML(p);
   renderTrick(); renderInfo(); renderActions(); renderHand();
@@ -460,4 +461,30 @@ function showRules() {
 $('bRules').onclick = showRules;
 $('bScores').onclick = showScores;
 let rT; addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(() => G && renderHand(), 120); });
-newDeal();
+/* ---------- reprise de la donne en cours ---------- */
+const DONNE = 'mm-belote-donne';
+function saveDeal() {
+  try {
+    if (!G || G.phase === 'end') { localStorage.removeItem(DONNE); return; }
+    localStorage.setItem(DONNE, JSON.stringify({ G, played, pending }));
+  } catch (e) {}
+}
+function resumeDeal() {
+  let r = null; try { r = JSON.parse(localStorage.getItem(DONNE) || 'null'); } catch (e) {}
+  if (!r || !r.G || r.G.phase === 'end') return false;
+  G = r.G; played.length = 0; played.push(...(r.played || [])); pending = r.pending || 0;
+  if (G.phase === 'collecting') G.phase = 'collect';
+  const before = G.msg;
+  G.msg = 'Votre donne en cours est reprise là où vous l’aviez laissée.';
+  render();
+  setTimeout(() => {
+    if (G.phase === 'bid') return bidStep();
+    if (G.phase === 'take') return distribute();
+    if (G.phase === 'play') return playStep();
+    if (G.phase === 'collect') return collect();
+    G.msg = before; render();
+  }, 1600);
+  return true;
+}
+addEventListener('pagehide', saveDeal);
+if (!resumeDeal()) newDeal();

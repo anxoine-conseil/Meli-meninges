@@ -623,7 +623,7 @@ function renderInfo() {
   if (G.best >= 0 && G.phase !== 'bid') parts.push(`<span class="chip">Contrat : <b>${CONTRACTS[G.best].short || CONTRACTS[G.best].name}</b> par ${G.taker === 0 ? 'vous' : NAMES[G.taker]}</span>`);
   if (['play', 'collect', 'end'].includes(G.phase)) {
     parts.push(`<span class="chip">Pli <b>${Math.min(18, G.tricks + (G.phase === 'play' ? 1 : 0))}</b> / 18</span>`);
-    const k = G.taker === 0 ? 0 : 1, mine = G.won[k].filter(c => !G.dog.includes(c) || G.best <= 1);
+    const k = G.taker === 0 ? 0 : 1, mine = G.won[k].filter(c => !G.dog.some(x => same(x, c)) || G.best <= 1);
     const pts = mine.reduce((a, c) => a + value(c), 0) + G.excuseAdj[k];
     parts.push(`<span class="chip">${k ? 'Points de la défense' : 'Vos points'} : <b>${fmt(pts)}</b> · bouts : <b>${mine.filter(isBout).length}</b></span>`);
   }
@@ -705,6 +705,7 @@ function renderHand() {
 }
 function render() {
   if (!G) return;
+  saveDeal();
   $('status').textContent = G.msg;
   for (let p = 0; p < 4; p++) seatHTML(p);
   renderTrick(); renderInfo(); renderActions(); renderHand();
@@ -753,7 +754,33 @@ $('bRules').onclick = showRules;
 $('bScores').onclick = showScores;
 let rT; addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(() => G && renderHand(), 120); });
 
-newDeal();
+/* ---------- reprise de la donne en cours ---------- */
+const DONNE = 'mm-tarot-donne';
+function saveDeal() {
+  try {
+    if (!G || G.phase === 'end') { localStorage.removeItem(DONNE); return; }
+    localStorage.setItem(DONNE, JSON.stringify({ G, played }));
+  } catch (e) {}
+}
+function resumeDeal() {
+  let r = null; try { r = JSON.parse(localStorage.getItem(DONNE) || 'null'); } catch (e) {}
+  if (!r || !r.G || r.G.phase === 'end') return false;
+  G = r.G; played.length = 0; played.push(...(r.played || []));
+  if (G.phase === 'collecting') G.phase = 'collect';
+  const before = G.msg;
+  G.msg = 'Votre donne en cours est reprise là où vous l’aviez laissée.';
+  render();
+  setTimeout(() => {
+    if (G.phase === 'bid') return bidStep();
+    if (G.phase === 'dog') { G.msg = before; render(); if (G.taker !== 0) wait(1500, botDiscard); return; }
+    if (G.phase === 'play') return playStep();
+    if (G.phase === 'collect') return collect(G.hands[0].length === 0);
+    G.msg = before; render();
+  }, 1600);
+  return true;
+}
+addEventListener('pagehide', saveDeal);
+if (!resumeDeal()) newDeal();
 </script>
 </body>
 </html>

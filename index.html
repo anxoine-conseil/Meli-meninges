@@ -1826,6 +1826,17 @@ const BANK = [
   function mountSudoku(box, snd = {}) {
     const st = { n: 6, diff: 0, help: true, pencil: false };
     let P, val, notes, sel, t0, done, timer;
+    // Reprise : la grille en cours est gardée sur l'appareil et revient telle quelle
+    const SAVE = 'mm-sdk-partie';
+    let saved = null; try { saved = JSON.parse(localStorage.getItem(SAVE) || 'null'); } catch (e) {}
+    if (saved && saved.P && !saved.done) { st.n = saved.st.n; st.diff = saved.st.diff; st.help = saved.st.help !== false; } else saved = null;
+    function save() {
+      try {
+        if (!P || done) { localStorage.removeItem(SAVE); return; }
+        if (val.every((x, k) => x === P.puz[k]) && notes.every(x => !x.size)) { localStorage.removeItem(SAVE); return; }   // rien encore joué
+        localStorage.setItem(SAVE, JSON.stringify({ st: { n: st.n, diff: st.diff, help: st.help }, P, val, notes: notes.map(x => [...x]), sel, el: Date.now() - t0 }));
+      } catch (e) {}
+    }
     box.innerHTML = `
       <div class="gTop">
         <div><b>Taille</b>${seg('n', [[4, '4 × 4'], [6, '6 × 6'], [9, '9 × 9']], st.n)}</div>
@@ -1837,15 +1848,17 @@ const BANK = [
         <div class="gSide">
           <div class="pad"></div>
           <div class="row"><button class="ghost dark" data-act="erase">Effacer</button><button class="ghost dark" data-act="pencil" aria-pressed="false">Crayon : non</button></div>
-          <button class="ghost dark" data-act="help" aria-pressed="true">Montrer les erreurs : oui</button>
+          <button class="ghost dark" data-act="help" aria-pressed="${st.help}">Montrer les erreurs : ${st.help ? 'oui' : 'non'}</button>
           <p class="gInfo"><span data-time>0 s</span></p>
           <p class="soft gRule">Chaque ligne, chaque colonne et chaque bloc doit contenir une seule fois chaque chiffre.</p>
         </div>
       </div>
       <div class="gWin hidden"></div>`;
     const grid = box.querySelector('.sdk'), pad = box.querySelector('.pad'), win = box.querySelector('.gWin');
-    function start() {
-      P = makeSudoku(st.n, st.diff); val = P.puz.slice(); notes = val.map(() => new Set()); sel = val.indexOf(0); done = false; t0 = Date.now();
+    function start(resume) {
+      if (resume) { P = resume.P; val = resume.val; notes = resume.notes.map(x => new Set(x)); sel = resume.sel; done = false; t0 = Date.now() - (resume.el || 0); }
+      else { P = makeSudoku(st.n, st.diff); val = P.puz.slice(); notes = val.map(() => new Set()); sel = val.indexOf(0); done = false; t0 = Date.now(); }
+      save();
       win.classList.add('hidden'); grid.style.setProperty('--n', P.n);
       pad.style.setProperty('--n', P.n === 9 ? 5 : P.n === 6 ? 3 : 4);
       pad.innerHTML = [...Array(P.n)].map((_, i) => `<button data-num="${i + 1}">${i + 1}</button>`).join('');
@@ -1871,12 +1884,12 @@ const BANK = [
     function put(v) {
       if (done || P.puz[sel]) return;
       if (v && val[sel] !== v && usedUp(v)) return;
-      if (st.pencil && v) { notes[sel].has(v) ? notes[sel].delete(v) : notes[sel].add(v); render(); return; }
-      val[sel] = v; notes[sel].clear();
+      if (st.pencil && v) { notes[sel].has(v) ? notes[sel].delete(v) : notes[sel].add(v); render(); save(); return; }
+      val[sel] = v; notes[sel].clear(); save();
       if (v) { if (st.help && v !== P.sol[sel]) snd.no?.(); else snd.place?.(); }
       render();
       if (val.every((x, k) => x === P.sol[k])) {
-        done = true; snd.win?.();
+        done = true; save(); snd.win?.();
         win.innerHTML = `<h2>Bravo, grille terminée !</h2><p class="lead">En ${fmt(Date.now() - t0)}.</p><button class="big" data-act="new">Une autre grille</button>`;
         win.classList.remove('hidden');
       }
@@ -1903,7 +1916,9 @@ const BANK = [
       }
     });
     timer = setInterval(() => { if (!done && P) { const el = box.querySelector('[data-time]'); if (el) el.textContent = fmt(Date.now() - t0); } }, 1000);
-    start();
+    addEventListener('pagehide', save); document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
+    if (saved) { start(saved); snd.toast?.('Votre grille en cours est reprise là où vous l’aviez laissée.'); }
+    else start();
     return { destroy() { clearInterval(timer); } };
   }
 
@@ -2334,8 +2349,10 @@ function whenPlayed(k) {
   const days = Math.ceil((d0 - t) / 864e5);
   return days <= 0 ? 'Joué aujourd’hui' : days === 1 ? 'Joué hier' : `Joué il y a ${days} jours`;
 }
-function memo(k) {   // ce que le jeu a gardé en mémoire : record ou score de la partie en cours
+function memo(k) {   // ce que le jeu a gardé en mémoire : partie interrompue, record ou score
   const sign = n => (n > 0 ? '+' : '') + n;
+  const enCours = { sdk: 'mm-sdk-partie', mel: 'mm_mel_partie', 'tarot.html': 'mm-tarot-donne', 'belote.html': 'mm-belote-donne', bri: 'mm-briques-partie' }[k];
+  if (enCours) { const r = readLS(enCours, null); if (r) return k === 'bri' && r.score != null ? `Partie en cours (${r.score} points) : elle vous attend` : (k === 'tarot.html' || k === 'belote.html' ? 'Donne en cours : elle vous attend' : 'Grille en cours : elle vous attend'); }
   if (k === 'tarot.html') { const t = readLS('mm-tarot', null); if (t && t.history && t.history.length) return `Votre total : ${sign(t.totals[0])}`; }
   if (k === 'belote.html') { const t = readLS('mm-belote', null); if (t && t.history && t.history.length) return `Partie : Nous ${t.totals[0]} · Eux ${t.totals[1]}`; }
   if (k === 'bri') { const b = +readLS('mm-briques-best', 0); if (b) return `Record : ${b} points`; }
