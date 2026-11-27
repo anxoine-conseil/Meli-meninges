@@ -1021,6 +1021,18 @@ html.game-open h2.huge { font-size:clamp(22px,5.5vw,30px) !important; margin:0 0
 .favEmpty svg { width:20px; height:20px; vertical-align:-4px; fill:#d9364b; }
 @media (max-width:520px) { .tRow > .tiroir { padding-right:54px; } .favBtn { width:42px; height:42px; max-height:42px; right:7px; } }
 #hub .shareRow { margin-top:4px; }
+.mmNews{max-width:560px;margin:18px auto 4px;padding:16px 18px;border-radius:18px;background:#fffaf0;border:2px solid #ead9b8;text-align:center;font-family:Sora,system-ui,sans-serif;color:#2b1d0e}
+.mmNews h2{margin:0 0 4px;font:800 19px/1.3 Sora,system-ui,sans-serif;color:#2f5d3a}
+.mmNews p{margin:0 0 10px;font-size:15px;line-height:1.45;color:#6b4520}
+.mmNews form{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.mmNews input[type=email]{flex:1 1 220px;min-height:48px;padding:0 14px;border-radius:12px;border:2px solid #d8c39c;font:600 16px Sora,system-ui,sans-serif;background:#fff;color:#2b1d0e}
+.mmNews button{min-height:48px;padding:0 18px;border:0;border-radius:12px;background:#2f5d3a;color:#fff;font:800 16px Sora,system-ui,sans-serif;cursor:pointer}
+.mmNews button[disabled]{opacity:.6}
+.mmNews .nwHp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.mmNews small{display:block;margin-top:8px;font-size:12.5px;line-height:1.4;color:#7a6650}
+.mmNews small a{color:#6b4520}
+.mmNews .nwMsg{margin:10px 0 0;font-weight:700;font-size:15px}
+.mmNews .nwMsg.ok{color:#2f5d3a}.mmNews .nwMsg.err{color:#a3301e}
 .mmContact{margin:18px 0 6px;text-align:center;font:600 15px/1.5 Sora,system-ui,sans-serif;color:#6b4520}.mmContact a{color:#2f5d3a;font-weight:800;text-decoration:underline;overflow-wrap:anywhere}
 .mmLegal{margin:0 0 8px;text-align:center;font:600 14px/1.6 Sora,system-ui,sans-serif;color:#6b4520}.mmLegal a{color:#6b4520}
 </style>
@@ -1055,6 +1067,20 @@ html.game-open h2.huge { font-size:clamp(22px,5.5vw,30px) !important; margin:0 0
       <button type="button" class="shareBtn" data-share="decouvrir"><span aria-hidden="true">📣</span> Faire découvrir le jeu à un ami</button>
       <button type="button" class="shareBtn" data-share="inviter"><span aria-hidden="true">🎲</span> Inviter un ami à jouer avec moi</button>
       <button type="button" class="shareBtn installBtn" id="installBtn"><svg class="iosShare" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 9H6.5A1.5 1.5 0 0 0 5 10.5v9A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 17.5 9h-2"/><path d="M12 14.5V2.5M8.5 6 12 2.5 15.5 6"/></svg> Mettre le jeu sur mon écran d’accueil</button>
+      <section class="mmNews" aria-labelledby="nwTitle">
+        <h2 id="nwTitle">Recevoir les nouveaux jeux</h2>
+        <p>Un petit e-mail quand un nouveau jeu arrive dans la boîte. Gratuit, sans publicité, et on se désinscrit en un clic.</p>
+        <form id="nwForm" action="https://2f403d39.sibforms.com/serve/MUIFAOpNv2qLzf4zrM8DMFh1gLY132ULWnMb4DAE1Iemlh9tE0gvebmWFsUIDOcj7obAm2fUXnZcOXffbYHWeIa7XTgUTWOqtUnnkaVRwmOJXcZFr2kyoBa5ZT4l0P-XstCMUjMiX_9bEIgRIoB4FcexX7rl8a99HgyOVg_OPCGSEBmgUBZeM3HJ6pJEL0wJIllJJQ-G3Xrp00hTYA==" method="POST" novalidate>
+          <label for="nwEmail" class="nwHp">Votre adresse e-mail</label>
+          <input type="email" id="nwEmail" name="EMAIL" autocomplete="email" inputmode="email" placeholder="votre adresse e-mail" required>
+          <input type="text" name="email_address_check" value="" class="nwHp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <input type="hidden" name="locale" value="fr">
+          <input type="hidden" name="html_type" value="simple">
+          <button type="submit" id="nwBtn">Je m’inscris</button>
+        </form>
+        <p class="nwMsg" id="nwMsg" role="status" aria-live="polite"></p>
+        <small>Vous recevrez un e-mail pour confirmer votre inscription. Votre adresse sert uniquement à vous prévenir des nouveaux jeux : voir <a href="confidentialite.html#lettre">Confidentialité</a>.</small>
+      </section>
       <p class="mmContact">Une idée, un souci, un jeu à proposer ? Écrivez-nous : <a href="mailto:contact@meli-meninges.fr">contact@meli-meninges.fr</a></p>
       <p class="mmLegal"><a href="mentions-legales.html">Mentions légales</a> · <a href="confidentialite.html">Confidentialité</a> · <a href="qui-est-ou/credits.html">Crédits des images</a></p>
     </div>
@@ -2651,6 +2677,27 @@ renderHome();
   const close = () => ov.classList.add('hidden');
   $('installClose').addEventListener('click', close); $('installOk').addEventListener('click', close);
   ov.addEventListener('click', e => { if (e.target === ov) close(); });
+})();
+
+/* Lettre « nouveaux jeux » (Brevo, double confirmation) */
+(function(){
+  const f=document.getElementById('nwForm'); if(!f) return;
+  const msg=document.getElementById('nwMsg'), btn=document.getElementById('nwBtn'), mail=document.getElementById('nwEmail');
+  const say=(t,ok)=>{msg.textContent=t;msg.className='nwMsg '+(ok?'ok':'err')};
+  f.addEventListener('submit', async e=>{
+    e.preventDefault();
+    const v=mail.value.trim();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)){ say('Cette adresse e-mail ne semble pas complète. Vérifiez-la.',false); mail.focus(); return; }
+    btn.disabled=true; btn.textContent='Envoi…';
+    try{
+      await fetch(f.action,{method:'POST',mode:'no-cors',body:new FormData(f)});
+      f.reset();
+      say('Merci ! Un e-mail de confirmation vient de vous être envoyé. Pensez à cliquer sur le lien qu’il contient (regardez aussi dans les indésirables).',true);
+    }catch(err){
+      say('L’inscription n’a pas pu être envoyée. Vérifiez votre connexion Internet et réessayez.',false);
+    }
+    btn.disabled=false; btn.textContent='Je m’inscris';
+  });
 })();
 </script>
 </body>
