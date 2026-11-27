@@ -1044,7 +1044,13 @@ html:not(.catalogue-open) .mmPub{display:none}
 .mmPub .pSub{font-size:13px;color:#6b4520}
 .mmPub .pGo{flex:none;padding:8px 10px;border-radius:10px;background:#b04a78;color:#fff;font-weight:800;font-size:14px}
 .mmPub button{flex:none;width:36px;height:36px;border:0;border-radius:50%;background:transparent;color:#8a6a55;font-size:22px;line-height:1;cursor:pointer}
-@media (max-width:460px){.mmPub .pGo{display:none}}
+.mmPub .pGo{display:inline-flex;align-items:center;justify-content:center;min-width:44px;height:44px;box-sizing:border-box}
+.mmPub .pGo .gT{margin-right:4px}
+.mmPub .pGo .gA{font-size:22px;line-height:1;animation:pubNudge 1.6s ease-in-out infinite}
+@keyframes pubNudge{0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}}
+@media (prefers-reduced-motion:reduce){.mmPub .pGo .gA{animation:none}}
+.mmPub button{width:28px;height:28px;font-size:18px;color:#b9a593;align-self:flex-start}
+@media (max-width:460px){.mmPub .pGo{padding:0;border-radius:50%}.mmPub .pGo .gT{display:none}.mmPub b{font-size:14px}.mmPub .pSub{font-size:12.5px}.mmPub img{width:84px;height:54px}}
 .mmContact{margin:18px 0 6px;text-align:center;font:600 15px/1.5 Sora,system-ui,sans-serif;color:#6b4520}.mmContact a{color:#2f5d3a;font-weight:800;text-decoration:underline;overflow-wrap:anywhere}
 .mmLegal{margin:0 0 8px;text-align:center;font:600 14px/1.6 Sora,system-ui,sans-serif;color:#6b4520}.mmLegal a{color:#6b4520}
 </style>
@@ -2732,7 +2738,7 @@ document.addEventListener('DOMContentLoaded', function(){
   <a href="https://www.jlanxoineconseils.fr/product/24751812/la-serie-des-3-tomes-plus-la-regle-d-or-en-cadeau?utm_source=meli-meninges&amp;utm_medium=bandeau&amp;utm_campaign=monsieur-petale" target="_blank" rel="noopener" id="mmPubLink">
     <img src="pub/monsieur-petale-3-tomes.webp" width="100" height="64" alt="Les trois albums de Monsieur Pétale">
     <span class="pTxt"><b>Monsieur Pétale et ses aventures</b><span class="pSub">Les fleurs, la tulipe magique et les abeilles</span></span>
-    <span class="pGo">Voir →</span>
+    <span class="pGo"><span class="gT">Voir</span><span class="gA" aria-hidden="true">→</span></span>
   </a>
   <button type="button" id="mmPubX" aria-label="Fermer">×</button>
 </aside>
