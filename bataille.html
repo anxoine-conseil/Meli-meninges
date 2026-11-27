@@ -260,6 +260,8 @@ main.nav{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr)}
 <section class="card" id="side" aria-live="polite"></section>
 </main>
 <div id="cover" hidden></div>
+<script src="mqtt.min.js"></script>
+<script src="loto-relais.js"></script>
 <script>
 {
 const DEFS=`<linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9cc6e8"/><stop offset=".7" stop-color="#dcebf3"/><stop offset="1" stop-color="#f6ead2"/></linearGradient><linearGradient id="gV" x1="0" x2="1"><stop offset="0" stop-color="#6e421d"/><stop offset=".3" stop-color="#b9834b"/><stop offset=".65" stop-color="#a26b36"/><stop offset="1" stop-color="#5f3817"/></linearGradient>
@@ -510,7 +512,9 @@ function overHTML(){const W=G.P[G.winner],L=G.P[1-G.winner],acc=p=>p.fired?Math.
 // ---- Deux téléphones ----
 const NET={db:null,uid:null,ready:false,code:null,me:0,doc:null,unsub:null,fleet:null,err:'',busy:false,lastLog:'',resolving:null,starting:false,resume:null};
 const LETTERS='ABCDEFGHJKLMNPQRSTUVWXYZ';
-(async()=>{try{const c=window.claude;if(!c||!c.use)throw 0;NET.db=await c.use('db');const u=await c.use('user');NET.uid=u?await u.id():null}catch(e){}
+(async()=>{try{let c=window.claude;try{if(!(c&&c.use)&&window.parent!==window)c=window.parent.claude}catch(e){}if(!c||!c.use)throw 0;NET.db=await c.use('db');const u=await c.use('user');NET.uid=u?await u.id():null}catch(e){}
+  // Hors de Claude (sur meli-meninges.fr) : un relais Internet public relie les deux téléphones, sans compte ni application
+  if(!(NET.db&&NET.uid)&&window.LotoRelais){try{const r=await LotoRelais.connect();NET.db=r.db;NET.uid=r.uid;NET.relais=true}catch(e){NET.db=null}}
   NET.ready=true;NET.ok=!!(NET.db&&NET.uid);
   if(NET.ok){try{const s=JSON.parse(localStorage.getItem('naval-net')||'null');if(s&&s.code){const g=await NET.db.doc('naval/'+s.code).get();const d=g.exists?g.data():null;if(d&&d.phase!=='over'&&(d.host===NET.uid||d.guest===NET.uid))NET.resume=s.code}}catch(e){}}
   if(!G&&cfg.mode==='net')setup()})();
@@ -518,7 +522,7 @@ const gref=()=>NET.db.doc('naval/'+NET.code);
 const fref=()=>NET.db.collection('data/users/'+NET.uid).doc('naval-'+NET.code);
 async function W(fn){try{await fn()}catch(e){NET.err=e&&e.code==='invalid_argument'?'Écriture refusée : votre adversaire doit avoir au moins le niveau « Contributeur » sur ce jeu (menu Partager).':'La connexion a échoué, réessayez dans un instant.';render2()}}
 function netSetupHTML(){if(!NET.ready)return '<p class="meta">Connexion au jeu en ligne…</p>';
-  if(!NET.ok)return '<p class="warn">Le jeu sur deux téléphones n\'est pas disponible ici. Il faut ouvrir le jeu depuis claude.ai en étant connecté, chacun sur son téléphone.</p>';
+  if(!NET.ok)return '<p class="warn">Pas de connexion : le jeu sur deux téléphones passe par Internet. Vérifiez le wifi ou les données mobiles, puis rechargez la page.</p>';
   return `<h3>Votre nom</h3><div class="pr"><i style="background:#1f4e79"></i><input data-p="0" value="${esc(cfg.names[0])}" maxlength="20" aria-label="Votre nom"></div>
   ${NET.resume?`<button class="btn wide" id="resume">Reprendre la partie ${NET.resume}</button>`:''}
   <div class="netbox"><h3>Créer une partie</h3><p class="meta">Vous recevez un code de 4 lettres à donner à votre adversaire. Les règles cochées ci-dessous s'appliquent.</p><button class="btn" id="create">Créer une partie</button></div>
@@ -651,7 +655,7 @@ setup();
 <h3>Trois façons de jouer</h3>
 <ul><li><b>Contre l'ordinateur</b> : Mousse (facile), Capitaine, ou Amiral (redoutable).</li>
 <li><b>À deux, même écran</b> : entre chaque tour, un écran bleu demande de passer l'appareil, pour que personne ne voie la flotte de l'autre.</li>
-<li><b>Sur deux téléphones</b> : l'un touche « Créer une partie » et donne le code de 4 lettres ; l'autre ouvre le même jeu sur son téléphone, tape le code et touche « Rejoindre ». Les deux doivent être connectés à Claude, et le jeu doit être partagé avec l'adversaire au niveau « Contributeur » au moins.</li></ul>
+<li><b>Sur deux téléphones</b> : l'un touche « Créer une partie » et donne le code de 4 lettres ; l'autre ouvre le même jeu sur son téléphone, tape le code et touche « Rejoindre ». Il suffit que chacun ait Internet et ouvre <b>meli-meninges.fr</b> dans son navigateur : aucune application ni compte à créer.</li></ul>
 <h3>Les options</h3>
 <ul><li><b>Les navires peuvent se toucher</b> : sinon, une case d'eau doit les séparer, même en diagonale.</li>
 <li><b>On rejoue quand on touche</b> : après un tir réussi, on tire encore.</li>

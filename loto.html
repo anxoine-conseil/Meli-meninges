@@ -235,6 +235,11 @@ body.host main{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)}
 .rpanel .lead{font-size:17px}.rpanel .tip{background:var(--bg);border-radius:10px;padding:8px 12px;font-size:15px}
 .rclose{position:sticky;top:0;float:right;margin:-10px -10px 0 8px;z-index:2;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:24px;line-height:1;cursor:pointer}
 @keyframes pop{from{transform:scale(.92);opacity:0}}
+.qrbox{display:grid;gap:8px;justify-items:center;margin-top:10px;max-width:420px}
+.qrbox .qr{width:min(220px,60vw);background:#fff;border-radius:12px;padding:6px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.qrbox .qr svg{display:block;width:100%;height:auto}
+.qrbox p{margin:0;text-align:center;font-size:15px}
+.okmsg{margin:8px 0 0;padding:8px 12px;border-radius:12px;background:#e6f3ea;color:#1f5a35;font-weight:600}
 </style>
 </head>
 <body>
@@ -247,6 +252,7 @@ body.host main{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)}
 </main>
 <script src="mqtt.min.js"></script>
 <script src="loto-relais.js"></script>
+<script src="qrcode.js"></script>
 <script>
 {
 const DEFS=`<linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9cc6e8"/><stop offset=".7" stop-color="#dcebf3"/><stop offset="1" stop-color="#f6ead2"/></linearGradient><linearGradient id="gV" x1="0" x2="1"><stop offset="0" stop-color="#6e421d"/><stop offset=".3" stop-color="#b9834b"/><stop offset=".65" stop-color="#a26b36"/><stop offset="1" stop-color="#5f3817"/></linearGradient>
@@ -406,8 +412,17 @@ function home(){S.role=null;S.unsub.forEach(f=>f());S.unsub=[];clearTimeout(S.ti
  <div class="netbox"><h3>Je suis l'animateur</h3><p class="meta">Ce téléphone ou cet écran tire les boules et affiche le tableau.</p><button class="btn" id="create">Créer une partie</button></div>
  <div class="netbox"><h3>Je joue</h3><div class="pr"><input id="nm" value="${esc(cfg.name)}" maxlength="20" placeholder="Votre prénom" aria-label="Votre prénom"></div>
  <p class="meta" style="margin:8px 0 4px">Nombre de cartons</p><div class="seg">${[1,2,3].map(v=>`<button data-n="${v}" aria-pressed="${cfg.n===v}">${v} carton${v>1?'s':''}</button>`).join('')}</div>
- <div class="row" style="margin-top:10px"><input id="code" class="codein" maxlength="4" placeholder="CODE" aria-label="Code de la partie" autocomplete="off"><button class="btn" id="join">Rejoindre</button></div></div>
+ ${URL_CODE?`<p class="okmsg">Vous êtes invité à la partie <b>${esc(URL_CODE)}</b> : écrivez votre prénom, puis touchez « Rejoindre ».</p>`:''}<div class="row" style="margin-top:10px"><input id="code" class="codein" maxlength="4" placeholder="CODE" aria-label="Code de la partie" autocomplete="off" value="${esc(URL_CODE)}"><button class="btn" id="join">Rejoindre</button></div></div>
  ${S.err?`<p class="warn">${esc(S.err)}</p>`:''}`}
+
+// ---- Invitation : lien direct et QR code (aucune application à installer) ----
+function inviteURL(code){const base=/^https?:$/.test(location.protocol)&&!/claude\.ai|claudeusercontent/.test(location.hostname)?location.origin+location.pathname.replace(/[^/]*$/,''):'https://meli-meninges.fr/';return base+'loto.html?code='+encodeURIComponent(code)}
+function qrSVG(text){try{const q=qrcode(0,'M');q.addData(text);q.make();return q.createSvgTag({cellSize:6,margin:2,scalable:true})}catch(e){return ''}}
+async function shareInvite(){const url=inviteURL(S.code),txt=`Venez jouer au Grand Loto de Méli-Méninges ! Code de la partie : ${S.code}`;
+ try{if(navigator.share){await navigator.share({title:'Le Grand Loto',text:txt,url});return}}catch(e){return}
+ try{await navigator.clipboard.writeText(txt+'\n'+url);alert('Le lien est copié : collez-le dans un SMS ou un e-mail.')}catch(e){prompt('Copiez ce lien et envoyez-le aux joueurs :',url)}}
+document.addEventListener('click',e=>{if(e.target.closest('#shareInv'))shareInvite()});
+const URL_CODE=(new URLSearchParams(location.search).get('code')||'').toUpperCase().replace(/[^A-Z]/g,'').slice(0,4);
 
 // ---- Animateur ----
 async function create(){S.err='';let code,ok=false;for(let t=0;t<6&&!ok;t++){code=[0,1,2,3].map(()=>rnd([...LET])).join('');const g=await S.db.doc('loto/'+code).get().catch(()=>null);ok=g&&!g.exists}
@@ -430,7 +445,7 @@ async function draw(){const g=S.g;if(!g||g.phase!=='play'||S.busy)return;S.busy=
  if(cfg.auto&&upd.phase!=='over')S.timer=setTimeout(draw,(ws.length?8:cfg.auto)*1000)}
 function hostRender(){const g=S.g;if(!g){area.innerHTML=bar();side.innerHTML='<p class="meta">Chargement…</p>';return}
  const ps=hostCards(),drawn=g.drawn,last=drawn[drawn.length-1];
- if(g.phase==='lobby'){area.innerHTML=bar()+`<div class="stagebox lobby"><div><p class="meta">Code de la partie</p><div class="codebig">${esc(S.code)}</div><p>Sur chaque téléphone : ouvrir ce jeu, choisir « Je joue », taper le code.</p></div>${boulier(false,[])}</div>`;
+ if(g.phase==='lobby'){area.innerHTML=bar()+`<div class="stagebox lobby"><div><p class="meta">Code de la partie</p><div class="codebig">${esc(S.code)}</div><div class="qrbox"><div class="qr" aria-label="QR code pour rejoindre la partie">${qrSVG(inviteURL(S.code))}</div><p><b>Pour jouer :</b> visez ce QR code avec l’appareil photo du téléphone, ou ouvrez <b>meli-meninges.fr</b> › Jeux de société › Le Grand Loto › « Je joue », et tapez le code. Aucune application à installer.</p><button class="btn ghost" id="shareInv" type="button">Envoyer l’invitation</button></div></div>${boulier(false,[])}</div>`;
   side.innerHTML=`<p class="kick">Animateur · partie ${esc(S.code)}</p><h2>${ps.length} joueur${ps.length>1?'s':''} inscrit${ps.length>1?'s':''}</h2>
   <ul class="plist">${ps.map(p=>`<li><b>${esc(p.name)}</b><em>${p.cards.length} carton${p.cards.length>1?'s':''}</em></li>`).join('')||'<li class="meta">En attente des joueurs…</li>'}</ul>
   <h3>Tirage</h3><div class="seg">${[[0,'À la main'],[10,'Auto 10 s'],[20,'Auto 20 s']].map(([v,t])=>`<button data-a="${v}" aria-pressed="${cfg.auto===v}">${t}</button>`).join('')}</div>
@@ -500,7 +515,7 @@ home();
 <div class="rmodal" id="rulesBox" hidden role="dialog" aria-modal="true" aria-labelledby="rtitle"><div class="rpanel"><button class="rclose" type="button" aria-label="Fermer">×</button><h2 id="rtitle">Comment jouer au loto</h2>
 <p class="lead">Un animateur fait tourner le boulier sur un téléphone ou un grand écran. Chaque joueur a ses cartons sur son propre téléphone, et ils se cochent tout seuls.</p>
 <h3>Avant de commencer</h3>
-<p>Chaque participant doit être <b>connecté à Claude</b>, et le jeu doit être partagé avec lui au niveau <b>« Contributeur »</b> au moins (menu Partager de la page).</p>
+<p><b>Aucune application ni compte à créer.</b> Il suffit que chacun ait Internet (wifi ou données mobiles) et ouvre le site <b>meli-meninges.fr</b> dans le navigateur de son téléphone, de sa tablette ou de son ordinateur. Le plus simple : l’animateur affiche le <b>QR code</b> de la partie, et chaque joueur le vise avec l’appareil photo de son téléphone.</p>
 <h3>L'animateur</h3>
 <ol><li>Touchez « Créer une partie » : un code de 4 lettres s'affiche en grand. Donnez-le aux joueurs.</li>
 <li>Les joueurs apparaissent dans la liste au fur et à mesure.</li>
@@ -508,7 +523,7 @@ home();
 <li>Touchez « Lancer la partie », puis « Tirer une boule » à chaque fois (ou la barre d'espace au clavier).</li></ol>
 <h3>Les joueurs</h3>
 <ol><li>Touchez « Je joue », écrivez votre prénom et choisissez 1, 2 ou 3 cartons.</li>
-<li>Tapez le code de la partie et touchez « Rejoindre ».</li>
+<li>Tapez le code de la partie et touchez « Rejoindre ». Si vous êtes venu par le QR code ou le lien d’invitation, le code est déjà écrit.</li>
 <li>Avant le début, vous pouvez « Tirer d'autres cartons » si les vôtres ne vous plaisent pas.</li>
 <li>Ensuite, rien à faire : à chaque boule, un jeton se pose tout seul sur vos numéros, et le téléphone vibre quand le numéro est à vous.</li></ol>
 <h3>Les cartons et les gains</h3>
