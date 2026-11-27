@@ -2249,7 +2249,7 @@ function show(v) {
 }
 const snd = { place: () => sPlace(), no: () => sNo(), win: () => sWin(), toast: t => toast(t) };
 const mounted = {};
-const TQ_PHOTOS = { classiques: 7, regions: 6, fromages: 6 };
+const TQ_PHOTOS = { classiques: 10, regions: 12, fromages: 12 };
 const IMAGES = Object.entries(TQ_PHOTOS).flatMap(([bank, n]) => PAP.BANKS[bank].slice(0, n).map((r, i) => ({ label: `${r.name} (${THEMES[{ classiques: 'cuisine', regions: 'regions', fromages: 'fromages' }[bank]].name})`, svg: `<image href="photos/${bank}-${i + 1}.jpg" width="400" height="400" preserveAspectRatio="xMidYMid slice"/>` })));
 function mountGame(v) {
   if (mounted[v]) return;
