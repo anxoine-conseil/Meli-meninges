@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Les Briques de Monsieur Méninge</title>
+<style>
+:root{--ink:#2b1d0e;--soft:#6e5a44;--paper:#fffaf0;--line:#ead9b8;--gold:#c99a2e;--brown:#6b4520;--ok:#2e8b57}
+*{box-sizing:border-box;min-width:0}
+html{background:transparent}
+body{margin:0;background:#fbf6ea;border-radius:16px;color:var(--ink);font:17px/1.45 Sora,"Segoe UI",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;padding:12px 10px 14px}
+.wrap{max-width:760px;margin:0 auto}
+.bar{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;margin-bottom:10px}
+.lbl{font-weight:800;color:var(--soft);font-size:15px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:700 15px Sora,system-ui,sans-serif;border:2px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:6px 13px;min-height:44px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--brown);border-color:var(--brown);color:#fff}
+.btn{font:800 16px Sora,system-ui,sans-serif;border:0;border-radius:14px;min-height:48px;padding:0 16px;cursor:pointer;color:#fff;background:var(--brown);box-shadow:0 3px 0 #4a2e12}
+.btn.alt{background:#fff;color:var(--brown);border:2px solid var(--gold);box-shadow:0 3px 0 #b8862f}
+.btn:active{transform:translateY(2px);box-shadow:none}
+.play{display:flex;gap:12px;justify-content:center;align-items:flex-start}
+.boardBox{position:relative;border-radius:14px;padding:6px;background:linear-gradient(#8a5a2c,#6b4520);box-shadow:0 4px 14px rgba(60,35,10,.3)}
+canvas{display:block;border-radius:9px;touch-action:none}
+.side{display:flex;flex-direction:column;gap:10px;width:clamp(92px,24vw,170px)}
+.panel{background:var(--paper);border:2px solid var(--line);border-radius:14px;padding:8px 10px;text-align:center}
+.panel small{display:block;font-weight:800;color:var(--soft);font-size:13px;letter-spacing:.03em;text-transform:uppercase}
+.panel b{font-size:clamp(20px,5vw,28px);font-variant-numeric:tabular-nums}
+#nextCv{margin:4px auto 0}
+.over{position:absolute;inset:6px;border-radius:9px;background:rgba(43,29,14,.78);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:16px}
+.over[hidden]{display:none}
+.over h2{margin:0;font-size:clamp(22px,6vw,30px)}
+.over p{margin:0;font-size:17px}
+.pad{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:12px auto 0;max-width:520px;user-select:none;-webkit-user-select:none}
+.pad button{min-height:66px;border-radius:16px;border:2px solid var(--line);background:#fff;color:var(--ink);font:800 13px Sora,system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;box-shadow:0 3px 0 #d8c39a;touch-action:manipulation}
+.pad button svg{width:30px;height:30px}
+.pad button:active,.pad button.down{transform:translateY(2px);box-shadow:none;background:#fff3d6}
+.pad .rot{background:#fff3d6;border-color:var(--gold)}
+.msg{text-align:center;font-weight:700;min-height:1.6em;margin:8px 0 0;color:var(--brown)}
+@media(max-width:480px){.chip{font-size:14px;padding:5px 11px;min-height:42px}.bar{gap:6px 8px;margin-bottom:8px}.lbl{font-size:14px}.pad button{min-height:62px;font-size:12px}.pad button svg{width:26px;height:26px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <span class="lbl">Vitesse :</span>
+    <div class="chips" id="speeds" role="group" aria-label="Vitesse">
+      <button class="chip" data-s="0" aria-pressed="false">Très lent</button>
+      <button class="chip" data-s="1" aria-pressed="true">Lent</button>
+      <button class="chip" data-s="2" aria-pressed="false">Moyen</button>
+      <button class="chip" data-s="3" aria-pressed="false">Rapide</button>
+    </div>
+  </div>
+  <div class="bar">
+    <span class="lbl">Aides :</span>
+    <div class="chips">
+      <button class="chip" id="ghostBtn" aria-pressed="true">Ombre</button>
+      <button class="chip" id="accBtn" aria-pressed="true">Accélérer peu à peu</button>
+    </div>
+  </div>
+
+  <div class="play">
+    <div class="boardBox">
+      <canvas id="cv" aria-label="Plateau de jeu"></canvas>
+      <div class="over" id="over">
+        <h2 id="overT">Les Briques</h2>
+        <p id="overP">Rangez les briques qui tombent pour remplir des lignes entières.</p>
+        <button class="btn" id="startBtn">Commencer</button>
+      </div>
+    </div>
+    <div class="side">
+      <div class="panel"><small>Suivante</small><canvas id="nextCv"></canvas></div>
+      <div class="panel"><small>Points</small><b id="score">0</b></div>
+      <div class="panel"><small>Lignes</small><b id="lines">0</b></div>
+      <div class="panel"><small>Record</small><b id="best">0</b></div>
+      <button class="btn alt" id="pauseBtn">Pause</button>
+    </div>
+  </div>
+
+  <p class="msg" id="msg" role="status"></p>
+
+  <div class="pad" id="pad">
+    <button data-a="left" aria-label="Vers la gauche"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Gauche</button>
+    <button data-a="rot" class="rot" aria-label="Tourner la brique"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v5h-5"/></svg>Tourner</button>
+    <button data-a="right" aria-label="Vers la droite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>Droite</button>
+    <button data-a="down" aria-label="Descendre plus vite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9l7 7 7-7"/></svg>Descendre</button>
+    <button data-a="drop" aria-label="Lâcher la brique tout en bas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 5l6 6 6-6M6 11l6 6 6-6M5 21h14"/></svg>Lâcher</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const COLS = 10, ROWS = 20;
+// Les 7 briques : chaque forme dans une grille carrée ; couleurs chaudes et bien distinctes
+const SHAPES = {
+  I: { c: '#3d8fd1', m: [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]] },
+  O: { c: '#e8b326', m: [[1,1],[1,1]] },
+  T: { c: '#9b59b6', m: [[0,1,0],[1,1,1],[0,0,0]] },
+  S: { c: '#3fa45b', m: [[0,1,1],[1,1,0],[0,0,0]] },
+  Z: { c: '#d9483b', m: [[1,1,0],[0,1,1],[0,0,0]] },
+  J: { c: '#2f5fa8', m: [[1,0,0],[1,1,1],[0,0,0]] },
+  L: { c: '#e67e22', m: [[0,0,1],[1,1,1],[0,0,0]] }
+};
+// temps de chute d'une case (ms) selon la vitesse choisie ; on gagne un cran toutes les 10 lignes si « Accélérer » est actif
+const SPEED_MS = [1400, 950, 620, 360, 260, 190, 140, 110];
+const SPEED_NAME = ['Très lent', 'Lent', 'Moyen', 'Rapide'];
+
+let board, cur, next, bag = [], score, lines, startSpeed = 1, speed, running = false, paused = false, over = true;
+let ghost = true, accel = true, dropAcc = 0, last = 0, cell = 28, flash = null;
+let best = 0; try { best = +localStorage.getItem('mm-briques-best') || 0; } catch (e) {}
+$('best').textContent = best;
+
+const cv = $('cv'), ctx = cv.getContext('2d'), nv = $('nextCv'), nctx = nv.getContext('2d');
+
+/* ---------- taille du plateau : tient dans l'écran du téléphone ---------- */
+function layout() {
+  let vh = innerHeight;
+  try { if (window.parent && window.parent !== window) vh = window.parent.innerHeight; } catch (e) {}
+  const wrapW = document.querySelector('.wrap').clientWidth;
+  const sideW = document.querySelector('.side').getBoundingClientRect().width || 100;
+  const byW = Math.floor((wrapW - sideW - 12 - 12) / COLS);
+  const byH = Math.floor((vh - 190) / ROWS);
+  cell = Math.max(16, Math.min(40, byW, byH));
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = COLS * cell * dpr; cv.height = ROWS * cell * dpr;
+  cv.style.width = COLS * cell + 'px'; cv.style.height = ROWS * cell + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const nc = Math.max(14, Math.min(26, Math.floor(cell * .75)));
+  nv.width = 4 * nc * dpr; nv.height = 3 * nc * dpr; nv.style.width = 4 * nc + 'px'; nv.style.height = 3 * nc + 'px';
+  nctx.setTransform(dpr, 0, 0, dpr, 0, 0); nv.dataset.c = nc;
+  draw();
+}
+
+/* ---------- briques ---------- */
+function newBag() { const k = Object.keys(SHAPES); for (let i = k.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [k[i], k[j]] = [k[j], k[i]]; } return k; }
+function take() { if (!bag.length) bag = newBag(); const k = bag.pop(); return { k, m: SHAPES[k].m.map(r => r.slice()), c: SHAPES[k].c, x: 0, y: 0 }; }
+function spawn() {
+  cur = next || take(); next = take();
+  cur.x = Math.floor((COLS - cur.m.length) / 2); cur.y = cur.k === 'I' ? -1 : 0;
+  if (collide(cur.m, cur.x, cur.y)) return gameOver();
+  drawNext();
+}
+function collide(m, x, y) {
+  for (let r = 0; r < m.length; r++) for (let c = 0; c < m.length; c++) {
+    if (!m[r][c]) continue;
+    const X = x + c, Y = y + r;
+    if (X < 0 || X >= COLS || Y >= ROWS) return true;
+    if (Y >= 0 && board[Y][X]) return true;
+  }
+  return false;
+}
+const rotateM = m => m[0].map((_, i) => m.map(r => r[i]).reverse());
+function move(dx) { if (!live()) return; if (!collide(cur.m, cur.x + dx, cur.y)) { cur.x += dx; draw(); } }
+function rotate() {
+  if (!live()) return;
+  const m = rotateM(cur.m);
+  for (const [dx, dy] of [[0, 0], [-1, 0], [1, 0], [-2, 0], [2, 0], [0, -1]]) {
+    if (!collide(m, cur.x + dx, cur.y + dy)) { cur.m = m; cur.x += dx; cur.y += dy; beep(520, .04); draw(); return; }
+  }
+}
+function softDrop() { if (!live()) return; if (!collide(cur.m, cur.x, cur.y + 1)) { cur.y++; score += 1; dropAcc = 0; upd(); draw(); } else lock(); }
+function hardDrop() { if (!live()) return; let n = 0; while (!collide(cur.m, cur.x, cur.y + 1)) { cur.y++; n++; } score += 2 * n; lock(); }
+function ghostY() { let y = cur.y; while (!collide(cur.m, cur.x, y + 1)) y++; return y; }
+function lock() {
+  for (let r = 0; r < cur.m.length; r++) for (let c = 0; c < cur.m.length; c++)
+    if (cur.m[r][c]) { const Y = cur.y + r; if (Y < 0) return gameOver(); board[Y][cur.x + c] = cur.c; }
+  const full = [];
+  for (let r = 0; r < ROWS; r++) if (board[r].every(Boolean)) full.push(r);
+  if (full.length) {
+    flash = { rows: full, t: performance.now() };
+    const pts = [0, 100, 300, 500, 800][full.length] * (level() + 1);
+    score += pts; lines += full.length;
+    $('msg').textContent = full.length === 4 ? `Bravo ! Quatre lignes d'un coup : +${pts} points` : full.length > 1 ? `${full.length} lignes : +${pts} points` : `Une ligne : +${pts} points`;
+    beep(660 + full.length * 120, .12);
+    setTimeout(() => {
+      for (const r of full) { board.splice(r, 1); board.unshift(Array(COLS).fill(null)); }
+      flash = null; speedUpdate(); draw();
+    }, 260);
+  } else beep(200, .03);
+  upd(); spawn(); draw();
+}
+const level = () => speed;
+function speedUpdate() {
+  const s = accel ? Math.min(SPEED_MS.length - 1, startSpeed + Math.floor(lines / 10)) : startSpeed;
+  if (s > speed) $('msg').textContent = 'Ça accélère un peu…';
+  speed = s;
+}
+const live = () => running && !paused && !over && cur;
+
+/* ---------- partie ---------- */
+function start() {
+  board = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+  bag = []; next = null; score = 0; lines = 0; speed = startSpeed; over = false; paused = false; running = true; dropAcc = 0;
+  $('over').hidden = true; $('pauseBtn').textContent = 'Pause';
+  $('msg').textContent = `Vitesse : ${SPEED_NAME[startSpeed]}. Bonne partie !`;
+  spawn(); upd(); last = performance.now(); requestAnimationFrame(loop);
+  showBoard();
+}
+// fait défiler la page pour voir le plateau et les boutons en même temps
+function showBoard() {
+  try {
+    const fe = window.frameElement, P = window.parent;
+    const top = fe ? fe.getBoundingClientRect().top + P.scrollY + document.querySelector('.play').offsetTop - 6 : document.querySelector('.play').offsetTop - 6;
+    (fe ? P : window).scrollTo({ top, behavior: 'smooth' });
+  } catch (e) {}
+}
+function gameOver() {
+  over = true; running = false; cur = null;
+  if (score > best) { best = score; try { localStorage.setItem('mm-briques-best', best); } catch (e) {} }
+  upd(); draw();
+  $('overT').textContent = 'Partie terminée';
+  $('overP').innerHTML = `${score} points, ${lines} ligne${lines > 1 ? 's' : ''}.${score && score >= best ? '<br><b>Nouveau record !</b>' : ''}`;
+  $('startBtn').textContent = 'Rejouer'; $('over').hidden = false;
+  $('msg').textContent = '';
+  beep(180, .3);
+}
+function setPause(p) {
+  if (over || !running) return;
+  paused = p; $('pauseBtn').textContent = p ? 'Reprendre' : 'Pause';
+  if (p) { $('overT').textContent = 'Pause'; $('overP').textContent = 'Prenez votre temps.'; $('startBtn').textContent = 'Reprendre'; $('over').hidden = false; }
+  else { $('over').hidden = true; last = performance.now(); requestAnimationFrame(loop); }
+}
+function upd() { $('score').textContent = score; $('lines').textContent = lines; $('best').textContent = Math.max(best, score); }
+function hiddenInPage() { try { return window.frameElement && window.frameElement.offsetParent === null; } catch (e) { return false; } }
+function loop(t) {
+  if (!running || paused || over) return;
+  if (document.hidden || hiddenInPage()) { setPause(true); return; }
+  const dt = t - last; last = t;
+  if (!flash) {
+    dropAcc += dt;
+    if (dropAcc >= SPEED_MS[speed]) { dropAcc = 0; if (!collide(cur.m, cur.x, cur.y + 1)) cur.y++; else lock(); }
+  }
+  draw();
+  requestAnimationFrame(loop);
+}
+
+/* ---------- dessin ---------- */
+function shade(hex, k) {
+  const n = parseInt(hex.slice(1), 16); let r = n >> 16, g = n >> 8 & 255, b = n & 255;
+  const f = v => Math.max(0, Math.min(255, Math.round(k > 0 ? v + (255 - v) * k : v * (1 + k))));
+  return `rgb(${f(r)},${f(g)},${f(b)})`;
+}
+function brick(c2, x, y, s, col, alpha = 1) {
+  c2.globalAlpha = alpha;
+  const p = Math.max(2, s * .12);
+  c2.fillStyle = col; c2.fillRect(x + 1, y + 1, s - 2, s - 2);
+  c2.fillStyle = shade(col, .38); c2.beginPath(); c2.moveTo(x + 1, y + 1); c2.lineTo(x + s - 1, y + 1); c2.lineTo(x + s - 1 - p, y + 1 + p); c2.lineTo(x + 1 + p, y + 1 + p); c2.lineTo(x + 1 + p, y + s - 1 - p); c2.lineTo(x + 1, y + s - 1); c2.fill();
+  c2.fillStyle = shade(col, -.3); c2.beginPath(); c2.moveTo(x + s - 1, y + s - 1); c2.lineTo(x + 1, y + s - 1); c2.lineTo(x + 1 + p, y + s - 1 - p); c2.lineTo(x + s - 1 - p, y + s - 1 - p); c2.lineTo(x + s - 1 - p, y + 1 + p); c2.lineTo(x + s - 1, y + 1); c2.fill();
+  c2.globalAlpha = 1;
+}
+function draw() {
+  if (!board) { ctx.fillStyle = '#fffaf0'; ctx.fillRect(0, 0, COLS * cell, ROWS * cell); return; }
+  ctx.fillStyle = '#fffaf0'; ctx.fillRect(0, 0, COLS * cell, ROWS * cell);
+  ctx.strokeStyle = '#efe3c8'; ctx.lineWidth = 1;
+  for (let c = 1; c < COLS; c++) { ctx.beginPath(); ctx.moveTo(c * cell + .5, 0); ctx.lineTo(c * cell + .5, ROWS * cell); ctx.stroke(); }
+  for (let r = 1; r < ROWS; r++) { ctx.beginPath(); ctx.moveTo(0, r * cell + .5); ctx.lineTo(COLS * cell, r * cell + .5); ctx.stroke(); }
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (board[r][c]) brick(ctx, c * cell, r * cell, cell, board[r][c]);
+  if (flash) { ctx.fillStyle = 'rgba(255,240,170,.85)'; for (const r of flash.rows) ctx.fillRect(0, r * cell, COLS * cell, cell); }
+  if (cur && !over) {
+    if (ghost) {
+      const gy = ghostY();
+      ctx.setLineDash([4, 3]); ctx.lineWidth = 2; ctx.strokeStyle = cur.c;
+      for (let r = 0; r < cur.m.length; r++) for (let c = 0; c < cur.m.length; c++)
+        if (cur.m[r][c] && gy + r >= 0) { ctx.fillStyle = shade(cur.c, .78); ctx.fillRect((cur.x + c) * cell + 2, (gy + r) * cell + 2, cell - 4, cell - 4); ctx.strokeRect((cur.x + c) * cell + 3, (gy + r) * cell + 3, cell - 6, cell - 6); }
+      ctx.setLineDash([]);
+    }
+    for (let r = 0; r < cur.m.length; r++) for (let c = 0; c < cur.m.length; c++)
+      if (cur.m[r][c] && cur.y + r >= 0) brick(ctx, (cur.x + c) * cell, (cur.y + r) * cell, cell, cur.c);
+  }
+}
+function drawNext() {
+  const nc = +nv.dataset.c || 20;
+  nctx.clearRect(0, 0, 4 * nc, 3 * nc);
+  if (!next) return;
+  const m = next.m, cells = [];
+  m.forEach((row, r) => row.forEach((v, c) => v && cells.push([r, c])));
+  const minR = Math.min(...cells.map(p => p[0])), maxR = Math.max(...cells.map(p => p[0]));
+  const minC = Math.min(...cells.map(p => p[1])), maxC = Math.max(...cells.map(p => p[1]));
+  const ox = (4 - (maxC - minC + 1)) * nc / 2, oy = (3 - (maxR - minR + 1)) * nc / 2;
+  for (const [r, c] of cells) brick(nctx, ox + (c - minC) * nc, oy + (r - minR) * nc, nc, next.c);
+}
+
+/* ---------- petits sons ---------- */
+let ac = null;
+function beep(f, d) {
+  try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); const o = ac.createOscillator(), g = ac.createGain();
+    o.frequency.value = f; o.type = 'triangle'; g.gain.value = .06; o.connect(g); g.connect(ac.destination);
+    g.gain.exponentialRampToValueAtTime(.0001, ac.currentTime + d + .05); o.start(); o.stop(ac.currentTime + d + .06); } catch (e) {}
+}
+
+/* ---------- commandes : boutons (appui long = répétition) et clavier ---------- */
+const ACT = { left: () => move(-1), right: () => move(1), rot: rotate, down: softDrop, drop: hardDrop };
+const REPEAT = { left: 1, right: 1, down: 1 };
+let rep = null;
+$('pad').addEventListener('pointerdown', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  e.preventDefault();
+  if (!running && over) return;
+  const a = b.dataset.a; ACT[a](); b.classList.add('down');
+  clearTimeout(rep);
+  if (REPEAT[a]) { const go = () => { ACT[a](); rep = setTimeout(go, a === 'down' ? 60 : 110); }; rep = setTimeout(go, 330); }
+});
+const stopRep = () => { clearTimeout(rep); rep = null; document.querySelectorAll('.pad .down').forEach(b => b.classList.remove('down')); };
+['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => $('pad').addEventListener(ev, stopRep));
+$('pad').addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  const k = e.key;
+  const map = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'rot', ArrowDown: 'down', ' ': 'drop', x: 'rot', X: 'rot' };
+  if (map[k]) { e.preventDefault(); if (live()) ACT[map[k]](); }
+  if (k === 'p' || k === 'P' || k === 'Escape') { e.preventDefault(); setPause(!paused); }
+  if (k === 'Enter' && !$('over').hidden) { e.preventDefault(); $('startBtn').click(); }
+});
+$('startBtn').addEventListener('click', () => { if (paused) setPause(false); else start(); });
+$('pauseBtn').addEventListener('click', () => setPause(!paused));
+$('speeds').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  startSpeed = +b.dataset.s;
+  $('speeds').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  if (running && !over) { speed = startSpeed; speedUpdate(); }
+  $('msg').textContent = `Vitesse : ${SPEED_NAME[startSpeed]}.`;
+});
+$('ghostBtn').addEventListener('click', e => { ghost = !ghost; e.currentTarget.setAttribute('aria-pressed', ghost); draw(); });
+$('accBtn').addEventListener('click', e => { accel = !accel; e.currentTarget.setAttribute('aria-pressed', accel); if (running) { speed = startSpeed; speedUpdate(); } });
+
+addEventListener('resize', layout);
+try { window.parent.addEventListener('resize', layout); } catch (e) {}
+layout();
+</script>
+</body>
+</html>

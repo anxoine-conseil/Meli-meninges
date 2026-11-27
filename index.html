@@ -1096,6 +1096,7 @@ html.game-open h2.huge { font-size:clamp(22px,5.5vw,30px) !important; margin:0 0
   <section id="dom" class="view hidden"><div class="card"><button class="ghost backHub" data-hub>← Tous les jeux</button><h2 class="huge"><img class="mmIco" src="logo/mm-96.png" alt="">Dominos</h2><div id="domBox" class="game"></div></div></section>
   <section id="dep" class="view hidden"><div class="card"><button class="ghost backHub" data-hub>← Tous les jeux</button><h2 class="huge"><img class="mmIco" src="logo/mm-96.png" alt="">Le jeu des départements</h2><p class="soft" style="margin:0 0 10px">Un département s'affiche en rouge : trouvez tous ceux qui le touchent.</p><iframe id="depFrame" title="Jeu des départements" style="width:100%;height:760px;border:0;display:block;background:transparent" loading="lazy"></iframe></div></section>
   <section id="mel" class="view hidden"><div class="card"><button class="ghost backHub" data-hub>← Tous les jeux</button><h2 class="huge"><img class="mmIco" src="logo/mm-96.png" alt="">Les mots mêlés</h2><p class="soft" style="margin:0 0 10px">Des mots sont cachés dans la grille : à l’endroit, à l’envers, en travers… À vous de tous les retrouver !</p><iframe id="melFrame" title="Les mots mêlés" style="width:100%;height:900px;border:0;display:block;background:transparent"></iframe></div></section>
+  <section id="bri" class="view hidden"><div class="card"><button class="ghost backHub" data-hub>← Tous les jeux</button><h2 class="huge"><img class="mmIco" src="logo/mm-96.png" alt="">Les Briques</h2><p class="soft" style="margin:0 0 10px">Des briques de toutes les formes descendent toutes seules. Avant qu’elles touchent le fond, poussez-les à gauche ou à droite et tournez-les pour remplir des lignes entières : chaque ligne pleine disparaît et rapporte des points. Choisissez la vitesse qui vous convient ; l’ombre en pointillés montre où la brique va tomber.</p><iframe id="briFrame" title="Les Briques" style="width:100%;height:900px;border:0;display:block;background:transparent"></iframe></div></section>
   <section id="form" class="view hidden"><div class="card"><button class="ghost backHub" data-hub>← Tous les jeux</button><h2 class="huge"><img class="mmIco" src="logo/mm-96.png" alt="">Le maçon malin</h2><p class="soft" style="margin:0 0 10px">Briques, demi-briques, triangles… emboîtez toutes les formes pour remplir le rectangle.</p><iframe id="formFrame" title="Le maçon malin" style="width:100%;height:900px;border:0;display:block;background:transparent"></iframe></div></section>
   <section id="meca" class="view hidden"><div class="card"><button class="ghost backHub" data-hub>← Tous les jeux</button><h2 class="huge"><img class="mmIco" src="logo/mm-96.png" alt="">Monsieur Méninge le mécano</h2><p class="soft" style="margin:0 0 10px">Remettez chaque pièce à sa place et découvrez comment l’objet est fabriqué.</p><iframe id="mecaFrame" title="Monsieur Méninge le mécano" style="width:100%;height:900px;border:0;display:block;background:transparent"></iframe></div></section>
   <section id="cel" class="view hidden"><div class="card"><button class="ghost backHub" data-hub>← Tous les jeux</button><h2 class="huge"><img class="mmIco" src="logo/mm-96.png" alt="">Qui est où ?</h2><p class="soft" style="margin:0 0 10px">Un monument, un personnage, un événement… Placez chaque carte dans le bon département.</p><iframe id="celFrame" title="Qui est où ?" style="width:100%;height:900px;border:0;display:block;background:transparent"></iframe></div></section>
@@ -2160,7 +2161,7 @@ const piecesFor = th => isRec(th) ? recAt(S.round).need : isText(th) ? PAP.frags
 const medal = i => `<span class="medal ${i < 3 ? 'm' + (i + 1) : ''}">${i + 1}</span>`;
 const pts = n => `${n} point${n > 1 ? 's' : ''}`;
 // Confort de jeu : une fois le jeu choisi, c'est lui qui prend la place.
-const GAME_VIEWS = ['sdk', 'tq', 'dom', 'dep', 'cel', 'dam', 'fle', 'obj', 'ani', 'meca', 'form', 'loto', 'bat', 'pen', 'reu', 'cav', 'mel'];
+const GAME_VIEWS = ['sdk', 'tq', 'dom', 'dep', 'cel', 'dam', 'fle', 'obj', 'ani', 'meca', 'form', 'loto', 'bat', 'pen', 'reu', 'cav', 'mel', 'bri'];
 function enhanceGame(v) {
   const sec = $(v);
   if (!sec || !GAME_VIEWS.includes(v) || sec.dataset.enh) return;
@@ -2194,7 +2195,7 @@ function show(v) {
   document.documentElement.classList.toggle('catalogue-open', atCatalogue);
   document.querySelector('meta[name="theme-color"]').content = atCatalogue ? '#f7eedc' : '#16233F';
   if (atCatalogue) mmHide();
-  ['hub', 'home', 'game', 'final', 'cat', 'sdk', 'tq', 'dom', 'dep', 'cel', 'dam', 'fle', 'obj', 'ani', 'meca', 'form', 'loto', 'bat', 'pen', 'reu', 'cav', 'mel'].forEach(s => $(s).classList.toggle('hidden', s !== v));
+  ['hub', 'home', 'game', 'final', 'cat', 'sdk', 'tq', 'dom', 'dep', 'cel', 'dam', 'fle', 'obj', 'ani', 'meca', 'form', 'loto', 'bat', 'pen', 'reu', 'cav', 'mel', 'bri'].forEach(s => $(s).classList.toggle('hidden', s !== v));
   mountGame(v);
   document.documentElement.classList.toggle('game-open', GAME_VIEWS.includes(v));
   enhanceGame(v);
@@ -2211,7 +2212,7 @@ function mountGame(v) {
   if (v === 'sdk') mounted.sdk = Games.mountSudoku($('sdkBox'), snd);
   if (v === 'tq') mounted.tq = Games.mountTaquin($('tqBox'), IMAGES, snd);
   if (v === 'dom') mounted.dom = Games.mountDomino($('domBox'), snd);
-  const frames = { dep: ['depFrame', 'departements.html'], cel: ['celFrame', 'celebres.html'], dam: ['damFrame', 'dames.html'], fle: ['fleFrame', 'fleurs.html'], obj: ['objFrame', 'objets.html'], ani: ['aniFrame', 'animaux.html'], meca: ['mecaFrame', 'mecano.html'], form: ['formFrame', 'formes.html'], loto: ['lotoFrame', 'loto.html'], bat: ['batFrame', 'bataille.html'], pen: ['penFrame', 'pendu.html'], reu: ['reuFrame', 'reussites.html'], cav: ['cavFrame', 'cave.html'], mel: ['melFrame', 'motsmeles.html'] };
+  const frames = { dep: ['depFrame', 'departements.html'], cel: ['celFrame', 'celebres.html'], dam: ['damFrame', 'dames.html'], fle: ['fleFrame', 'fleurs.html'], obj: ['objFrame', 'objets.html'], ani: ['aniFrame', 'animaux.html'], meca: ['mecaFrame', 'mecano.html'], form: ['formFrame', 'formes.html'], loto: ['lotoFrame', 'loto.html'], bat: ['batFrame', 'bataille.html'], pen: ['penFrame', 'pendu.html'], reu: ['reuFrame', 'reussites.html'], cav: ['cavFrame', 'cave.html'], mel: ['melFrame', 'motsmeles.html'], bri: ['briFrame', 'briques.html'] };
   if (frames[v]) {
     const f = $(frames[v][0]); mounted[v] = true;
     f.addEventListener('load', () => {
@@ -2294,8 +2295,9 @@ const CABINET = [
     { img: 'dep', t: 'Les départements', s: 'Trouver tous les voisins', g: 'dep', x: 29 },
     { img: 'cel', t: 'Qui est où ?', s: 'Placer chaque carte sur la carte', g: 'cel', x: 29 },
     { img: 'cav', t: 'La Cave de France', s: 'Cépages et appellations', g: 'cav', x: 29 } ] },
-  { id: 'casse', img: 'casse', t: 'Casse-tête', s: 'Mots mêlés, cuisine, proverbes…', x: 29, kids: [
+  { id: 'casse', img: 'casse', t: 'Casse-tête', s: 'Mots mêlés, briques, proverbes…', x: 29, kids: [
     { img: 'mel', t: 'Mots mêlés', s: 'Retrouver les mots cachés', g: 'mel', x: 29 },
+    { img: 'bri', t: 'Les Briques', s: 'Ranger les briques qui tombent', g: 'bri', x: 29 },
     { img: 'cuisine', t: 'Cuisine', s: 'Recettes, spécialités, fromages', g: 'cuisine', x: 29 },
     { img: 'prov', t: 'Proverbes', s: 'Remettre les phrases dans l’ordre', g: 'mots', x: 29 },
     { img: 'calcul', t: 'Calcul malin', s: 'Nombres et signes à placer', g: 'calcul', x: 29 } ] }
