@@ -2,6 +2,10 @@
 (function () {
   var inFrame = false; try { inFrame = window.self !== window.top; } catch (e) { inFrame = true; }
   if (inFrame) return;
+  // Statistiques de fréquentation (Umami, sans cookie) : seulement quand le jeu est ouvert seul, pour ne pas compter deux fois.
+  var u = document.createElement('script'); u.defer = true; u.src = 'https://cloud.umami.is/script.js';
+  u.setAttribute('data-website-id', 'd3fcb17e-2f90-43fc-babc-f3997557076d'); u.setAttribute('data-domains', 'meli-meninges.fr,www.meli-meninges.fr');
+  document.head.appendChild(u);
   var a = document.createElement('a');
   a.href = 'index.html';
   a.textContent = '← Méli-Méninges : tous les jeux gratuits';

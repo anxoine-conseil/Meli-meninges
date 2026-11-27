@@ -1036,6 +1036,7 @@ html.game-open h2.huge { font-size:clamp(22px,5.5vw,30px) !important; margin:0 0
 .mmContact{margin:18px 0 6px;text-align:center;font:600 15px/1.5 Sora,system-ui,sans-serif;color:#6b4520}.mmContact a{color:#2f5d3a;font-weight:800;text-decoration:underline;overflow-wrap:anywhere}
 .mmLegal{margin:0 0 8px;text-align:center;font:600 14px/1.6 Sora,system-ui,sans-serif;color:#6b4520}.mmLegal a{color:#6b4520}
 </style>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="d3fcb17e-2f90-43fc-babc-f3997557076d" data-domains="meli-meninges.fr,www.meli-meninges.fr"></script>
 </head>
 <body>
 <div class="app">
@@ -2384,7 +2385,8 @@ const writeLS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } 
 let FAVS = readLS('mm-favoris', []), PLAYED = readLS('mm-joues', {});
 const isFav = k => FAVS.includes(k);
 function toggleFav(k) { FAVS = isFav(k) ? FAVS.filter(x => x !== k) : [...FAVS, k]; writeLS('mm-favoris', FAVS); }
-function notePlayed(k) { PLAYED[k] = Date.now(); writeLS('mm-joues', PLAYED); }
+function notePlayed(k) { PLAYED[k] = Date.now(); writeLS('mm-joues', PLAYED);
+  try { const g = ALL_GAMES.find(d => gameKey(d) === k); if (window.umami) umami.track('Jeu ouvert', { jeu: g ? g.t : String(k) }); } catch (e) {} }
 function whenPlayed(k) {
   const t = PLAYED[k]; if (!t) return '';
   const d0 = new Date(); d0.setHours(0, 0, 0, 0);
