@@ -18,24 +18,26 @@ body{margin:0;background:#fbf6ea;border-radius:16px;color:var(--ink);font:17px/1
 .btn{font:800 16px Sora,system-ui,sans-serif;border:0;border-radius:14px;min-height:48px;padding:0 16px;cursor:pointer;color:#fff;background:var(--brown);box-shadow:0 3px 0 #4a2e12}
 .btn.alt{background:#fff;color:var(--brown);border:2px solid var(--gold);box-shadow:0 3px 0 #b8862f}
 .btn:active{transform:translateY(2px);box-shadow:none}
-.play{display:flex;gap:12px;justify-content:center;align-items:flex-start}
+.play{display:flex;flex-direction:column;gap:8px;align-items:center}
 .boardBox{position:relative;border-radius:14px;padding:6px;background:linear-gradient(#8a5a2c,#6b4520);box-shadow:0 4px 14px rgba(60,35,10,.3)}
 canvas{display:block;border-radius:9px;touch-action:none}
-.side{display:flex;flex-direction:column;gap:10px;width:clamp(92px,24vw,170px)}
-.panel{background:var(--paper);border:2px solid var(--line);border-radius:14px;padding:8px 10px;text-align:center}
-.panel small{display:block;font-weight:800;color:var(--soft);font-size:13px;letter-spacing:.03em;text-transform:uppercase}
-.panel b{font-size:clamp(20px,5vw,28px);font-variant-numeric:tabular-nums}
-#nextCv{margin:4px auto 0}
+.side{display:flex;flex-direction:row;align-items:stretch;gap:6px;width:100%}
+.panel{flex:1;background:var(--paper);border:2px solid var(--line);border-radius:12px;padding:3px 4px;text-align:center;display:flex;flex-direction:column;justify-content:center}
+.panel small{display:block;font-weight:800;color:var(--soft);font-size:10.5px;letter-spacing:0;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.panel b{font-size:clamp(17px,4.6vw,24px);line-height:1.2;font-variant-numeric:tabular-nums}
+.panel.nx{flex:1.1}
+#nextCv{margin:2px auto 0}
+.side .btn{flex:1;min-height:0;padding:0 6px;font-size:15px}
 .over{position:absolute;inset:6px;border-radius:9px;background:rgba(43,29,14,.78);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:16px}
 .over[hidden]{display:none}
 .over h2{margin:0;font-size:clamp(22px,6vw,30px)}
 .over p{margin:0;font-size:17px}
-.pad{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:12px auto 0;max-width:520px;user-select:none;-webkit-user-select:none}
+.pad{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:6px auto 0;max-width:520px;user-select:none;-webkit-user-select:none}
 .pad button{min-height:66px;border-radius:16px;border:2px solid var(--line);background:#fff;color:var(--ink);font:800 13px Sora,system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;box-shadow:0 3px 0 #d8c39a;touch-action:manipulation}
 .pad button svg{width:30px;height:30px}
 .pad button:active,.pad button.down{transform:translateY(2px);box-shadow:none;background:#fff3d6}
 .pad .rot{background:#fff3d6;border-color:var(--gold)}
-.msg{text-align:center;font-weight:700;min-height:1.6em;margin:8px 0 0;color:var(--brown)}
+.msg{text-align:center;font-weight:700;min-height:1.5em;margin:6px 0 0;color:var(--brown);font-size:16px}
 @media(max-width:480px){.chip{font-size:14px;padding:5px 11px;min-height:42px}.bar{gap:6px 8px;margin-bottom:8px}.lbl{font-size:14px}.pad button{min-height:62px;font-size:12px}.pad button svg{width:26px;height:26px}}
 </style>
 </head>
@@ -59,6 +61,13 @@ canvas{display:block;border-radius:9px;touch-action:none}
   </div>
 
   <div class="play">
+    <div class="side">
+      <div class="panel nx"><small>Suivante</small><canvas id="nextCv"></canvas></div>
+      <div class="panel"><small>Points</small><b id="score">0</b></div>
+      <div class="panel"><small>Lignes</small><b id="lines">0</b></div>
+      <div class="panel"><small>Record</small><b id="best">0</b></div>
+      <button class="btn alt" id="pauseBtn">Pause</button>
+    </div>
     <div class="boardBox">
       <canvas id="cv" aria-label="Plateau de jeu"></canvas>
       <div class="over" id="over">
@@ -66,13 +75,6 @@ canvas{display:block;border-radius:9px;touch-action:none}
         <p id="overP">Rangez les briques qui tombent pour remplir des lignes entières.</p>
         <button class="btn" id="startBtn">Commencer</button>
       </div>
-    </div>
-    <div class="side">
-      <div class="panel"><small>Suivante</small><canvas id="nextCv"></canvas></div>
-      <div class="panel"><small>Points</small><b id="score">0</b></div>
-      <div class="panel"><small>Lignes</small><b id="lines">0</b></div>
-      <div class="panel"><small>Record</small><b id="best">0</b></div>
-      <button class="btn alt" id="pauseBtn">Pause</button>
     </div>
   </div>
 
@@ -117,16 +119,17 @@ function layout() {
   let vh = innerHeight;
   try { if (window.parent && window.parent !== window) vh = window.parent.innerHeight; } catch (e) {}
   const wrapW = document.querySelector('.wrap').clientWidth;
-  const sideW = document.querySelector('.side').getBoundingClientRect().width || 100;
-  const byW = Math.floor((wrapW - sideW - 12 - 12) / COLS);
-  const byH = Math.floor((vh - 190) / ROWS);
-  cell = Math.max(16, Math.min(40, byW, byH));
+  const byW = Math.floor((wrapW - 12) / COLS);
+  // plateau aussi grand que possible : il ne reste en dessous que le message et les gros boutons
+  const byH = Math.floor((vh - 215) / ROWS);
+  cell = Math.max(16, Math.min(48, byW, byH));
+  document.querySelector('.side').style.maxWidth = (COLS * cell + 12) + 'px';
   const dpr = window.devicePixelRatio || 1;
   cv.width = COLS * cell * dpr; cv.height = ROWS * cell * dpr;
   cv.style.width = COLS * cell + 'px'; cv.style.height = ROWS * cell + 'px';
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const nc = Math.max(14, Math.min(26, Math.floor(cell * .75)));
-  nv.width = 4 * nc * dpr; nv.height = 3 * nc * dpr; nv.style.width = 4 * nc + 'px'; nv.style.height = 3 * nc + 'px';
+  const nc = Math.max(9, Math.min(16, Math.floor(cell * .42)));
+  nv.width = 4 * nc * dpr; nv.height = 2 * nc * dpr; nv.style.width = 4 * nc + 'px'; nv.style.height = 2 * nc + 'px';
   nctx.setTransform(dpr, 0, 0, dpr, 0, 0); nv.dataset.c = nc;
   draw();
 }
@@ -270,13 +273,13 @@ function draw() {
 }
 function drawNext() {
   const nc = +nv.dataset.c || 20;
-  nctx.clearRect(0, 0, 4 * nc, 3 * nc);
+  nctx.clearRect(0, 0, 4 * nc, 2 * nc);
   if (!next) return;
   const m = next.m, cells = [];
   m.forEach((row, r) => row.forEach((v, c) => v && cells.push([r, c])));
   const minR = Math.min(...cells.map(p => p[0])), maxR = Math.max(...cells.map(p => p[0]));
   const minC = Math.min(...cells.map(p => p[1])), maxC = Math.max(...cells.map(p => p[1]));
-  const ox = (4 - (maxC - minC + 1)) * nc / 2, oy = (3 - (maxR - minR + 1)) * nc / 2;
+  const ox = (4 - (maxC - minC + 1)) * nc / 2, oy = (2 - (maxR - minR + 1)) * nc / 2;
   for (const [r, c] of cells) brick(nctx, ox + (c - minC) * nc, oy + (r - minR) * nc, nc, next.c);
 }
 
