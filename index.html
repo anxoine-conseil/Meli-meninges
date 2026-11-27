@@ -3,20 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Tarot, belote, loto, sudoku, mots mêlés, briques, bataille navale, puzzles en photos, jeux sur la France… 24 jeux gratuits, sans inscription, faciles à lire, sur téléphone, tablette et ordinateur.">
+<meta name="description" content="Méli-Méninges, la boîte à jeux : une boîte à tiroirs remplie de 24 jeux gratuits. Tarot, belote, loto, sudoku, mots mêlés, briques, bataille navale, puzzles en photos, jeux sur la France… Sans inscription, faciles à lire, sur téléphone, tablette et ordinateur.">
 <link rel="canonical" href="https://meli-meninges.fr/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Méli-Méninges">
 <meta property="og:locale" content="fr_FR">
-<meta property="og:title" content="Méli-Méninges – 24 jeux gratuits pour faire travailler les méninges">
-<meta property="og:description" content="Tarot, belote, loto, sudoku, mots mêlés, briques, bataille navale, puzzles en photos, jeux sur la France… 24 jeux gratuits, sans inscription, faciles à lire, sur téléphone, tablette et ordinateur.">
+<meta property="og:title" content="Méli-Méninges, la boîte à jeux – 24 jeux gratuits">
+<meta property="og:description" content="Méli-Méninges, la boîte à jeux : une boîte à tiroirs remplie de 24 jeux gratuits. Tarot, belote, loto, sudoku, mots mêlés, briques, bataille navale, puzzles en photos, jeux sur la France… Sans inscription, faciles à lire, sur téléphone, tablette et ordinateur.">
 <meta property="og:url" content="https://meli-meninges.fr/">
 <meta property="og:image" content="https://meli-meninges.fr/partage.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Méli-Méninges, le cabinet des curiosités : 24 jeux gratuits, avec Monsieur Méninge">
+<meta property="og:image:alt" content="Méli-Méninges, la boîte à jeux : 24 jeux gratuits rangés dans des tiroirs, avec Monsieur Méninge">
 <meta name="twitter:card" content="summary_large_image">
-<title>Méli-Méninges – 24 jeux gratuits pour faire travailler les méninges</title>
+<title>Méli-Méninges, la boîte à jeux – 24 jeux gratuits pour faire travailler les méninges</title>
 <link rel="icon" type="image/png" sizes="32x32" href="logo/mm-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="logo/mm-192.png">
 <link rel="apple-touch-icon" href="logo/mm-180.png">
@@ -1041,12 +1041,12 @@ html.game-open h2.huge { font-size:clamp(22px,5.5vw,30px) !important; margin:0 0
     <header class="fHead">
       <div class="fTitle">
         <h1>Méli-Méninges</h1>
-        <p>Le cabinet des curiosités</p>
+        <p>La boîte à jeux</p>
         <span class="fCount" id="fCount"></span>
       </div>
       <img class="fMascot" src="mascotte/question.png" alt="Monsieur Méninge se gratte la tête">
     </header>
-    <section class="meuble" aria-label="Le cabinet des jeux">
+    <section class="meuble" aria-label="La boîte à jeux">
       <div id="cabinetDrawers"></div>
     </section>
     <p class="cabinetNote" id="cabinetNote">Touchez un tiroir pour l’ouvrir.</p>
@@ -2422,7 +2422,7 @@ function renderDrawers() {
     $('cabinetNote').textContent = 'Choisissez un jeu. Le cœur l’ajoute à « Mes jeux préférés ».';
   }
 }
-$('fCount').textContent = CABINET.reduce((n, d) => n + nbJeux(d), 0) + ' jeux dans un seul meuble';
+$('fCount').textContent = CABINET.reduce((n, d) => n + nbJeux(d), 0) + ' jeux dans une seule boîte';
 $('cabinetDrawers').addEventListener('click', e => {
   const f = e.target.closest('button[data-fav]');
   if (f) {
@@ -2575,8 +2575,8 @@ renderHome();
 (function(){
   const url = new URL('./', location.href).href.replace(/index\.html$/, '');
   const MSG = {
-    decouvrir: { t: 'Faire découvrir le jeu', m: 'J’ai découvert Méli-Méninges, un site de jeux gratuit et sans inscription : belote, loto, pendu, dames, puzzles, départements… Essaie, c’est super ! 👉 ' },
-    inviter:   { t: 'Inviter un ami à jouer', m: 'Viens jouer avec moi à Méli-Méninges ! Une partie de loto, de belote, de dames ou de pendu ? C’est gratuit et sans inscription 👉 ' }
+    decouvrir: { t: 'Faire découvrir le jeu', m: 'J’ai découvert Méli-Méninges, la boîte à jeux : des tiroirs pleins de jeux gratuits et sans inscription : belote, loto, pendu, dames, puzzles, départements… Essaie, c’est super ! 👉 ' },
+    inviter:   { t: 'Inviter un ami à jouer', m: 'Viens jouer avec moi dans la boîte à jeux de Méli-Méninges ! Une partie de loto, de belote, de dames ou de pendu ? C’est gratuit et sans inscription 👉 ' }
   };
   const $ = id => document.getElementById(id);
   const ov = $('shareOv');
@@ -2599,7 +2599,7 @@ renderHome();
   document.querySelectorAll('.shareBtn[data-share]').forEach(b => b.addEventListener('click', async () => {
     const kind = b.dataset.share, k = MSG[kind];
     if (navigator.share && matchMedia('(pointer:coarse)').matches) {
-      try { await navigator.share({ title: 'Méli-Méninges', text: k.m.replace(/ 👉 $/, ''), url }); return; }
+      try { await navigator.share({ title: 'Méli-Méninges, la boîte à jeux', text: k.m.replace(/ 👉 $/, ''), url }); return; }
       catch (e) { if (e && e.name === 'AbortError') return; }
     }
     openBox(kind);

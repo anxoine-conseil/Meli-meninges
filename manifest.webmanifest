@@ -1,7 +1,7 @@
 {
   "name": "Méli-Méninges",
   "short_name": "Méli-Méninges",
-  "description": "Les jeux qui font travailler les méninges",
+  "description": "La boîte à jeux : des tiroirs pleins de jeux gratuits pour faire travailler les méninges",
   "lang": "fr",
   "start_url": "./index.html",
   "display": "standalone",
