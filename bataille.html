@@ -235,6 +235,20 @@ main.nav{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr)}
 .rpanel .lead{font-size:17px}.rpanel .tip{background:var(--bg);border-radius:10px;padding:8px 12px;font-size:15px}
 .rclose{position:sticky;top:0;float:right;margin:-10px -10px 0 8px;z-index:2;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:24px;line-height:1;cursor:pointer}
 @keyframes pop{from{transform:scale(.92);opacity:0}}
+
+/* Petite explosion quand un navire est touché */
+.boomFx{position:fixed;z-index:60;pointer-events:none;transform:translate(-50%,-50%)}
+.boomFx .fl0{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#fff6c2 0,#ffd24a 28%,#ff8a2a 55%,rgba(230,70,20,0) 72%);animation:bfFlash .55s ease-out forwards}
+.boomFx .rg{position:absolute;inset:18%;border-radius:50%;border:3px solid rgba(255,190,80,.9);animation:bfRing .6s ease-out forwards}
+.boomFx .sp{position:absolute;left:50%;top:50%;width:7px;height:7px;margin:-3.5px;border-radius:50%;background:#ffc23a;box-shadow:0 0 6px #ff7a1a;animation:bfSpark .65s ease-out forwards}
+.boomFx .sm{position:absolute;left:50%;top:50%;width:44%;height:44%;margin:-22%;border-radius:50%;background:rgba(90,90,100,.45);animation:bfSmoke .9s .15s ease-out forwards;opacity:0}
+@keyframes bfFlash{0%{transform:scale(.2);opacity:1}60%{opacity:.95}100%{transform:scale(1);opacity:0}}
+@keyframes bfRing{0%{transform:scale(.3);opacity:1}100%{transform:scale(1.25);opacity:0}}
+@keyframes bfSpark{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.3);opacity:0}}
+@keyframes bfSmoke{0%{transform:translateY(0) scale(.6);opacity:.55}100%{transform:translateY(-60%) scale(1.5);opacity:0}}
+.board.jolt{animation:bfJolt .32s ease-out}
+@keyframes bfJolt{25%{transform:translate(2px,-1px)}50%{transform:translate(-2px,1px)}75%{transform:translate(1px,0)}}
+@media(prefers-reduced-motion:reduce){.boomFx .sp,.boomFx .sm,.boomFx .rg{display:none}}
 </style>
 </head>
 <body>
@@ -404,13 +418,13 @@ function aiPick(){const D=G.P[0],free=[...Array(100).keys()].filter(i=>!knownEmp
 
 // ---- Plateaux ----
 function board(P,o){const showShips=o.ships,cl=o.click,mark=G.last&&G.last.b===P?G.last.i:-1;
-  let h=`<div class="board${o.click?' live':''}" data-b="${o.id}"><span class="corner"></span>${[...COLS].map((c,k)=>`<span class="lab" style="grid-row:1;grid-column:${k+2}">${c}</span>`).join('')}${[...Array(10)].map((_,k)=>`<span class="lab" style="grid-row:${k+2};grid-column:1">${k+1}</span>`).join('')}<div class="sea" aria-hidden="true"></div>`;
+  let h=`<div class="board${o.click?' live':''}" data-b="${o.id}" data-p="${esc(P.name||'')}"><span class="corner"></span>${[...COLS].map((c,k)=>`<span class="lab" style="grid-row:1;grid-column:${k+2}">${c}</span>`).join('')}${[...Array(10)].map((_,k)=>`<span class="lab" style="grid-row:${k+2};grid-column:1">${k+1}</span>`).join('')}<div class="sea" aria-hidden="true"></div>`;
   for(let i=0;i<100;i++){const r=Math.floor(i/10),c=i%10,sh=P.shots[i];
     h+=`<button class="cell${sh?' shot':''}" data-i="${i}" style="grid-row:${r+2};grid-column:${c+2}" aria-label="${coord(i)}${sh===1?', à l\'eau':sh===2?', touché':sh===3?', coulé':''}"${cl&&(!sh||o.all)?'':' tabindex="-1"'}${!cl||(sh&&!o.all)?' disabled':''}></button>`}
   P.ships.forEach((s,si)=>{if(!s.cells.length||!(showShips||s.sunk))return;const a=s.cells[0],r=Math.floor(a/10),c=a%10;
     h+=`<div class="ship${s.sunk?' sunk':''}${o.sel===si?' sel':''}" style="grid-row:${r+2}/span ${s.v?s.len:1};grid-column:${c+2}/span ${s.v?1:s.len}">${shipSVG(s.id,s.len,s.v)}</div>`});
   for(let i=0;i<100;i++){const sh=P.shots[i];if(!sh)continue;const r=Math.floor(i/10),c=i%10;
-    h+=`<div class="mk ${sh===4?'pend':sh===1?'miss':'hit'}${i===mark?' new':''}" style="grid-row:${r+2};grid-column:${c+2}">${sh===4?PEND:sh===1?MISS:HIT}</div>`}
+    h+=`<div class="mk ${sh===4?'pend':sh===1?'miss':'hit'}${i===mark?' new':''}" data-i="${i}" style="grid-row:${r+2};grid-column:${c+2}">${sh===4?PEND:sh===1?MISS:HIT}</div>`}
   return h+'</div>'}
 function fleetList(P,own){return `<ul class="fleet">${P.ships.map(s=>`<li class="${s.sunk?'down':''}"><span class="mini">${shipSVG(s.id,s.len,false)}</span><span>${s.n}</span><em>${s.sunk?'coulé':own&&s.hits.size?s.hits.size+' / '+s.len+' touché'+(s.hits.size>1?'s':''):s.len+' cases'}</em></li>`).join('')}</ul>`}
 
@@ -649,6 +663,47 @@ function closeR(){box.hidden=true;document.getElementById('rulesBtn').focus()}
 document.getElementById('rulesBtn').addEventListener('click',openR);
 box.addEventListener('click',e=>{if(e.target===box||e.target.closest('.rclose,.rok'))closeR()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!box.hidden)closeR()});}
+</script>
+
+<script>
+/* Petite explosion (image + léger « boum ») à chaque navire touché, quel que soit le mode de jeu */
+(function(){
+  const seen=new Map();let ac=null,queued=false;
+  function boomSound(big){
+    try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const t=ac.currentTime,len=big?.7:.45;
+      const buf=ac.createBuffer(1,Math.floor(ac.sampleRate*len),ac.sampleRate),d=buf.getChannelData(0);
+      for(let k=0;k<d.length;k++)d[k]=(Math.random()*2-1)*Math.pow(1-k/d.length,2.2);
+      const src=ac.createBufferSource();src.buffer=buf;
+      const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.setValueAtTime(big?900:1300,t);lp.frequency.exponentialRampToValueAtTime(140,t+len);
+      const g=ac.createGain();g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(big?.22:.16,t+.015);g.gain.exponentialRampToValueAtTime(.0001,t+len);
+      src.connect(lp);lp.connect(g);g.connect(ac.destination);src.start(t);
+    }catch(e){}
+  }
+  function explode(el,big){
+    const r=el.getBoundingClientRect();if(!r.width)return;
+    const size=Math.max(46,r.width*(big?3:2.4)),fx=document.createElement('div');fx.className='boomFx';
+    fx.style.cssText=`left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;width:${size}px;height:${size}px`;
+    let h='<span class="sm"></span><span class="fl0"></span><span class="rg"></span>';
+    const n=big?12:8;for(let k=0;k<n;k++){const a=k/n*Math.PI*2+Math.random()*.4,dist=size*(.45+Math.random()*.2);
+      h+=`<span class="sp" style="--dx:${Math.cos(a)*dist}px;--dy:${Math.sin(a)*dist}px"></span>`}
+    fx.innerHTML=h;document.body.appendChild(fx);setTimeout(()=>fx.remove(),1100);
+    const b=el.closest('.board');if(b){b.classList.remove('jolt');void b.offsetWidth;b.classList.add('jolt')}
+    boomSound(big);try{navigator.vibrate&&navigator.vibrate(big?[40,30,60]:35)}catch(e){}
+  }
+  function scan(){queued=false;
+    document.querySelectorAll('.board[data-b]').forEach(b=>{
+      const key=b.dataset.b+'|'+b.dataset.p,hits=new Set([...b.querySelectorAll('.mk.hit')].map(m=>m.dataset.i));
+      const sunk=b.querySelectorAll('.ship.sunk').length,prev=seen.get(key);seen.set(key,{hits,sunk});
+      if(!prev||hits.size<prev.hits.size)return;
+      const fresh=[...hits].filter(i=>!prev.hits.has(i));
+      if(!fresh.length||fresh.length>6)return;
+      const big=sunk>prev.sunk;                            // navire coulé : explosion un peu plus grande
+      const target=b.querySelector(`.mk.new.hit`)||b.querySelector(`.mk.hit[data-i="${fresh[fresh.length-1]}"]`);
+      if(target)requestAnimationFrame(()=>explode(target,big));
+    });
+  }
+  new MutationObserver(()=>{if(!queued){queued=true;requestAnimationFrame(scan)}}).observe(document.body,{childList:true,subtree:true});
+})();
 </script>
 </body>
 </html>
