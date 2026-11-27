@@ -993,6 +993,21 @@ html.game-open h2.huge { font-size:clamp(22px,5.5vw,30px) !important; margin:0 0
   .tiroir .tGo { width:26px; height:26px; }
 }
 @media (prefers-reduced-motion:reduce) { .tiroir { transition:none; } }
+/* Mes jeux préférés */
+.tRow { position:relative; }
+.tRow > .tiroir { padding-right:62px; }
+.favBtn { position:absolute; right:10px; top:50%; transform:translateY(-50%); width:46px; height:46px; min-height:0 !important; min-width:0; max-height:46px; line-height:0; margin:0; border-radius:50%; border:2px solid #e0b96a; background:#fff8e6; color:#b9893a; display:grid; place-items:center; cursor:pointer; padding:0; box-shadow:0 2px 0 rgba(150,100,40,.3); z-index:2; }
+.favBtn svg { width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linejoin:round; }
+.favBtn[aria-pressed="true"] { background:#d9364b; border-color:#b02a3c; color:#fff; }
+.favBtn[aria-pressed="true"] svg { fill:#fff; stroke:#fff; }
+.favBtn:focus-visible { outline:4px solid #0b6ab0; outline-offset:2px; }
+.favBtn.pop { animation:favPop .35s ease-out; }
+@keyframes favPop { 50% { transform:translateY(-50%) scale(1.25); } }
+.tiroir.favD { background:#ffe1e1; box-shadow:0 1px 0 rgba(255,255,255,.7) inset, 0 -2px 0 rgba(170,60,60,.25) inset, 0 3px 6px rgba(50,25,5,.3); }
+.tiroir .tMem { font:700 12.5px/1.3 Sora,system-ui,sans-serif; color:#2f5d3a; }
+.favEmpty { background:#fff8e6; border-radius:15px; padding:14px 16px; font:600 15px/1.45 Sora,system-ui,sans-serif; color:#5b3a1a; text-align:center; }
+.favEmpty svg { width:20px; height:20px; vertical-align:-4px; fill:#d9364b; }
+@media (max-width:520px) { .tRow > .tiroir { padding-right:54px; } .favBtn { width:42px; height:42px; max-height:42px; right:7px; } }
 #hub .shareRow { margin-top:4px; }
 </style>
 </head>
@@ -2303,6 +2318,42 @@ const CABINET = [
     { img: 'calcul', t: 'Calcul malin', s: 'Nombres et signes à placer', g: 'calcul', x: 29 } ] }
 ];
 let openDrawer = null;
+/* ---------- Mes jeux préférés : cœurs, dernier jeu joué, scores gardés ---------- */
+const HEART = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.1A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.8c0 5.5-7.5 10.1-7.5 10.1z"/></svg>';
+const gameKey = d => d.g || d.href;
+const ALL_GAMES = CABINET.flatMap(d => d.kids ? d.kids : [d]).filter(gameKey);
+const readLS = (k, def) => { try { const v = localStorage.getItem(k); return v == null ? def : JSON.parse(v); } catch (e) { return def; } };
+const writeLS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+let FAVS = readLS('mm-favoris', []), PLAYED = readLS('mm-joues', {});
+const isFav = k => FAVS.includes(k);
+function toggleFav(k) { FAVS = isFav(k) ? FAVS.filter(x => x !== k) : [...FAVS, k]; writeLS('mm-favoris', FAVS); }
+function notePlayed(k) { PLAYED[k] = Date.now(); writeLS('mm-joues', PLAYED); }
+function whenPlayed(k) {
+  const t = PLAYED[k]; if (!t) return '';
+  const d0 = new Date(); d0.setHours(0, 0, 0, 0);
+  const days = Math.ceil((d0 - t) / 864e5);
+  return days <= 0 ? 'Joué aujourd’hui' : days === 1 ? 'Joué hier' : `Joué il y a ${days} jours`;
+}
+function memo(k) {   // ce que le jeu a gardé en mémoire : record ou score de la partie en cours
+  const sign = n => (n > 0 ? '+' : '') + n;
+  if (k === 'tarot.html') { const t = readLS('mm-tarot', null); if (t && t.history && t.history.length) return `Votre total : ${sign(t.totals[0])}`; }
+  if (k === 'belote.html') { const t = readLS('mm-belote', null); if (t && t.history && t.history.length) return `Partie : Nous ${t.totals[0]} · Eux ${t.totals[1]}`; }
+  if (k === 'bri') { const b = +readLS('mm-briques-best', 0); if (b) return `Record : ${b} points`; }
+  if (k === 'dep') { const b = +readLS('dep-best', 0); if (b) return `Record : ${b}`; }
+  if (k === 'pen') { const b = +readLS('pendu-gk-best', 0); if (b) return `Record : ${b} bonnes réponses`; }
+  return '';
+}
+function favList() { return FAVS.map(k => ALL_GAMES.find(d => gameKey(d) === k)).filter(Boolean).sort((a, b) => (PLAYED[gameKey(b)] || 0) - (PLAYED[gameKey(a)] || 0)); }
+function withHeart(html, d) {
+  const k = gameKey(d); if (!k) return html;
+  const on = isFav(k);
+  return `<div class="tRow">${html}<button type="button" class="favBtn" data-fav="${esc(k)}" aria-pressed="${on}" aria-label="${on ? 'Retirer ' + esc(d.t) + ' de mes jeux préférés' : 'Ajouter ' + esc(d.t) + ' à mes jeux préférés'}" title="${on ? 'Retirer de mes jeux préférés' : 'Ajouter à mes jeux préférés'}">${HEART}</button></div>`;
+}
+function favDrawerHtml() {
+  const n = favList().length;
+  const sub = n ? (n > 1 ? n + ' jeux, retrouvés en un geste' : '1 jeu, retrouvé en un geste') : 'Touchez le cœur d’un jeu pour l’ajouter ici';
+  return `<button type="button" class="tiroir favD" data-i="fav"><img class="tIc" src="cabinet/ic/fav.png" alt=""><span class="tTx"><b>Mes jeux préférés</b><small>${sub}</small></span><span class="tEnd"><span class="tGo">${CHEV}</span></span></button>`;
+}
 function openCatalogueGame(k) {
   if (GROUP_TITLE[k]) openGroup(k);
   else show(k);
@@ -2311,33 +2362,55 @@ const CHEV = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"
 const nbJeux = d => d.kids ? d.kids.length : 1;
 function drawerHtml(d, i, extra = '') {
   const nb = d.kids ? `<span class="tNb">${d.kids.length} jeux</span>` : '';
+  const mem = extra === ' mem' ? [whenPlayed(gameKey(d)), memo(gameKey(d))].filter(Boolean).join(' · ') : '';
   const ic = extra === ' back' ? '' : `<img class="tIc" src="cabinet/ic/${d.img}.png" alt="">`;
   const go = `<span class="tGo">${CHEV}</span>`;
   const inner = extra === ' back'
     ? `${go}<span class="tTx"><b>${esc(d.t)}</b><small>${esc(d.s)}</small></span>`
-    : `${ic}<span class="tTx"><b>${esc(d.t)}</b>${d.s ? `<small>${esc(d.s)}</small>` : ''}${nb}</span><span class="tEnd">${go}</span>`;
-  if (d.href) return `<a class="tiroir" href="${d.href}">${inner}</a>`;
-  return `<button type="button" class="tiroir${extra}" data-i="${i}">${inner}</button>`;
+    : `${ic}<span class="tTx"><b>${esc(d.t)}</b>${d.s ? `<small>${esc(d.s)}</small>` : ''}${mem ? `<span class="tMem">${esc(mem)}</span>` : ''}${nb}</span><span class="tEnd">${go}</span>`;
+  const cls = extra === ' mem' ? '' : extra;
+  if (d.href) return `<a class="tiroir" href="${d.href}" data-k="${d.href}">${inner}</a>`;
+  return `<button type="button" class="tiroir${cls}" data-i="${i}">${inner}</button>`;
 }
 function renderDrawers() {
   const box = $('cabinetDrawers');
+  if (openDrawer === 'fav') {
+    const L = favList();
+    box.innerHTML = drawerHtml({ t: 'Tous les tiroirs', s: 'Mes jeux préférés · ' + (L.length > 1 ? L.length + ' jeux' : L.length + ' jeu') }, 'back', ' back') +
+      (L.length ? L.map((d, i) => withHeart(drawerHtml(d, i, ' mem'), d)).join('')
+        : `<p class="favEmpty">Vous n’avez pas encore de jeu préféré.<br>Ouvrez un tiroir et touchez le cœur ${HEART} à côté d’un jeu : il viendra se ranger ici.</p>`);
+    $('cabinetNote').textContent = L.length ? 'Le dernier jeu joué est en haut. Touchez le cœur rouge pour retirer un jeu.' : '';
+    return;
+  }
   const group = CABINET.find(d => d.id === openDrawer);
   if (!group) {
-    box.innerHTML = CABINET.map((d, i) => drawerHtml(d, i)).join('');
-    $('cabinetNote').textContent = 'Touchez un tiroir pour l’ouvrir.';
+    box.innerHTML = favDrawerHtml() + CABINET.map((d, i) => d.kids ? drawerHtml(d, i) : withHeart(drawerHtml(d, i), d)).join('');
+    $('cabinetNote').textContent = 'Touchez un tiroir pour l’ouvrir. Le cœur ajoute un jeu à « Mes jeux préférés ».';
   } else {
-    box.innerHTML = drawerHtml({ t: 'Tous les tiroirs', s: group.t + ' · ' + group.kids.length + ' jeux' }, 'back', ' back') + group.kids.map((d, i) => drawerHtml(d, i)).join('');
-    $('cabinetNote').textContent = 'Choisissez un jeu.';
+    box.innerHTML = drawerHtml({ t: 'Tous les tiroirs', s: group.t + ' · ' + group.kids.length + ' jeux' }, 'back', ' back') + group.kids.map((d, i) => withHeart(drawerHtml(d, i), d)).join('');
+    $('cabinetNote').textContent = 'Choisissez un jeu. Le cœur l’ajoute à « Mes jeux préférés ».';
   }
 }
 $('fCount').textContent = CABINET.reduce((n, d) => n + nbJeux(d), 0) + ' jeux dans un seul meuble';
 $('cabinetDrawers').addEventListener('click', e => {
+  const f = e.target.closest('button[data-fav]');
+  if (f) {
+    const k = f.dataset.fav; toggleFav(k);
+    const d = ALL_GAMES.find(x => gameKey(x) === k);
+    toast(isFav(k) ? `« ${d.t} » est rangé dans Mes jeux préférés` : `« ${d.t} » est retiré de Mes jeux préférés`);
+    renderDrawers();
+    const nf = $('cabinetDrawers').querySelector(`[data-fav="${CSS.escape(k)}"]`); if (nf) { nf.classList.add('pop'); nf.focus(); }
+    return;
+  }
+  const a = e.target.closest('a.tiroir[data-k]'); if (a) { notePlayed(a.dataset.k); return; }
   const b = e.target.closest('button[data-i]');
   if (!b) return;
   if (b.dataset.i === 'back') { openDrawer = null; renderDrawers(); return; }
-  const list = openDrawer ? CABINET.find(d => d.id === openDrawer).kids : CABINET;
+  if (b.dataset.i === 'fav') { openDrawer = 'fav'; renderDrawers(); window.scrollTo(0, 0); return; }
+  const list = openDrawer === 'fav' ? favList() : openDrawer ? CABINET.find(d => d.id === openDrawer).kids : CABINET;
   const d = list[+b.dataset.i];
   if (d.kids) { openDrawer = d.id; renderDrawers(); window.scrollTo(0, 0); return; }
+  notePlayed(d.g);
   openCatalogueGame(d.g);
 });
 renderDrawers();
@@ -2347,7 +2420,8 @@ function openGroup(k) {
   $('homeTitle').textContent = GROUP_TITLE[k] || 'Jouer seul';
   renderHome(); show('home');
 }
-document.addEventListener('click', e => { if (e.target.closest('[data-hub]')) { stop(); show('hub'); } });
+document.addEventListener('click', e => { if (e.target.closest('[data-hub]')) { stop(); show('hub'); renderDrawers(); } });
+addEventListener('pageshow', () => renderDrawers());
 $('quitTop').addEventListener('click', () => { stop(); show('home'); });
 function stop() { clearInterval(tick); puzzle?.destroy(); puzzle = null; $('ov').classList.add('hidden'); }
 
