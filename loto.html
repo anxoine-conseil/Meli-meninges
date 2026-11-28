@@ -233,6 +233,7 @@ footer{max-width:1280px;margin:auto;padding:0 max(4vw,16px) 30px;font-size:13px;
 .bravo{background:linear-gradient(135deg,#ffd24a,#ffb02e);color:#3b1f5c;border-radius:14px;padding:14px;font:400 22px/1.2 "DM Serif Display",serif;text-align:center;margin:10px 0;animation:pop .5s cubic-bezier(.34,1.56,.64,1)}
 .drawnlist{font-size:14px;color:var(--soft);line-height:1.7}
 body.host main{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)}
+@media(max-width:860px){body.host main{grid-template-columns:minmax(0,1fr);padding-bottom:110px}body.host #draw{position:fixed;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));width:auto;z-index:60;min-height:64px;font-size:20px;box-shadow:0 8px 24px rgba(40,20,80,.35)}}
 @media(max-width:860px){body.player .card{order:0}.stagebox,.stagebox.play{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:600px){.tableau{gap:3px;padding:8px}.phead{padding:10px}}
 
