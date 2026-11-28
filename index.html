@@ -147,7 +147,7 @@ html,body{overscroll-behavior-y:none}
 .cell .pc.jig{position:absolute;left:-30%;top:-30%;width:160%;height:160%;margin:0;filter:none;pointer-events:none}
 .cell .pc.jig .hit{pointer-events:none}
 @keyframes pop{0%{transform:scale(1.15)}100%{transform:none}}
-.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#1f2433;color:#fff;padding:12px 22px;border-radius:14px;font-weight:800;font-size:19px;z-index:90;opacity:0;transition:opacity .3s;pointer-events:none;max-width:92vw;text-align:center}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#1f2433;color:#fff;padding:12px 22px;border-radius:14px;font-weight:800;font-size:19px;z-index:10000;opacity:0;transition:opacity .3s;pointer-events:none;max-width:92vw;text-align:center}
 .toast.on{opacity:1}
 @media(orientation:landscape) and (min-width:700px){
   .pgame{grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
@@ -647,6 +647,12 @@ input.code{letter-spacing:12px;color:var(--neon);text-shadow:0 0 14px rgba(95,21
 .frag:active,.pad button:active{transform:translateY(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 2px 6px rgba(0,0,0,.35)}
 .frag.ctile,.calcTiles span,.cslot,.eq,.calcprev{color:var(--neon)}
 .frag.ctile.op,.calcTiles span.op,.cslot.op{color:#ff6b80}
+.recHint{margin:10px 0 0;font:700 16px/1.35 Sora,sans-serif;color:rgba(255,255,255,.85);text-align:center;min-height:1.35em}
+.recHint.warn{color:#ffd166;font-size:18px}
+.line.fix .bslot.full{position:relative;border:2px solid #ffd166;animation:fixPulse 1.2s ease-in-out infinite}
+.line.fix .bslot.full::after{content:'×';position:absolute;top:-10px;right:-8px;width:24px;height:24px;border-radius:50%;background:#ffd166;color:#3a2606;font:900 18px/24px Sora,sans-serif;text-align:center}
+@keyframes fixPulse{50%{box-shadow:0 0 0 4px rgba(255,209,102,.35)}}
+@media (prefers-reduced-motion:reduce){.line.fix .bslot.full{animation:none}}
 .cslot,.bslot{background:rgba(3,8,16,.45);border:2px dashed rgba(255,255,255,.22);color:#fff}
 .cslot{color:var(--neon)}
 .cslot.full,.bslot.full{border:1px solid var(--edge2);background:rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
@@ -1778,7 +1784,7 @@ const BANK = [
       fill[i] = null; render(); report();
     }
     box.addEventListener('click', tileClick); line.addEventListener('click', slotClick);
-    render();
+    render(); hint(`Touchez les ${need} bons éléments pour remplir le panier.`);
     return { count: () => (solved ? n : Math.min(filled(), n - 1)), total: n, destroy() { box.removeEventListener('click', tileClick); line.removeEventListener('click', slotClick); line.classList.remove('ok'); } };
   }
 
@@ -1799,19 +1805,21 @@ const BANK = [
   function mountRecipe(line, box, opts) {
     const rd = opts.round, need = rd.need, picked = [];
     let solved = false;
-    line.innerHTML = `<div class="recName">${recPhoto(rd, 'recThumb')}${escT(rd.name)}</div><div class="basket" style="--n:${need}">${Array.from({ length: need }, (_, i) => `<button class="bslot" data-s="${i}" aria-label="Case ${i + 1} du panier"></button>`).join('')}</div>`;
+    line.innerHTML = `<div class="recName">${recPhoto(rd, 'recThumb')}${escT(rd.name)}</div><div class="basket" style="--n:${need}">${Array.from({ length: need }, (_, i) => `<button class="bslot" data-s="${i}" aria-label="Case ${i + 1} du panier"></button>`).join('')}</div><p class="recHint" aria-live="polite"></p>`;
     box.innerHTML = rd.tiles.map((x, i) => `<button class="frag rtile ${tcls(x.t)}" data-t="${i}">${escT(x.t)}</button>`).join('');
     const good = () => picked.filter(i => rd.tiles[i].ok).length;
     function render() {
       line.querySelectorAll('.bslot').forEach((b, i) => { const t = picked[i]; b.textContent = t === undefined ? '' : rd.tiles[t].t; b.classList.toggle('full', t !== undefined); });
       box.querySelectorAll('.rtile').forEach(b => b.classList.toggle('used', picked.includes(+b.dataset.t)));
     }
+    const hint = (t, warn) => { const h = line.querySelector('.recHint'); if (h) { h.textContent = t; h.classList.toggle('warn', !!warn); } line.classList.toggle('fix', !!warn); };
     function report() {
       if (picked.length === need) {
-        if (good() === need) { solved = true; line.classList.add('ok'); opts.onPlace?.(Array.from({ length: need }, (_, i) => i), true); return; }
+        if (good() === need) { solved = true; hint(''); line.classList.add('ok'); opts.onPlace?.(Array.from({ length: need }, (_, i) => i), true); return; }
         line.classList.remove('no'); void line.offsetWidth; line.classList.add('no');
-        opts.onWrong?.(`${good()} bon${good() > 1 ? 's' : ''} sur ${need}… touchez un élément du panier pour le retirer`);
-      }
+        const msg = `${good()} bon${good() > 1 ? 's' : ''} sur ${need}. Touchez un élément du panier pour le retirer, puis choisissez-en un autre.`;
+        hint(msg, true); opts.onWrong?.(`${good()} bon${good() > 1 ? 's' : ''} sur ${need}`);
+      } else hint(picked.length ? `Panier : ${picked.length} sur ${need}. Pour retirer un élément, touchez-le dans le panier.` : `Touchez les ${need} bons éléments pour remplir le panier.`);
       const g = Math.min(picked.length, need - 1);
       opts.onPlace?.(Array.from({ length: g }, (_, i) => i), false);
     }
@@ -1826,7 +1834,7 @@ const BANK = [
       picked.splice(i, 1); render(); report();
     }
     box.addEventListener('click', tileClick); line.addEventListener('click', slotClick);
-    render();
+    render(); hint(`Touchez les ${need} bons éléments pour remplir le panier.`);
     return { count: () => (solved ? need : Math.min(picked.length, need - 1)), total: need, destroy() { box.removeEventListener('click', tileClick); line.removeEventListener('click', slotClick); line.classList.remove('ok'); } };
   }
 
