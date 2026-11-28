@@ -648,6 +648,9 @@ input.code{letter-spacing:12px;color:var(--neon);text-shadow:0 0 14px rgba(95,21
 .frag.ctile,.calcTiles span,.cslot,.eq,.calcprev{color:var(--neon)}
 .frag.ctile.op,.calcTiles span.op,.cslot.op{color:#ff6b80}
 .recHint{margin:10px 0 0;font:700 16px/1.35 Sora,sans-serif;color:rgba(255,255,255,.85);text-align:center;min-height:1.35em}
+.resumeCard{margin:18px 0 0;padding:14px 16px;border-radius:16px;border:2px solid #ffd166;background:rgba(255,209,102,.12)}
+.resumeCard p{margin:0 0 10px;font-size:17px}
+.recReveal{display:block;margin:12px auto 0;padding:12px 18px;min-height:48px;border-radius:14px;border:2px solid #ffd166;background:rgba(255,209,102,.15);color:#fff;font:800 17px Sora,sans-serif;cursor:pointer}
 .recHint.warn{color:#ffd166;font-size:18px}
 .line.fix .bslot.full{position:relative;border:2px solid #ffd166;animation:fixPulse 1.2s ease-in-out infinite}
 .line.fix .bslot.full::after{content:'×';position:absolute;top:-10px;right:-8px;width:24px;height:24px;border-radius:50%;background:#ffd166;color:#3a2606;font:900 18px/24px Sora,sans-serif;text-align:center}
@@ -1140,6 +1143,7 @@ html:not(.catalogue-open) .mmPub{display:none}
       <button class="ghost backHub" data-hub>← Tous les jeux</button>
       <div class="mmHead"><h2 class="huge" id="homeTitle">Jouer seul</h2><img src="mascotte/jouer.png" alt="Monsieur Méninge vous accueille"></div>
       <p class="soft lead" style="margin:0">Choisissez un thème et un niveau. Jouez tranquillement, ou contre trois joueurs simulés qui jouent au même niveau que vous.</p>
+      <div id="resumeBox"></div>
       <h3>Votre prénom</h3>
       <input id="nm" maxlength="14" value="Paul" autocomplete="off" style="max-width:420px">
       <h3>Les images</h3>
@@ -1784,7 +1788,7 @@ const BANK = [
       fill[i] = null; render(); report();
     }
     box.addEventListener('click', tileClick); line.addEventListener('click', slotClick);
-    render(); hint(`Touchez les ${need} bons éléments pour remplir le panier.`);
+    render();
     return { count: () => (solved ? n : Math.min(filled(), n - 1)), total: n, destroy() { box.removeEventListener('click', tileClick); line.removeEventListener('click', slotClick); line.classList.remove('ok'); } };
   }
 
@@ -1805,18 +1809,26 @@ const BANK = [
   function mountRecipe(line, box, opts) {
     const rd = opts.round, need = rd.need, picked = [];
     let solved = false;
-    line.innerHTML = `<div class="recName">${recPhoto(rd, 'recThumb')}${escT(rd.name)}</div><div class="basket" style="--n:${need}">${Array.from({ length: need }, (_, i) => `<button class="bslot" data-s="${i}" aria-label="Case ${i + 1} du panier"></button>`).join('')}</div><p class="recHint" aria-live="polite"></p>`;
+    line.innerHTML = `<div class="recName">${recPhoto(rd, 'recThumb')}${escT(rd.name)}</div><div class="basket" style="--n:${need}">${Array.from({ length: need }, (_, i) => `<button class="bslot" data-s="${i}" aria-label="Case ${i + 1} du panier"></button>`).join('')}</div><div class="recHint" aria-live="polite"></div>`;
     box.innerHTML = rd.tiles.map((x, i) => `<button class="frag rtile ${tcls(x.t)}" data-t="${i}">${escT(x.t)}</button>`).join('');
     const good = () => picked.filter(i => rd.tiles[i].ok).length;
     function render() {
       line.querySelectorAll('.bslot').forEach((b, i) => { const t = picked[i]; b.textContent = t === undefined ? '' : rd.tiles[t].t; b.classList.toggle('full', t !== undefined); });
       box.querySelectorAll('.rtile').forEach(b => b.classList.toggle('used', picked.includes(+b.dataset.t)));
     }
-    const hint = (t, warn) => { const h = line.querySelector('.recHint'); if (h) { h.textContent = t; h.classList.toggle('warn', !!warn); } line.classList.toggle('fix', !!warn); };
+    let fails = 0;
+    const hint = (t, warn) => { const h = line.querySelector('.recHint'); if (h) { h.textContent = t; h.classList.toggle('warn', !!warn); if (fails && !solved) { const b = document.createElement('button'); b.type = 'button'; b.className = 'recReveal'; b.textContent = 'Je ne sais pas : voir la réponse'; h.appendChild(b); } } line.classList.toggle('fix', !!warn); };
+    function reveal() {
+      picked.length = 0; rd.tiles.forEach((x, i) => { if (x.ok) picked.push(i); });
+      solved = true; render(); line.classList.remove('fix', 'no'); line.classList.add('ok');
+      const h = line.querySelector('.recHint'); if (h) { h.textContent = 'Voici la bonne réponse. On passe à la suite !'; h.classList.remove('warn'); }
+      opts.onPlace?.(Array.from({ length: need }, (_, i) => i), true, { revealed: true });
+    }
     function report() {
       if (picked.length === need) {
         if (good() === need) { solved = true; hint(''); line.classList.add('ok'); opts.onPlace?.(Array.from({ length: need }, (_, i) => i), true); return; }
         line.classList.remove('no'); void line.offsetWidth; line.classList.add('no');
+        fails++;
         const msg = `${good()} bon${good() > 1 ? 's' : ''} sur ${need}. Touchez un élément du panier pour le retirer, puis choisissez-en un autre.`;
         hint(msg, true); opts.onWrong?.(`${good()} bon${good() > 1 ? 's' : ''} sur ${need}`);
       } else hint(picked.length ? `Panier : ${picked.length} sur ${need}. Pour retirer un élément, touchez-le dans le panier.` : `Touchez les ${need} bons éléments pour remplir le panier.`);
@@ -1829,6 +1841,7 @@ const BANK = [
       picked.push(+b.dataset.t); render(); report();
     }
     function slotClick(e) {
+      if (e.target.closest('.recReveal')) { if (!solved) reveal(); return; }
       const b = e.target.closest('.bslot'); if (!b || solved) return;
       const i = +b.dataset.s; if (picked[i] === undefined) return;
       picked.splice(i, 1); render(); report();
@@ -2346,7 +2359,7 @@ $('startBtn').addEventListener('click', () => {
   S.items = isText(THEMES[S.theme]) ? PAP.pickTexts(S.level, seenTexts, Math.random) : isRec(THEMES[S.theme]) ? PAP.pickRecipes(THEMES[S.theme].bank, (seenRec[THEMES[S.theme].bank] ||= new Set()), Math.random) : [];
   S.seeds = []; S.round = 0; show('game'); startRound();
 });
-$('quitBtn').addEventListener('click', () => { stop(); show('home'); });
+$('quitBtn').addEventListener('click', () => { stop(); show('home'); renderResume(); });
 
 // ---------- page d'accueil : tous les jeux ----------
 const HUB = [
@@ -2503,19 +2516,42 @@ $('cabinetDrawers').addEventListener('click', e => {
   openCatalogueGame(d.g);
 });
 renderDrawers();
+const SEUL_KEY = 'mm-seul-partie';
+function saveSeul(round) {
+  try { localStorage.setItem(SEUL_KEY, JSON.stringify({ group: S.group, theme: S.theme, level: S.level, speed: S.speed, items: S.items, round, players: S.players.map(p => ({ name: p.name, pts: p.pts, me: !!p.me })), t: Date.now() })); } catch (e) {}
+}
+const clearSeul = () => { try { localStorage.removeItem(SEUL_KEY); } catch (e) {} };
+function readSeul() { try { const r = JSON.parse(localStorage.getItem(SEUL_KEY) || 'null'); return r && THEMES[r.theme] && r.round >= 0 && r.round <= 4 ? r : null; } catch (e) { return null; } }
+function renderResume() {
+  const box = $('resumeBox'); if (!box) return;
+  const r = readSeul();
+  if (!r || (r.group || null) !== (S.group || null)) { box.innerHTML = ''; return; }
+  const th = THEMES[r.theme], me = r.players.find(p => p.me) || r.players[0];
+  const what = isRec(th) ? (th.unit || 'Recette').toLowerCase() : isCalc(th) ? 'calcul' : isText(th) ? 'phrase' : 'objet';
+  box.innerHTML = `<div class="resumeCard"><p><b>Partie en cours : ${esc(th.name)}</b><br>${what} ${r.round + 1} sur 5 · ${me.name} : ${pts(me.pts)}</p><div class="row"><button class="big" id="resumeSeul" type="button">Reprendre la partie</button><button class="ghost" id="dropSeul" type="button">Effacer</button></div></div>`;
+}
+document.addEventListener('click', e => {
+  if (e.target.closest('#dropSeul')) { clearSeul(); renderResume(); return; }
+  if (!e.target.closest('#resumeSeul')) return;
+  const r = readSeul(); if (!r) { renderResume(); return; }
+  Object.assign(S, { theme: r.theme, level: r.level, speed: r.speed, items: r.items || [], round: r.round, seeds: [] });
+  S.players = r.players.map(p => ({ name: p.name, pts: p.pts, me: p.me }));
+  show('game'); startRound();
+});
 function openGroup(k) {
   S.group = k;
   if (THEMES[S.theme]?.cat !== k) S.theme = Object.keys(THEMES).find(t => THEMES[t].cat === k);
   $('homeTitle').textContent = GROUP_TITLE[k] || 'Jouer seul';
-  renderHome(); show('home');
+  renderHome(); renderResume(); show('home');
 }
 document.addEventListener('click', e => { if (e.target.closest('[data-hub]')) { stop(); show('hub'); renderDrawers(); } });
 addEventListener('pageshow', () => renderDrawers());
-$('quitTop').addEventListener('click', () => { stop(); show('home'); });
+$('quitTop').addEventListener('click', () => { stop(); show('home'); renderResume(); });
 function stop() { clearInterval(tick); puzzle?.destroy(); puzzle = null; $('ov').classList.add('hidden'); }
 
 // ---------- manche ----------
 function startRound() {
+  S.revealed = false; saveSeul(S.round);
   const th = THEMES[S.theme], lv = LEVELS[S.level], text = isText(th) || isCalc(th) || isRec(th);
   S.seeds[S.round] = Math.floor(Math.random() * 2 ** 31);
   finished = false; t0 = performance.now(); puzzle?.destroy(); puzzle = null;
@@ -2527,7 +2563,7 @@ function startRound() {
   if (isRec(th)) {
     txt = null;
     $('hint').textContent = (th.bank === 'fromages' ? 'Trouvez 3 choses : le lait, la région, et la famille du fromage (pâte molle, pâte pressée, pâte persillée…).' : 'Mettez dans le panier les 5 bons éléments de la recette.') + ' Touchez le panier pour retirer un élément.';
-    puzzle = Puzzle.mountRecipe($('line'), $('frags'), { round: recAt(S.round), onPlace(list, done) { sPlace(); S.players[0].prog = list.length; renderPlayers(); if (done) endRound(); }, onWrong(msg) { sNo(); if (msg) toast(msg); } });
+    puzzle = Puzzle.mountRecipe($('line'), $('frags'), { round: recAt(S.round), onPlace(list, done, info) { if (info?.revealed) S.revealed = true; else sPlace(); S.players[0].prog = list.length; renderPlayers(); if (done) endRound(); }, onWrong(msg) { sNo(); if (msg) toast(msg); } });
   } else if (isCalc(th)) {
     txt = null;
     const rd = PAP.calcRound(S.level, S.seeds[S.round]);
@@ -2579,10 +2615,12 @@ function endRound() {
   if (finished) return; finished = true; clearInterval(tick);
   const th = THEMES[S.theme], now = performance.now();
   const order = S.players.map(p => ({ p, t: p.me ? now : (p.done ? p.doneT : p.finishAt) })).sort((a, b) => a.t - b.t);
-  order.forEach((r, i) => { r.gain = i === 0 ? 3 : 1; r.p.pts += r.gain; });
-  sWin();
+  if (S.revealed) order.push(order.splice(order.findIndex(r => r.p.me), 1)[0]);
+  order.forEach((r, i) => { r.gain = (r.p.me && S.revealed) ? 0 : i === 0 ? 3 : 1; r.p.pts += r.gain; });
+  if (S.round < 4) saveSeul(S.round + 1); else clearSeul();
+  if (!S.revealed) sWin();
   const solo = S.players.length === 1, secs = Math.round((now - t0) / 1000);
-  $('ovT').textContent = solo ? `Bravo ${S.players[0].name} ! Terminé en ${secs >= 60 ? Math.floor(secs / 60) + ' min ' : ''}${secs % 60} s` : order[0].p.me ? `Bravo ${S.players[0].name} !` : 'Bien joué !';
+  $('ovT').textContent = S.revealed ? 'Voici la bonne réponse' : solo ? `Bravo ${S.players[0].name} ! Terminé en ${secs >= 60 ? Math.floor(secs / 60) + ' min ' : ''}${secs % 60} s` : order[0].p.me ? `Bravo ${S.players[0].name} !` : 'Bien joué !';
   $('ovObj').innerHTML = isRec(th) ? Puzzle.recipeCard(recAt(S.round)) : isCalc(th) ? '<p class="soft" style="margin:0">Une solution :</p>' + Puzzle.eqHTML(PAP.calcRound(S.level, S.seeds[S.round])) : isText(th) ? quoteHTML(items()[S.round]) : `<div class="objImg">${Puzzle.full(th.objects[S.round], LEVELS[S.level].style)}</div>`;
   $('ovRes').innerHTML = solo ? '' : order.map((r, i) => `<li>${medal(i)}<span style="flex:1">${esc(r.p.name)}</span><b>+${pts(r.gain)}</b></li>`).join('');
   $('nextBtn').textContent = S.round < 4 ? (isRec(th) ? (th.unit || 'Recette') + ' suivante' : isCalc(th) ? 'Calcul suivant' : isText(th) ? 'Phrase suivante' : 'Objet suivant') : 'Voir la fin de la partie';
@@ -2610,7 +2648,7 @@ $('qs').addEventListener('click', e => {
   $('finalRes').innerHTML = rank.map((p, i) => `<li>${medal(i)}<span style="flex:1">${esc(p.name)}</span><b>${pts(p.pts)}</b></li>`).join('');
   setTimeout(() => $('podium').classList.remove('hidden'), 700);
 });
-$('againBtn').addEventListener('click', () => show('home'));
+$('againBtn').addEventListener('click', () => { show('home'); renderResume(); });
 
 // ---------- catalogue ----------
 function renderGallery() {
